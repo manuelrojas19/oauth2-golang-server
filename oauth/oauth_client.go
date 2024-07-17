@@ -10,7 +10,7 @@ import (
 )
 
 type OauthClient struct {
-	Dao *dao.OauthClientDao
+	OauthClientDao *dao.OauthClientDao
 }
 
 func (oc *OauthClient) CreateOauthClient(clientKey string, clientSecret string, redirectUri string) (*entities.OauthClientEntity, error) {
@@ -29,5 +29,9 @@ func (oc *OauthClient) CreateOauthClient(clientKey string, clientSecret string, 
 		RedirectURI: redirectUri,
 	}
 
-	return oc.Dao.Save(client)
+	return oc.OauthClientDao.SaveClient(client)
+}
+
+func (oc *OauthClient) FindOauthClient(clientKey string) (*entities.OauthClientEntity, error) {
+	return oc.OauthClientDao.FindClientByClientKey(clientKey)
 }

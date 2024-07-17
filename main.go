@@ -12,12 +12,14 @@ func main() {
 	db, _ := database.InitDatabaseConnection()
 
 	oauthClient := &oauth.OauthClient{
-		Dao: &dao.OauthClientDao{
+		OauthClientDao: &dao.OauthClientDao{
 			Db: db,
 		},
 	}
 
 	_, error := oauthClient.CreateOauthClient("client", "secret", "uri")
+	client, _ := oauthClient.FindOauthClient("client2")
+	log.Println(client)
 	if error != nil {
 		log.Fatal(error)
 	}
