@@ -11,13 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type TokenUtils struct{}
-
-func NewTokenUtils() *TokenUtils {
-	return &TokenUtils{}
-}
-
-func (tokenUtils *TokenUtils) Token(clientId string, userId string, createdAt time.Time) (string, error) {
+func Token(clientId string, userId string, createdAt time.Time) (string, error) {
 	buf := bytes.NewBufferString(clientId)
 	buf.WriteString(userId)
 	buf.WriteString(strconv.FormatInt(createdAt.UnixNano(), 10))

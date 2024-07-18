@@ -11,7 +11,7 @@ func InitDatabaseConnection() (*gorm.DB, error) {
 
 	datasource, error := gorm.Open(postgres.Open(dbUrl), &gorm.Config{})
 
-	datasource.AutoMigrate(&entities.OauthClientEntity{})
+	datasource.AutoMigrate(&entities.OauthClientEntity{}, &entities.OauthTokenEntity{})
 
 	if error != nil {
 		return nil, error

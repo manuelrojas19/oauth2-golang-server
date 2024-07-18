@@ -1,20 +1,20 @@
-package utils
+package utils_test
 
 import (
 	"testing"
 	"time"
+
+	"github.com/manuelrojas19/go-oauth2-server/utils"
 )
 
 func TestToken(t *testing.T) {
-	tokenUtils := &TokenUtils{}
-
 	// Test inputs
 	clientId := "testClientId"
 	userId := "testUserId"
 	createdAt := time.Date(2024, time.July, 14, 12, 0, 0, 0, time.UTC)
 
 	// Expected output format (we cannot predict the exact token, but we can check its length)
-	token, err := tokenUtils.Token(clientId, userId, createdAt)
+	token, err := utils.Token(clientId, userId, createdAt)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -33,7 +33,7 @@ func TestToken(t *testing.T) {
 	// Edge case: empty clientId and userId
 	emptyClientId := ""
 	emptyUserId := ""
-	token, err = tokenUtils.Token(emptyClientId, emptyUserId, createdAt)
+	token, err = utils.Token(emptyClientId, emptyUserId, createdAt)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -43,7 +43,7 @@ func TestToken(t *testing.T) {
 
 	// Edge case: extreme date (Unix epoch)
 	epochTime := time.Unix(0, 0)
-	token, err = tokenUtils.Token(clientId, userId, epochTime)
+	token, err = utils.Token(clientId, userId, epochTime)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
