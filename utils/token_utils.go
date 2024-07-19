@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func Token(clientId string, userId string, createdAt time.Time) (string, error) {
+func GenerateToken(clientId string, userId string, createdAt time.Time) (string, error) {
 	buf := bytes.NewBufferString(clientId)
 	buf.WriteString(userId)
 	buf.WriteString(strconv.FormatInt(createdAt.UnixNano(), 10))

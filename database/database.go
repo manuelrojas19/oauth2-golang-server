@@ -9,12 +9,15 @@ import (
 func InitDatabaseConnection() (*gorm.DB, error) {
 	dbUrl := "postgres://postgres:postgres@localhost:5432/oauthDB"
 
-	datasource, error := gorm.Open(postgres.Open(dbUrl), &gorm.Config{})
+	datasource, err := gorm.Open(postgres.Open(dbUrl), &gorm.Config{})
 
-	datasource.AutoMigrate(&entities.OauthClientEntity{}, &entities.OauthTokenEntity{})
+	if err != nil {
+		return nil, err
+	}
 
-	if error != nil {
-		return nil, error
+	err = datasource.AutoMigrate(&entities.OauthClient{}, &entities.AccessToken{})
+	if err != nil {
+		return nil, err
 	}
 
 	return datasource, nil

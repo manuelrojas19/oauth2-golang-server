@@ -1,41 +1,38 @@
 package main
 
 import (
+	"github.com/manuelrojas19/go-oauth2-server/handlers"
+	"github.com/manuelrojas19/go-oauth2-server/services"
 	"log"
+	"net/http"
 
 	"github.com/manuelrojas19/go-oauth2-server/database"
-	"github.com/manuelrojas19/go-oauth2-server/oauth"
-	"github.com/manuelrojas19/go-oauth2-server/store/dao"
+	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 )
 
 func main() {
-	db, _ := database.InitDatabaseConnection()
-
-	oauthClient := &oauth.OauthClient{
-		OauthClientDao: &dao.OauthClientDao{
-			Db: db,
-		},
-	}
-
-	oauthToken := &oauth.OauthToken{
-		OauthClient: oauthClient,
-		OauthTokenDao: &dao.OauthTokenDao{
-			Db: db,
-		},
-	}
-
-	client, error := oauthClient.FindOauthClient("client149")
-
-	log.Println(client)
-
-	if error != nil {
-		log.Fatal(error)
-	}
-
-	accessToken, error := oauthToken.GrantAccessToken(client.Key)
-	log.Println(accessToken)
-	if error != nil {
-		log.Fatal(error)
+	// Initialize database connection
+	db, err := database.InitDatabaseConnection()
+	if err != nil {
+		log.Fatalf("Failed to initialize database connection: %v", err)
 		return
+	}
+	log.Println("Database connection initialized successfully")
+
+	// Initialize repositories and services
+	oauthClientRepository := repositories.NewOauthClientRepository(db)
+	oauthClientService := services.NewOauthClientService(oauthClientRepository)
+	registerHandler := handlers.NewRegisterHandler(oauthClientService)
+	log.Println("Services and handlers initialized successfully")
+
+	// Setup HTTP handler
+	http.HandleFunc("/register", registerHandler.Register)
+	log.Println("HTTP handler for /register is set up")
+
+	// Start HTTP server
+	log.Println("Starting HTTP server on :8080")
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatalf("Failed to start HTTP server: %v", err)
 	}
 }
