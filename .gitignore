@@ -1,0 +1,41 @@
+# Go build output
+/bin/
+/obj/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Dependency directories
+/vendor/
+
+# IDE-specific files
+.idea/
+*.iml
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Go modules and cache
+go.sum
+go.mod
+
+# Test output
+*.out
+
+# Build and coverage files
+*.cover
+
+# Coverage and profiling data
+*.cov
+*.pprof
+*.trace
+
+# Log files
+*.log
