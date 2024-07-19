@@ -10,6 +10,6 @@ type AccessTokenService interface {
 }
 
 type OauthClientService interface {
-	CreateOauthClient(redirectUri string) (*oauth.Client, error)
+	CreateOauthClient(*oauth.Client) (*oauth.Client, error)
 	FindOauthClient(clientKey string) (*entities.OauthClient, error)
 }

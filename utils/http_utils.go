@@ -2,7 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/manuelrojas19/go-oauth2-server/models/request"
+	"github.com/manuelrojas19/go-oauth2-server/api/request"
 	"net/http"
 )
 
@@ -18,4 +18,8 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, responseBody interfa
 	if err := json.NewEncoder(w).Encode(responseBody); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
+}
+
+func ErrorResponseBody(err error) map[string]string {
+	return map[string]string{"error": err.Error()}
 }

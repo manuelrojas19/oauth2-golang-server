@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/manuelrojas19/go-oauth2-server/handlers"
+	"github.com/manuelrojas19/go-oauth2-server/api/handlers"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"log"
 	"net/http"
@@ -26,7 +26,7 @@ func main() {
 	log.Println("Services and handlers initialized successfully")
 
 	// Setup HTTP handler
-	http.HandleFunc("/register", registerHandler.Register)
+	http.HandleFunc("/register", registerHandler.Handler)
 	log.Println("HTTP handler for /register is set up")
 
 	// Start HTTP server

@@ -27,10 +27,10 @@ func (ocd *oauthClientRepository) Save(client *entities.OauthClient) (*entities.
 	return client, nil
 }
 
-func (ocd *oauthClientRepository) FindByClientKey(clientKey string) (*entities.OauthClient, error) {
+func (ocd *oauthClientRepository) FindByClientId(clientId string) (*entities.OauthClient, error) {
 	oauthClient := new(entities.OauthClient)
 
-	result := ocd.Db.Where("key = LOWER(?)", clientKey).First(oauthClient)
+	result := ocd.Db.Where("client_id = LOWER(?)", clientId).First(oauthClient)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -44,6 +44,6 @@ func (ocd *oauthClientRepository) FindByClientKey(clientKey string) (*entities.O
 }
 
 func (ocd *oauthClientRepository) clientExists(clientKey string) bool {
-	_, err := ocd.FindByClientKey(clientKey)
+	_, err := ocd.FindByClientId(clientKey)
 	return err == nil
 }
