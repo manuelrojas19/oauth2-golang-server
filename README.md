@@ -5,7 +5,7 @@ Currently, it only includes the registration endpoint.
 
 ## Features
 
-- OAuth2 Registration Endpoint
+- OAuth2 Registration Endpoint (More endpoints based on  OAuth2 RFC will be implemented)
 - Built with Go
 - PostgreSQL for data storage
 - Docker Compose for easy setup
@@ -26,8 +26,8 @@ Currently, it only includes the registration endpoint.
 ### Clone the Repository
 
 ```bash
-git clone <your-repo-url>
-cd <your-repo-directory>
+git clone https://github.com/manuelrojas19/oauth2-golang-server
+cd oauth2-golang-server
 ```
 
 ### Build and Run the Application
