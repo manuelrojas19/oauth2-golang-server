@@ -30,8 +30,7 @@ func (handler *registerHandler) Handler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	client := mappers.NewClientModelFromRegisterClientRequest(&req)
-	client, err := handler.oauthClientService.CreateOauthClient(client)
+	client, err := handler.oauthClientService.CreateOauthClient(&req)
 	if err != nil {
 		log.Printf("Error creating OAuth client: %v", err)
 		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))

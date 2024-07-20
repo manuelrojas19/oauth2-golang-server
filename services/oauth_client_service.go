@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/google/uuid"
+	"github.com/manuelrojas19/go-oauth2-server/api/request"
 	"github.com/manuelrojas19/go-oauth2-server/mappers"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/store/entities"
@@ -17,16 +18,16 @@ func NewOauthClientService(oauthClientRepository repositories.OauthClientReposit
 	return &oauthClientService{oauthClientRepository: oauthClientRepository}
 }
 
-func (c *oauthClientService) CreateOauthClient(client *oauth.Client) (*oauth.Client, error) {
+func (c *oauthClientService) CreateOauthClient(request *request.RegisterClientRequest) (*oauth.Client, error) {
+	client := mappers.NewClientModelFromRegisterClientRequest(request)
 
 	clientSecret, err := utils.EncryptText(uuid.New().String())
 	if err != nil {
 		return nil, err
 	}
-
 	client.ClientSecret = clientSecret
 
-	savedClient, err := c.oauthClientRepository.Save(entities.NewOauthClient(client))
+	savedClient, err := c.oauthClientRepository.Save(entities.NewOauthClientEntityFromModel(client))
 	if err != nil {
 		return nil, err
 	}

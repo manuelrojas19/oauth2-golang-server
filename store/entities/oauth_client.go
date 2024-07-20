@@ -18,7 +18,7 @@ type OauthClient struct {
 	UpdatedAt               time.Time
 }
 
-func NewOauthClient(client *oauth.Client) *OauthClient {
+func NewOauthClientEntityFromModel(client *oauth.Client) *OauthClient {
 	return &OauthClient{
 		ClientId:                uuid.New().String(),
 		ClientSecret:            client.ClientSecret,
