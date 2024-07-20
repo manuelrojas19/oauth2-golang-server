@@ -1,22 +1,10 @@
 package mappers
 
 import (
-	"github.com/google/uuid"
-	"github.com/manuelrojas19/go-oauth2-server/api/request"
 	"github.com/manuelrojas19/go-oauth2-server/api/response"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/store/entities"
 )
-
-func NewClientModelFromRegisterClientRequest(client *request.RegisterClientRequest) *oauth.Client {
-	return &oauth.Client{
-		ClientId:                uuid.New().String(),
-		ClientName:              client.ClientName,
-		GrantTypes:              client.GrantTypes,
-		ResponseTypes:           client.ResponseTypes,
-		TokenEndpointAuthMethod: client.TokenEndpointAuthMethod,
-	}
-}
 
 func NewClientModelFromClientEntity(client *entities.OauthClient) *oauth.Client {
 	return &oauth.Client{

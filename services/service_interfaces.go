@@ -1,8 +1,8 @@
 package services
 
 import (
-	"github.com/manuelrojas19/go-oauth2-server/api/request"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
+	"github.com/manuelrojas19/go-oauth2-server/services/commands"
 	"github.com/manuelrojas19/go-oauth2-server/store/entities"
 )
 
@@ -11,6 +11,6 @@ type AccessTokenService interface {
 }
 
 type OauthClientService interface {
-	CreateOauthClient(*request.RegisterClientRequest) (*oauth.Client, error)
+	CreateOauthClient(command *commands.CreateOauthClientCommand) (*oauth.Client, error)
 	FindOauthClient(clientKey string) (*entities.OauthClient, error)
 }
