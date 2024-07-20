@@ -1,7 +1,8 @@
 # OAuth2 Server Implementation
 
-This project is a basic implementation of an OAuth2 server based on the OAuth2 RFC. It is built using Go and PostgreSQL.
-Currently, it only includes the registration endpoint.
+This project is a minimal implementation of an OAuth2 server using Go and PostgreSQL, designed to follow the OAuth2 RFC specifications. It provides endpoints for client registration and will include additional OAuth2 functionality such as authorization, token management, and user information retrieval. The application is containerized using Docker Compose for easy setup and deployment.
+
+
 
 ## Features
 
