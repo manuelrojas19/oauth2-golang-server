@@ -23,6 +23,7 @@ func NewClientModelFromClientEntity(client *entities.OauthClient) *oauth.Client 
 func NewRegisterClientResponseFromClientModel(client *oauth.Client) *response.RegisterClientResponse {
 	return &response.RegisterClientResponse{
 		ClientId:                client.ClientId,
+		ClientSecret:            client.ClientSecret,
 		ClientName:              client.ClientName,
 		GrantTypes:              client.GrantTypes,
 		ResponseTypes:           client.ResponseTypes,

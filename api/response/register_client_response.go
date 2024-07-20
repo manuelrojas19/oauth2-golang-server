@@ -4,6 +4,7 @@ import "github.com/manuelrojas19/go-oauth2-server/models/oauth"
 
 type RegisterClientResponse struct {
 	ClientId                string                        `json:"client_id"`
+	ClientSecret            string                        `json:"client_secret,omitempty"`
 	ClientName              string                        `json:"client_name"`
 	GrantTypes              []oauth.GrantType             `json:"grant_types"`
 	ResponseTypes           []oauth.ResponseType          `json:"response_types"`
