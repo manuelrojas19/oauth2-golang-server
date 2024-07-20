@@ -3,20 +3,22 @@ package entities
 import (
 	"github.com/google/uuid"
 	"github.com/lib/pq"
-	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
+	"github.com/manuelrojas19/go-oauth2-server/models/oauth/authmethodtype"
+	"github.com/manuelrojas19/go-oauth2-server/models/oauth/granttype"
+	"github.com/manuelrojas19/go-oauth2-server/models/oauth/responsetype"
 	"time"
 )
 
 type OauthClient struct {
-	ClientId                string         `gorm:"primaryKey;type:varchar(255)"`
+	ClientId                string         `gorm:"primaryKey;type:varchar(255);not null"`
 	ClientSecret            string         `gorm:"type:varchar(255);not null"`
-	ClientName              string         `gorm:"type:varchar(255);"`
-	ResponseTypes           pq.StringArray `gorm:"type:text[]"`
-	GrantTypes              pq.StringArray `gorm:"type:text[]"`
-	TokenEndpointAuthMethod string         `gorm:"type:varchar(255);"`
+	ClientName              string         `gorm:"type:varchar(255);not null"`
+	ResponseTypes           pq.StringArray `gorm:"type:text[];not null"`
+	GrantTypes              pq.StringArray `gorm:"type:text[];not null"`
+	TokenEndpointAuthMethod string         `gorm:"type:varchar(255);not null"`
 	RedirectURI             pq.StringArray `gorm:"type:text[]"`
-	CreatedAt               time.Time
-	UpdatedAt               time.Time
+	CreatedAt               time.Time      `gorm:"default:now()"`
+	UpdatedAt               time.Time      `gorm:"default:now()"`
 }
 
 // OauthClientBuilder helps build an OauthClient with optional configurations.
@@ -24,9 +26,9 @@ type OauthClientBuilder struct {
 	clientID                string
 	clientSecret            string
 	clientName              string
-	responseTypes           []oauth.ResponseType
-	grantTypes              []oauth.GrantType
-	tokenEndpointAuthMethod oauth.TokenEndpointAuthMethod
+	responseTypes           []responsetype.ResponseType
+	grantTypes              []granttype.GrantType
+	tokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod
 	redirectURI             []string
 }
 
@@ -53,20 +55,20 @@ func (b *OauthClientBuilder) SetClientName(clientName string) *OauthClientBuilde
 	return b
 }
 
-// SetResponseTypes sets the response types.
-func (b *OauthClientBuilder) SetResponseTypes(responseTypes []oauth.ResponseType) *OauthClientBuilder {
+// SetResponseTypes sets the responsetype types.
+func (b *OauthClientBuilder) SetResponseTypes(responseTypes []responsetype.ResponseType) *OauthClientBuilder {
 	b.responseTypes = responseTypes
 	return b
 }
 
-// SetGrantTypes sets the grant types.
-func (b *OauthClientBuilder) SetGrantTypes(grantTypes []oauth.GrantType) *OauthClientBuilder {
+// SetGrantTypes sets the granttype types.
+func (b *OauthClientBuilder) SetGrantTypes(grantTypes []granttype.GrantType) *OauthClientBuilder {
 	b.grantTypes = grantTypes
 	return b
 }
 
-// SetTokenEndpointAuthMethod sets the token endpoint auth method.
-func (b *OauthClientBuilder) SetTokenEndpointAuthMethod(authMethod oauth.TokenEndpointAuthMethod) *OauthClientBuilder {
+// SetTokenEndpointAuthMethod sets the token endpoint authmethodtype method.
+func (b *OauthClientBuilder) SetTokenEndpointAuthMethod(authMethod authmethodtype.TokenEndpointAuthMethod) *OauthClientBuilder {
 	b.tokenEndpointAuthMethod = authMethod
 	return b
 }
@@ -88,8 +90,8 @@ func (b *OauthClientBuilder) Build() *OauthClient {
 		ClientId:                b.clientID,
 		ClientSecret:            b.clientSecret,
 		ClientName:              b.clientName,
-		ResponseTypes:           oauth.ResponseTypeListToStringList(b.responseTypes),
-		GrantTypes:              oauth.GrantTypeListToStringList(b.grantTypes),
+		ResponseTypes:           responsetype.EnumListToStringList(b.responseTypes),
+		GrantTypes:              granttype.EnumListToStringList(b.grantTypes),
 		TokenEndpointAuthMethod: string(b.tokenEndpointAuthMethod),
 		RedirectURI:             b.redirectURI,
 		CreatedAt:               time.Now().UTC(),

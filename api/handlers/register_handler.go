@@ -22,10 +22,21 @@ func NewRegisterHandler(oauthClientService services.OauthClientService) Handler 
 func (handler *registerHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Received registration request")
 
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
 	var req request.RegisterClientRequest
 
 	if err := utils.Decode(r, &req); err != nil {
 		log.Printf("Error decoding request body: %v", err)
+		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
+		return
+	}
+
+	// Validate the request data
+	if err := req.Validate(); err != nil {
 		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
 		return
 	}

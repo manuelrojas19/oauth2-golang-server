@@ -90,8 +90,8 @@ curl -X POST http://localhost:8080/register \
     -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
     -d '{
         "client_name": "Example Client",
-        "grant_types": ["authorization_code", "refresh_token"],
-        "response_types": ["code", "token"],
+        "granttype": ["authorization_code", "refresh_token"],
+        "responsetype": ["code", "token"],
         "token_endpoint_auth_method": "client_secret_basic",
         "redirect_uris": ["https://example.com/callback"]
     }'
