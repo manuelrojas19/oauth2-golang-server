@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type Token struct {
+type AccessToken struct {
 	ClientId         string
 	UserId           string
 	RedirectURI      string
@@ -19,6 +19,6 @@ type Token struct {
 	Extension        url.Values
 }
 
-func NewToken() *Token {
-	return &Token{Extension: make(url.Values)}
+func NewToken() *AccessToken {
+	return &AccessToken{Extension: make(url.Values)}
 }

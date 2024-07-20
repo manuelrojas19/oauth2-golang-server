@@ -21,7 +21,7 @@ func NewOauthClientService(oauthClientRepository repositories.OauthClientReposit
 }
 
 // CreateOauthClient creates a new OAuth client and returns it.
-func (s *oauthClientService) CreateOauthClient(command *commands.CreateOauthClientCommand) (*oauth.Client, error) {
+func (s *oauthClientService) CreateOauthClient(command *commands.RegisterOauthClientCommand) (*oauth.Client, error) {
 	// Encrypt the client secret
 	clientSecret, err := utils.EncryptText(uuid.New().String())
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *oauthClientService) CreateOauthClient(command *commands.CreateOauthClie
 		SetResponseTypes(command.ResponseTypes).
 		SetGrantTypes(command.GrantTypes).
 		SetTokenEndpointAuthMethod(command.TokenEndpointAuthMethod).
-		SetRedirectURI(&command.RedirectUris).
+		SetRedirectURI(command.RedirectUris).
 		Build()
 
 	// Save the client entity

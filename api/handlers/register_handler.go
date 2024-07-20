@@ -4,7 +4,6 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/api/request"
 	"github.com/manuelrojas19/go-oauth2-server/mappers"
 	"github.com/manuelrojas19/go-oauth2-server/services"
-	"github.com/manuelrojas19/go-oauth2-server/services/commands"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
 	"net/http"
@@ -31,7 +30,7 @@ func (handler *registerHandler) Handler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	command := commands.NewCreateOauthClientCommandFromRequest(&req)
+	command := mappers.NewCreateOauthClientCommandFromRequest(&req)
 
 	client, err := handler.oauthClientService.CreateOauthClient(command)
 	if err != nil {

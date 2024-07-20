@@ -11,6 +11,6 @@ type AccessTokenService interface {
 }
 
 type OauthClientService interface {
-	CreateOauthClient(command *commands.CreateOauthClientCommand) (*oauth.Client, error)
+	CreateOauthClient(command *commands.RegisterOauthClientCommand) (*oauth.Client, error)
 	FindOauthClient(clientKey string) (*entities.OauthClient, error)
 }
