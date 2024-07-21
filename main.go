@@ -21,12 +21,16 @@ func main() {
 
 	// Initialize repositories and services
 	oauthClientRepository := repositories.NewOauthClientRepository(db)
+	accessTokenRepository := repositories.NewAccessTokenRepository(db)
 	oauthClientService := services.NewOauthClientService(oauthClientRepository)
+	tokenService := services.NewTokenService(accessTokenRepository, oauthClientService)
 	registerHandler := handlers.NewRegisterHandler(oauthClientService)
+	tokenHandler := handlers.NewTokenHandler(tokenService)
 	log.Println("Services and handlers initialized successfully")
 
 	// Setup HTTP handler
 	http.HandleFunc("/register", registerHandler.Handler)
+	http.HandleFunc("/token", tokenHandler.Handler)
 	log.Println("HTTP handler for /register is set up")
 
 	// Start HTTP server

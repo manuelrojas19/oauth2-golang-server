@@ -1,11 +1,14 @@
 package entities
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth/authmethodtype"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth/granttype"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth/responsetype"
+	"golang.org/x/crypto/bcrypt"
+	"log"
 	"time"
 )
 
@@ -16,9 +19,21 @@ type OauthClient struct {
 	ResponseTypes           pq.StringArray `gorm:"type:text[];not null"`
 	GrantTypes              pq.StringArray `gorm:"type:text[];not null"`
 	TokenEndpointAuthMethod string         `gorm:"type:varchar(255);not null"`
-	RedirectURI             pq.StringArray `gorm:"type:text[]"`
+	RedirectURIs            pq.StringArray `gorm:"type:text[]"`
 	CreatedAt               time.Time      `gorm:"default:now()"`
 	UpdatedAt               time.Time      `gorm:"default:now()"`
+}
+
+// ValidateSecret compares a plaintext secret with a bcrypt hash and returns a boolean indicating whether they match.
+func (c *OauthClient) ValidateSecret(providedPassword string) error {
+	log.Println("Validating secret")
+	err := bcrypt.CompareHashAndPassword([]byte(c.ClientSecret), []byte(providedPassword))
+	if err != nil {
+		log.Printf("Secret validation failed: %v", err)
+		return fmt.Errorf("secret validation failed: %w", err)
+	}
+	log.Println("Secret validation succeeded")
+	return nil
 }
 
 // OauthClientBuilder helps build an OauthClient with optional configurations.
@@ -37,44 +52,44 @@ func NewOauthClientBuilder() *OauthClientBuilder {
 	return &OauthClientBuilder{}
 }
 
-// SetClientID sets the client ID.
-func (b *OauthClientBuilder) SetClientID(clientID string) *OauthClientBuilder {
+// WithClientID sets the client ID.
+func (b *OauthClientBuilder) WithClientID(clientID string) *OauthClientBuilder {
 	b.clientID = clientID
 	return b
 }
 
-// SetClientSecret sets the client secret.
-func (b *OauthClientBuilder) SetClientSecret(clientSecret string) *OauthClientBuilder {
+// WithClientSecret sets the client secret.
+func (b *OauthClientBuilder) WithClientSecret(clientSecret string) *OauthClientBuilder {
 	b.clientSecret = clientSecret
 	return b
 }
 
-// SetClientName sets the client name.
-func (b *OauthClientBuilder) SetClientName(clientName string) *OauthClientBuilder {
+// WithClientName sets the client name.
+func (b *OauthClientBuilder) WithClientName(clientName string) *OauthClientBuilder {
 	b.clientName = clientName
 	return b
 }
 
-// SetResponseTypes sets the responsetype types.
-func (b *OauthClientBuilder) SetResponseTypes(responseTypes []responsetype.ResponseType) *OauthClientBuilder {
+// WithResponseTypes sets the responsetype types.
+func (b *OauthClientBuilder) WithResponseTypes(responseTypes []responsetype.ResponseType) *OauthClientBuilder {
 	b.responseTypes = responseTypes
 	return b
 }
 
-// SetGrantTypes sets the granttype types.
-func (b *OauthClientBuilder) SetGrantTypes(grantTypes []granttype.GrantType) *OauthClientBuilder {
+// WithGrantTypes sets the granttype types.
+func (b *OauthClientBuilder) WithGrantTypes(grantTypes []granttype.GrantType) *OauthClientBuilder {
 	b.grantTypes = grantTypes
 	return b
 }
 
-// SetTokenEndpointAuthMethod sets the token endpoint authmethodtype method.
-func (b *OauthClientBuilder) SetTokenEndpointAuthMethod(authMethod authmethodtype.TokenEndpointAuthMethod) *OauthClientBuilder {
+// WithTokenEndpointAuthMethod sets the token endpoint authmethodtype method.
+func (b *OauthClientBuilder) WithTokenEndpointAuthMethod(authMethod authmethodtype.TokenEndpointAuthMethod) *OauthClientBuilder {
 	b.tokenEndpointAuthMethod = authMethod
 	return b
 }
 
-// SetRedirectURI sets the redirect URI.
-func (b *OauthClientBuilder) SetRedirectURI(redirectURI []string) *OauthClientBuilder {
+// WithRedirectURI sets the redirect URI.
+func (b *OauthClientBuilder) WithRedirectURI(redirectURI []string) *OauthClientBuilder {
 	b.redirectURI = redirectURI
 	return b
 }
@@ -93,7 +108,7 @@ func (b *OauthClientBuilder) Build() *OauthClient {
 		ResponseTypes:           responsetype.EnumListToStringList(b.responseTypes),
 		GrantTypes:              granttype.EnumListToStringList(b.grantTypes),
 		TokenEndpointAuthMethod: string(b.tokenEndpointAuthMethod),
-		RedirectURI:             b.redirectURI,
+		RedirectURIs:            b.redirectURI,
 		CreatedAt:               time.Now().UTC(),
 		UpdatedAt:               time.Now().UTC(),
 	}

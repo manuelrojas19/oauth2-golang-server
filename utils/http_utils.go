@@ -3,12 +3,28 @@ package utils
 import (
 	"encoding/json"
 	"github.com/manuelrojas19/go-oauth2-server/api/dto/request"
+	"github.com/manuelrojas19/go-oauth2-server/models/oauth/granttype"
 	"net/http"
 )
 
 // Decode parses the request body into the provided requestBody object.
-func Decode(r *http.Request, requestBody *request.RegisterClientRequest) error {
+func Decode[T any](r *http.Request, requestBody *T) error {
 	return json.NewDecoder(r.Body).Decode(requestBody)
+}
+
+// DecodeTokenRequest function to handle URL encoded data.
+func DecodeTokenRequest(r *http.Request, requestBody *request.TokenRequest) error {
+	// Parse URL encoded form data
+	if err := r.ParseForm(); err != nil {
+		return err
+	}
+
+	// Populate requestBody fields from form values
+	requestBody.ClientId = r.FormValue("client_id")
+	requestBody.ClientSecret = r.FormValue("client_secret")
+	requestBody.GrantType = granttype.GrantType(r.FormValue("grant_type"))
+
+	return nil
 }
 
 // RespondWithJSON sends a JSON response type with the specified status code and body.

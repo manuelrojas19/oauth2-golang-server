@@ -19,7 +19,7 @@ func NewClientModelFromClientEntity(client *entities.OauthClient) *oauth.Client 
 		GrantTypes:              granttype.StringListToEnumList(client.GrantTypes),
 		ResponseTypes:           responsetype.StringListToEnumList(client.ResponseTypes),
 		TokenEndpointAuthMethod: authmethodtype.TokenEndpointAuthMethod(client.TokenEndpointAuthMethod),
-		RedirectUris:            client.RedirectURI,
+		RedirectUris:            client.RedirectURIs,
 	}
 }
 

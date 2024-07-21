@@ -2,8 +2,10 @@ package services
 
 import (
 	"github.com/google/uuid"
-	"github.com/manuelrojas19/go-oauth2-server/mappers"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
+	"github.com/manuelrojas19/go-oauth2-server/models/oauth/authmethodtype"
+	"github.com/manuelrojas19/go-oauth2-server/models/oauth/granttype"
+	"github.com/manuelrojas19/go-oauth2-server/models/oauth/responsetype"
 	"github.com/manuelrojas19/go-oauth2-server/services/commands"
 	"github.com/manuelrojas19/go-oauth2-server/store/entities"
 	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
@@ -23,7 +25,9 @@ func NewOauthClientService(oauthClientRepository repositories.OauthClientReposit
 // CreateOauthClient creates a new OAuth client and returns it.
 func (s *oauthClientService) CreateOauthClient(command *commands.RegisterOauthClientCommand) (*oauth.Client, error) {
 	// Encrypt the client secret
-	clientSecret, err := utils.EncryptText(uuid.New().String())
+	clientSecret := uuid.New().String()
+
+	encryptedClientSecret, err := utils.EncryptText(clientSecret)
 	if err != nil {
 		log.Printf("Error encrypting client secret: %v", err)
 		return nil, err
@@ -31,12 +35,12 @@ func (s *oauthClientService) CreateOauthClient(command *commands.RegisterOauthCl
 
 	// Build the client entity
 	clientEntity := entities.NewOauthClientBuilder().
-		SetClientName(command.ClientName).
-		SetClientSecret(clientSecret).
-		SetResponseTypes(command.ResponseTypes).
-		SetGrantTypes(command.GrantTypes).
-		SetTokenEndpointAuthMethod(command.TokenEndpointAuthMethod).
-		SetRedirectURI(command.RedirectUris).
+		WithClientName(command.ClientName).
+		WithClientSecret(encryptedClientSecret).
+		WithResponseTypes(command.ResponseTypes).
+		WithGrantTypes(command.GrantTypes).
+		WithTokenEndpointAuthMethod(command.TokenEndpointAuthMethod).
+		WithRedirectURI(command.RedirectUris).
 		Build()
 
 	// Save the client entity
@@ -47,13 +51,21 @@ func (s *oauthClientService) CreateOauthClient(command *commands.RegisterOauthCl
 	}
 
 	// Map to Client model
-	clientModel := mappers.NewClientModelFromClientEntity(savedClient)
+	clientModel := oauth.NewClientBuilder().
+		WithClientId(savedClient.ClientId).
+		WithClientSecret(clientSecret).
+		WithClientName(savedClient.ClientName).
+		WithResponseTypes(responsetype.StringListToEnumList(savedClient.ResponseTypes)).
+		WithGrantTypes(granttype.StringListToEnumList(savedClient.GrantTypes)).
+		WithTokenEndpointAuthMethod(authmethodtype.TokenEndpointAuthMethod(savedClient.TokenEndpointAuthMethod)).
+		WithRedirectUris(savedClient.RedirectURIs).
+		Build()
 	return clientModel, nil
 }
 
 // FindOauthClient retrieves an OAuth client by its client ID.
-func (s *oauthClientService) FindOauthClient(clientID string) (*entities.OauthClient, error) {
-	client, err := s.oauthClientRepository.FindByClientId(clientID)
+func (s *oauthClientService) FindOauthClient(clientId string) (*entities.OauthClient, error) {
+	client, err := s.oauthClientRepository.FindByClientId(clientId)
 	if err != nil {
 		log.Printf("Error finding OAuth client by ID: %v", err)
 		return nil, err
