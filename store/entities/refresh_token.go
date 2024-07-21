@@ -7,7 +7,7 @@ import (
 
 type RefreshToken struct {
 	Id            string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
-	Token         string    `gorm:"type:varchar(255);unique;not null"`
+	Token         string    `gorm:"type:text;unique;not null"`
 	TokenType     string    `gorm:"type:varchar(255);not null"`
 	ExpiresAt     time.Time `gorm:"not null"`
 	CreatedAt     time.Time `gorm:"default:now()"`

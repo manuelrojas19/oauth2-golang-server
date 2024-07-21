@@ -2,8 +2,10 @@ package utils
 
 import (
 	"bytes"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"github.com/golang-jwt/jwt/v4"
 	"strconv"
@@ -48,6 +50,12 @@ func GenerateJWT(clientId string, userId string, secretKey []byte, tokenType str
 		return "", errors.New("invalid token type")
 	}
 
+	// Generate a random unique identifier for the token
+	tokenID, err := generateRandomString(16) // 16 bytes = 32 characters
+	if err != nil {
+		return "", err
+	}
+
 	// Define JWT claims
 	claims := jwt.MapClaims{
 		"clientId": clientId,
@@ -55,6 +63,7 @@ func GenerateJWT(clientId string, userId string, secretKey []byte, tokenType str
 		"iat":      time.Now().Unix(),
 		"exp":      time.Now().Add(expirationTime).Unix(), // Token expires based on type
 		"type":     tokenType,                             // Add token type to claims
+		"jti":      tokenID,                               // Add a unique identifier to claims
 	}
 
 	// Create the token with HS256 algorithm
@@ -67,4 +76,22 @@ func GenerateJWT(clientId string, userId string, secretKey []byte, tokenType str
 	}
 
 	return tokenString, nil
+}
+
+// generateRandomString generates a random string of the specified length.
+func generateRandomString(length int) (string, error) {
+	if length <= 0 {
+		return "", errors.New("length must be positive")
+	}
+
+	// Calculate the number of bytes needed
+	numBytes := length
+	b := make([]byte, numBytes)
+
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(b), nil
 }
