@@ -102,10 +102,10 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 		WithUserId("user"). // Assuming a static user ID or replace with dynamic value
 		WithAccessToken(accessTokenJwt).
 		WithAccessTokenCreatedAt(time.Now()).
-		WithAccessTokenExpiresAt(AccessTokenDuration).
+		WithAccessTokenExpiresAt(accessToken.ExpiresAt.Sub(time.Now())).
 		WithRefreshToken(refreshTokenJwt).
 		WithRefreshTokenCreatedAt(time.Now()).
-		WithRefreshTokenExpiresAt(RefreshTokenDuration).
+		WithRefreshTokenExpiresAt(refreshToken.ExpiresAt.Sub(time.Now())).
 		WithExtension(nil). // If you have any extensions, set them here
 		Build()
 
@@ -114,6 +114,16 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 
 func (t *tokenService) getTokenByRefreshTokenFlow(token, clientId, clientSecret string) (*oauth.Token, error) {
 	log.Println("Received refresh token request for client:", clientId)
+
+	// Step 0: Retrieve and validate client
+	client, err := t.client.FindOauthClient(clientId)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := client.ValidateSecret(clientSecret); err != nil {
+		return nil, err
+	}
 
 	// Step 1: Retrieve and validate the refresh token
 	refreshToken, err := t.refreshTokenRepository.FindByToken(token)
@@ -158,7 +168,7 @@ func (t *tokenService) getTokenByRefreshTokenFlow(token, clientId, clientSecret 
 		WithUserId("user"). // Adjust according to your use case
 		WithAccessToken(newAccessTokenJwt).
 		WithAccessTokenCreatedAt(time.Now()).
-		WithAccessTokenExpiresAt(1 * time.Hour).
+		WithAccessTokenExpiresAt(newAccessToken.ExpiresAt.Sub(time.Now())).
 		WithRefreshToken(refreshToken.Token). // Retain the same refresh token
 		WithRefreshTokenCreatedAt(time.Now()).
 		WithRefreshTokenExpiresAt(refreshToken.ExpiresAt.Sub(time.Now())).

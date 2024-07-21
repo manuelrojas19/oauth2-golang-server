@@ -30,8 +30,8 @@ func main() {
 	log.Println("Services and handlers initialized successfully")
 
 	// Setup HTTP handler
-	http.HandleFunc("/register", registerHandler.Handler)
-	http.HandleFunc("/token", tokenHandler.Handler)
+	http.HandleFunc("/oauth/register", registerHandler.Handler)
+	http.HandleFunc("/oauth/token", tokenHandler.Handler)
 	log.Println("HTTP handler for /register is set up")
 
 	// Start HTTP server
