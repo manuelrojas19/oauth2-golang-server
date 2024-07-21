@@ -11,6 +11,7 @@ import (
 type TokenRequest struct {
 	ClientId     string              `json:"client_id"`
 	ClientSecret string              `json:"client_secret"`
+	RefreshToken string              `json:"refresh_token"`
 	GrantType    granttype.GrantType `json:"grant_type"`
 }
 

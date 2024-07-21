@@ -5,6 +5,7 @@ import "github.com/manuelrojas19/go-oauth2-server/models/oauth/granttype"
 type GrantAccessTokenCommand struct {
 	ClientId     string
 	ClientSecret string
+	RefreshToken string
 	GrantType    granttype.GrantType
 }
 

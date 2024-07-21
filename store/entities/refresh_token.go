@@ -17,6 +17,11 @@ type RefreshToken struct {
 	AccessTokenId string `gorm:"index;not null"`
 }
 
+// IsExpired checks if the refresh token has expired
+func (r *RefreshToken) IsExpired() bool {
+	return time.Now().After(r.ExpiresAt)
+}
+
 type RefreshTokenBuilder struct {
 	id            string
 	token         string

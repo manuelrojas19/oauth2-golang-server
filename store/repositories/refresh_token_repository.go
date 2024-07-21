@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"github.com/manuelrojas19/go-oauth2-server/store/entities"
 	"gorm.io/gorm"
 	"log"
@@ -42,4 +43,19 @@ func (ot *refreshTokenRepository) Save(token *entities.RefreshToken) (*entities.
 
 	log.Printf("Successfully saved refresh token for access_token_id %s", token.AccessTokenId)
 	return token, nil
+}
+
+func (ot *refreshTokenRepository) FindByToken(token string) (*entities.RefreshToken, error) {
+	refreshToken := new(entities.RefreshToken)
+	result := ot.Db.Where("token = ?", token).First(refreshToken)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, errors.New("OAuth Client not Found")
+	}
+
+	return refreshToken, nil
 }
