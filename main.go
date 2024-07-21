@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/manuelrojas19/go-oauth2-server/api/handlers"
 	"github.com/manuelrojas19/go-oauth2-server/configuration/database"
+	"github.com/manuelrojas19/go-oauth2-server/configuration/keymanager"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"log"
 	"net/http"
@@ -18,6 +19,11 @@ func main() {
 		return
 	}
 	log.Println("Database connection initialized successfully")
+
+	err = keymanager.Initialize()
+	if err != nil {
+		log.Fatalf("Failed to initialize keys: %v", err)
+	}
 
 	// Initialize repositories and services
 	oauthClientRepository := repositories.NewOauthClientRepository(db)
