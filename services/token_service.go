@@ -94,7 +94,7 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 		WithClientId(clientId).
 		WithToken(refreshTokenJwt).
 		WithTokenType("JWT").
-		WithExpiresAt(time.Now().Add(AccessTokenDuration)). // Example expiration
+		WithExpiresAt(time.Now().Add(RefreshTokenDuration)). // Example expiration
 		Build()
 
 	refreshToken, err = t.refreshTokenRepository.Save(refreshToken)
@@ -146,21 +146,21 @@ func (t *tokenService) getTokenByRefreshTokenFlow(token, clientId, clientSecret 
 	log.Println("Refresh token validated successfully for client:", clientId)
 
 	// Step 2: Generate a new access token
-	newAccessTokenJwt, err := utils.GenerateJWT(refreshToken.ClientId, "user", []byte("secret"), "access")
+	accessTokenJwt, err := utils.GenerateJWT(refreshToken.ClientId, "user", []byte("secret"), "access")
 	if err != nil {
 		log.Printf("Failed to generate new access token: %v", err)
 		return nil, fmt.Errorf("failed to generate new access token: %w", err)
 	}
 
 	// Create and save the new access token
-	newAccessToken := entities.NewAccessTokenBuilder().
-		WithClientId(refreshToken.ClientId).
-		WithToken(newAccessTokenJwt).
+	accessToken := entities.NewAccessTokenBuilder().
+		WithClientId(client.ClientId).
+		WithToken(accessTokenJwt).
 		WithTokenType("JWT").
-		WithExpiresAt(time.Now().Add(1 * time.Hour)). // Example expiration
+		WithExpiresAt(time.Now().Add(AccessTokenDuration)). // Example expiration
 		Build()
 
-	newAccessToken, err = t.accessTokenRepository.Save(newAccessToken)
+	accessToken, err = t.accessTokenRepository.Save(accessToken)
 	if err != nil {
 		log.Printf("Failed to save new access token: %v", err)
 		return nil, fmt.Errorf("failed to save new access token: %w", err)
@@ -170,13 +170,13 @@ func (t *tokenService) getTokenByRefreshTokenFlow(token, clientId, clientSecret 
 
 	// Step 3: Build and return the token response
 	newToken := oauth.NewTokenBuilder().
-		WithClientId(refreshToken.ClientId).
+		WithClientId(client.ClientId).
 		WithUserId("user"). // Adjust according to your use case
-		WithAccessToken(newAccessTokenJwt).
+		WithAccessToken(accessToken.Token).
 		WithAccessTokenCreatedAt(time.Now()).
-		WithAccessTokenExpiresAt(newAccessToken.ExpiresAt.Sub(time.Now())).
+		WithAccessTokenExpiresAt(accessToken.ExpiresAt.Sub(time.Now())).
 		WithRefreshToken(refreshToken.Token). // Retain the same refresh token
-		WithRefreshTokenCreatedAt(time.Now()).
+		WithRefreshTokenCreatedAt(refreshToken.CreatedAt).
 		WithRefreshTokenExpiresAt(refreshToken.ExpiresAt.Sub(time.Now())).
 		WithExtension(nil). // If you have any extensions, set them here
 		Build()
