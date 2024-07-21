@@ -16,7 +16,7 @@ func NewRefreshTokenRepository(db *gorm.DB) RefreshTokenRepository {
 }
 
 func (ot *refreshTokenRepository) Save(token *entities.RefreshToken) (*entities.RefreshToken, error) {
-	log.Printf("Starting transaction to save token for client_key %s", token.ClientId)
+	log.Printf("Starting transaction to save refresh token for access_token_id %s", token.AccessTokenId)
 
 	tx := ot.Db.Begin()
 
@@ -40,6 +40,6 @@ func (ot *refreshTokenRepository) Save(token *entities.RefreshToken) (*entities.
 		return nil, err
 	}
 
-	log.Printf("Successfully saved token for access_token_id %s", token.AccessTokenId)
+	log.Printf("Successfully saved refresh token for access_token_id %s", token.AccessTokenId)
 	return token, nil
 }

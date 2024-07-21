@@ -80,6 +80,30 @@ go run main.go
       }
       ```
 
+#### Token: `/token`
+
+- **Description**: This endpoint allows for the registration of OAuth2 clients.
+- **Method**: `POST`
+- **Request**:
+    - **Headers**:
+        - `Content-Type: application/x-www-form-urlencoded`
+    - **Body**:
+      ```
+      grant_type=client_credentials&client_id=CLIENT_ID&client_secret=CLIENT_SECRET
+      ```
+- **Response**:
+    - **Status**: `200 Okey` (on successful token issuance)
+    - **Body**:
+      ```json
+      {
+        "access_token": "string",
+        "token_type": "bearer",
+        "expires_in": 3600,
+        "refresh_token": "string", // Included if grant_type is authorization_code or if refresh token is requested
+        "scope": "string" // Optional, depending on the scopes requested
+      }
+      ```
+
 #### Example `curl` Command
 
 To register a new OAuth2 client, you can use the following `curl` command:
@@ -87,7 +111,6 @@ To register a new OAuth2 client, you can use the following `curl` command:
 ```bash
 curl -X POST http://localhost:8080/register \
     -H "Content-Type: application/json" \
-    -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
     -d '{
         "client_name": "Example Client",
         "granttype": ["authorization_code", "refresh_token"],
@@ -95,4 +118,12 @@ curl -X POST http://localhost:8080/register \
         "token_endpoint_auth_method": "client_secret_basic",
         "redirect_uris": ["https://example.com/callback"]
     }'
+```
+
+To get an access token, you can use the following `curl` command:
+
+```bash
+curl -X POST http://localhost:8080/token \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d 'grant_type=client_credentials&client_id=CLIENT_ID&client_secret=CLIENT_SECRET'
 ```
