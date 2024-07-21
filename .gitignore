@@ -39,3 +39,7 @@ go.mod
 
 # Log files
 *.log
+
+
+# PEM files
+*.pem
