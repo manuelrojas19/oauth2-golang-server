@@ -59,20 +59,13 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 		return nil, err
 	}
 
-	log.Printf("Access Token JWT: %s", accessTokenJwt)
-
-	accessTokenJWE, err := utils.GenerateJWE(accessTokenJwt)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create and save Access Token
 	accessToken := entities.NewAccessTokenBuilder().
 		WithClient(client).
-		WithClientId(client.ClientId).
-		WithToken(accessTokenJWE).
-		WithTokenType("JWE").
-		WithExpiresAt(time.Now().Add(AccessTokenDuration)). // Example expiration
+		WithClientId(clientId).
+		WithToken(accessTokenJwt).
+		WithTokenType("JWT").
+		WithExpiresAt(time.Now().Add(RefreshTokenDuration)). // Example expiration
 		Build()
 
 	accessToken, err = t.accessTokenRepository.Save(accessToken)
@@ -92,10 +85,10 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 		WithAccessToken(accessToken).
 		WithAccessTokenId(accessToken.Id).
 		WithClient(client).
-		WithClientId(client.ClientId).
+		WithClientId(clientId).
 		WithToken(refreshTokenJwt).
 		WithTokenType("JWT").
-		WithExpiresAt(time.Now().Add(RefreshTokenDuration)). // Example expiration
+		WithExpiresAt(time.Now().Add(AccessTokenDuration)). // Example expiration
 		Build()
 
 	refreshToken, err = t.refreshTokenRepository.Save(refreshToken)
@@ -107,11 +100,11 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 	token := oauth.NewTokenBuilder().
 		WithClientId(client.ClientId).
 		WithUserId("user"). // Assuming a static user ID or replace with dynamic value
-		WithAccessToken(accessToken.Token).
-		WithAccessTokenCreatedAt(accessToken.CreatedAt).
+		WithAccessToken(accessTokenJwt).
+		WithAccessTokenCreatedAt(time.Now()).
 		WithAccessTokenExpiresAt(accessToken.ExpiresAt.Sub(time.Now())).
-		WithRefreshToken(refreshToken.Token).
-		WithRefreshTokenCreatedAt(refreshToken.CreatedAt).
+		WithRefreshToken(refreshTokenJwt).
+		WithRefreshTokenCreatedAt(time.Now()).
 		WithRefreshTokenExpiresAt(refreshToken.ExpiresAt.Sub(time.Now())).
 		WithExtension(nil). // If you have any extensions, set them here
 		Build()
