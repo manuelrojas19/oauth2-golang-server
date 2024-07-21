@@ -59,12 +59,18 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 		return nil, err
 	}
 
+	// Step 2: Generate Access Token
+	accessTokenJwe, err := utils.GenerateJWE(accessTokenJwt)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create and save Access Token
 	accessToken := entities.NewAccessTokenBuilder().
 		WithClient(client).
 		WithClientId(clientId).
-		WithToken(accessTokenJwt).
-		WithTokenType("JWT").
+		WithToken(accessTokenJwe).
+		WithTokenType("JWE").
 		WithExpiresAt(time.Now().Add(RefreshTokenDuration)). // Example expiration
 		Build()
 
@@ -100,11 +106,11 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 	token := oauth.NewTokenBuilder().
 		WithClientId(client.ClientId).
 		WithUserId("user"). // Assuming a static user ID or replace with dynamic value
-		WithAccessToken(accessTokenJwt).
-		WithAccessTokenCreatedAt(time.Now()).
+		WithAccessToken(accessToken.Token).
+		WithAccessTokenCreatedAt(accessToken.CreatedAt).
 		WithAccessTokenExpiresAt(accessToken.ExpiresAt.Sub(time.Now())).
-		WithRefreshToken(refreshTokenJwt).
-		WithRefreshTokenCreatedAt(time.Now()).
+		WithRefreshToken(refreshToken.Token).
+		WithRefreshTokenCreatedAt(refreshToken.CreatedAt).
 		WithRefreshTokenExpiresAt(refreshToken.ExpiresAt.Sub(time.Now())).
 		WithExtension(nil). // If you have any extensions, set them here
 		Build()
