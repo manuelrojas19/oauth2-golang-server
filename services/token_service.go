@@ -27,7 +27,7 @@ func (t *tokenService) GrantAccessToken(command *commands.GrantAccessTokenComman
 		return "", err
 	}
 
-	generatedToken, err := utils.GenerateToken(command.ClientId, "", time.Now())
+	generatedToken, err := utils.GenerateJWT(command.ClientId, "user", []byte("secret"))
 
 	if err != nil {
 		return "", err
