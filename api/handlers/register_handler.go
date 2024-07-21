@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/manuelrojas19/go-oauth2-server/api/request"
+	"github.com/manuelrojas19/go-oauth2-server/api/dto/request"
 	"github.com/manuelrojas19/go-oauth2-server/mappers"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/utils"

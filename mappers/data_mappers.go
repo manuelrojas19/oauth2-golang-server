@@ -1,8 +1,8 @@
 package mappers
 
 import (
-	"github.com/manuelrojas19/go-oauth2-server/api/request"
-	"github.com/manuelrojas19/go-oauth2-server/api/response"
+	"github.com/manuelrojas19/go-oauth2-server/api/dto/request"
+	"github.com/manuelrojas19/go-oauth2-server/api/dto/response"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth/authmethodtype"
 	"github.com/manuelrojas19/go-oauth2-server/models/oauth/granttype"

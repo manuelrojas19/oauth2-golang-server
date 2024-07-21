@@ -46,7 +46,7 @@ func (s *oauthClientService) CreateOauthClient(command *commands.RegisterOauthCl
 		return nil, err
 	}
 
-	// Map to responsetype model
+	// Map to Client model
 	clientModel := mappers.NewClientModelFromClientEntity(savedClient)
 	return clientModel, nil
 }

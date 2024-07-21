@@ -2,7 +2,7 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/manuelrojas19/go-oauth2-server/api/request"
+	"github.com/manuelrojas19/go-oauth2-server/api/dto/request"
 	"net/http"
 )
 

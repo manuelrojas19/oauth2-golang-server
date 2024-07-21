@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/manuelrojas19/go-oauth2-server/api/handlers"
+	"github.com/manuelrojas19/go-oauth2-server/configuration/database"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"log"
 	"net/http"
 
-	"github.com/manuelrojas19/go-oauth2-server/database"
 	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 )
 

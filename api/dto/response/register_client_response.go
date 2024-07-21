@@ -10,8 +10,8 @@ type RegisterClientResponse struct {
 	ClientId                string                                 `json:"client_id"`
 	ClientSecret            string                                 `json:"client_secret,omitempty"`
 	ClientName              string                                 `json:"client_name"`
-	GrantTypes              []granttype.GrantType                  `json:"granttype"`
-	ResponseTypes           []responsetype.ResponseType            `json:"responsetype"`
+	GrantTypes              []granttype.GrantType                  `json:"grant_type"`
+	ResponseTypes           []responsetype.ResponseType            `json:"response_type"`
 	TokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod `json:"token_endpoint_auth_method"`
 	RedirectUris            []string                               `json:"redirect_uris"`
 }
