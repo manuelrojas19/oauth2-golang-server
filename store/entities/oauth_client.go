@@ -10,9 +10,9 @@ import (
 )
 
 type OauthClient struct {
-	ClientId                string         `gorm:"primaryKey;type:varchar(255);not null"`
-	ClientSecret            string         `gorm:"type:varchar(255);not null"`
-	ClientName              string         `gorm:"type:varchar(255);not null"`
+	ClientId                string         `gorm:"primaryKey;type:varchar(255);unique;not null"`
+	ClientSecret            string         `gorm:"type:varchar(255);unique;not null"`
+	ClientName              string         `gorm:"type:varchar(255);unique;not null"`
 	ResponseTypes           pq.StringArray `gorm:"type:text[];not null"`
 	GrantTypes              pq.StringArray `gorm:"type:text[];not null"`
 	TokenEndpointAuthMethod string         `gorm:"type:varchar(255);not null"`
