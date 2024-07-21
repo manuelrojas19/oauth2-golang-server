@@ -13,7 +13,7 @@ import (
 )
 
 const RefreshTokenDuration = 30 * 24 * time.Hour
-const AccessTokenDuration = 1 * time.Hour
+const AccessTokenDuration = 10 * time.Second
 
 type tokenService struct {
 	accessTokenRepository  repositories.AccessTokenRepository
@@ -71,7 +71,7 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 		WithClientId(clientId).
 		WithToken(accessTokenJwe).
 		WithTokenType("JWE").
-		WithExpiresAt(time.Now().Add(RefreshTokenDuration)). // Example expiration
+		WithExpiresAt(time.Now().Add(AccessTokenDuration)). // Example expiration
 		Build()
 
 	accessToken, err = t.accessTokenRepository.Save(accessToken)

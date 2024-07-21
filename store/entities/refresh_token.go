@@ -14,7 +14,7 @@ type RefreshToken struct {
 	Client        *OauthClient
 	ClientId      string `gorm:"index;not null"`
 	AccessToken   *AccessToken
-	AccessTokenId string `gorm:"index;not null"`
+	AccessTokenId string `gorm:"index;not null;constraint:OnDelete:CASCADE"`
 }
 
 // IsExpired checks if the refresh token has expired

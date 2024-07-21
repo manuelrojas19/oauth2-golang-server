@@ -6,15 +6,16 @@ import (
 )
 
 type AccessToken struct {
-	Id        string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
-	Token     string    `gorm:"type:text;unique;not null"`
-	TokenType string    `gorm:"type:varchar(255);not null"`
-	Scope     string    `gorm:"type:varchar(255);not null"`
-	ExpiresAt time.Time `gorm:"not null"`
-	CreatedAt time.Time `gorm:"default:now()"`
-	UpdatedAt time.Time `gorm:"default:now()"`
-	Client    *OauthClient
-	ClientId  string `gorm:"index;not null"`
+	Id            string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
+	Token         string    `gorm:"type:text;unique;not null"`
+	TokenType     string    `gorm:"type:varchar(255);not null"`
+	Scope         string    `gorm:"type:varchar(255);not null"`
+	ExpiresAt     time.Time `gorm:"not null"`
+	CreatedAt     time.Time `gorm:"default:now()"`
+	UpdatedAt     time.Time `gorm:"default:now()"`
+	Client        *OauthClient
+	ClientId      string         `gorm:"index;not null"`
+	RefreshTokens []RefreshToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:CASCADE"`
 }
 
 type AccessTokenBuilder struct {
