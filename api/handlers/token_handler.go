@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"github.com/manuelrojas19/go-oauth2-server/api/dto/request"
+	"github.com/manuelrojas19/go-oauth2-server/api/dto/response"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/services/commands"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
@@ -59,6 +60,8 @@ func (handler *tokenHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := response.NewTokenResponse(token, "Bearer", 24000)
+
 	// Send the response with the token
-	utils.RespondWithJSON(w, http.StatusOK, token)
+	utils.RespondWithJSON(w, http.StatusOK, res)
 }
