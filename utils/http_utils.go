@@ -23,6 +23,7 @@ func DecodeTokenRequest(r *http.Request, requestBody *request.TokenRequest) erro
 	requestBody.ClientId = r.FormValue("client_id")
 	requestBody.ClientSecret = r.FormValue("client_secret")
 	requestBody.GrantType = granttype.GrantType(r.FormValue("grant_type"))
+	requestBody.RefreshToken = r.FormValue("refresh_token")
 
 	return nil
 }

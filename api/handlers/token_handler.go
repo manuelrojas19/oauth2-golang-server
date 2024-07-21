@@ -45,12 +45,12 @@ func (handler *tokenHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate the grant_type
-	if req.GrantType != "client_credentials" {
+	if !(req.GrantType == "client_credentials" || req.GrantType == "refresh_token") {
 		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(errors.New("invalid grant_type")))
 		return
 	}
 
-	grantAccessTokenCommand := commands.NewGrantAccessTokenCommand(req.ClientId, req.ClientSecret, req.GrantType)
+	grantAccessTokenCommand := commands.NewGrantAccessTokenCommand(req.ClientId, req.ClientSecret, req.GrantType, req.RefreshToken)
 
 	// Generate an access token
 	token, err := handler.tokenService.GrantAccessToken(grantAccessTokenCommand)
