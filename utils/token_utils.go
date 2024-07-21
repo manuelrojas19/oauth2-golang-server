@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
 	"github.com/golang-jwt/jwt/v4"
 	"strconv"
 	"strings"
@@ -35,13 +36,25 @@ func GenerateToken(clientId string, userId string, createdAt time.Time) (string,
 	return token, nil
 }
 
-func GenerateJWT(clientId string, userId string, secretKey []byte) (string, error) {
+// GenerateJWT generates a JWT token with the given client ID, user ID, secret key, token type, and expiration.
+func GenerateJWT(clientId string, userId string, secretKey []byte, tokenType string) (string, error) {
+	// Define the expiration time for different token types
+	var expirationTime time.Duration
+	if tokenType == "access" {
+		expirationTime = time.Hour * 1 // Access token expires in 1 hour
+	} else if tokenType == "refresh" {
+		expirationTime = time.Hour * 24 * 30 // Refresh token expires in 30 days
+	} else {
+		return "", errors.New("invalid token type")
+	}
+
 	// Define JWT claims
 	claims := jwt.MapClaims{
 		"clientId": clientId,
 		"userId":   userId,
 		"iat":      time.Now().Unix(),
-		"exp":      time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
+		"exp":      time.Now().Add(expirationTime).Unix(), // Token expires based on type
+		"type":     tokenType,                             // Add token type to claims
 	}
 
 	// Create the token with HS256 algorithm

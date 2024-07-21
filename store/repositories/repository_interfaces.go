@@ -10,3 +10,7 @@ type OauthClientRepository interface {
 type AccessTokenRepository interface {
 	Save(token *entities.AccessToken) (*entities.AccessToken, error)
 }
+
+type RefreshTokenRepository interface {
+	Save(token *entities.RefreshToken) (*entities.RefreshToken, error)
+}

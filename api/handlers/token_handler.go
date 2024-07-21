@@ -60,7 +60,10 @@ func (handler *tokenHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := response.NewTokenResponse(token, "Bearer", 24000)
+	res := response.NewTokenResponse(token.AccessToken,
+		"Bearer",
+		services.AccessTokenDuration.String(),
+		token.RefreshToken)
 
 	// Send the response with the token
 	utils.RespondWithJSON(w, http.StatusOK, res)

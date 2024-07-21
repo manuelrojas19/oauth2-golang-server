@@ -8,6 +8,7 @@ import (
 type AccessToken struct {
 	Id        string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
 	Token     string    `gorm:"type:varchar(255);unique;not null"`
+	TokenType string    `gorm:"type:varchar(255);not null"`
 	Scope     string    `gorm:"type:varchar(255);not null"`
 	ExpiresAt time.Time `gorm:"not null"`
 	CreatedAt time.Time `gorm:"default:now()"`
@@ -16,21 +17,9 @@ type AccessToken struct {
 	ClientId  string `gorm:"index;not null"`
 }
 
-func NewAccessToken(client *OauthClient, token string, scope string, expiresAt time.Time) *AccessToken {
-	return &AccessToken{
-		Id:        uuid.New().String(),
-		ClientId:  client.ClientId,
-		Client:    client,
-		ExpiresAt: expiresAt,
-		Scope:     scope,
-		Token:     token,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-}
-
 type AccessTokenBuilder struct {
 	token     string
+	tokenType string
 	scope     string
 	expiresAt time.Time
 	clientId  string
@@ -42,32 +31,38 @@ func NewAccessTokenBuilder() *AccessTokenBuilder {
 	return &AccessTokenBuilder{}
 }
 
-// SetToken sets the token value.
-func (b *AccessTokenBuilder) SetToken(token string) *AccessTokenBuilder {
+// WithToken sets the token value.
+func (b *AccessTokenBuilder) WithToken(token string) *AccessTokenBuilder {
 	b.token = token
 	return b
 }
 
-// SetScope sets the scope value.
-func (b *AccessTokenBuilder) SetScope(scope string) *AccessTokenBuilder {
+// WithTokenType sets the token type value.
+func (b *AccessTokenBuilder) WithTokenType(tokenType string) *AccessTokenBuilder {
+	b.tokenType = tokenType
+	return b
+}
+
+// WithScope sets the scope value.
+func (b *AccessTokenBuilder) WithScope(scope string) *AccessTokenBuilder {
 	b.scope = scope
 	return b
 }
 
-// SetExpiresAt sets the expiration time.
-func (b *AccessTokenBuilder) SetExpiresAt(expiresAt time.Time) *AccessTokenBuilder {
+// WithExpiresAt sets the expiration time.
+func (b *AccessTokenBuilder) WithExpiresAt(expiresAt time.Time) *AccessTokenBuilder {
 	b.expiresAt = expiresAt
 	return b
 }
 
-// SetClientId sets the client ID value.
-func (b *AccessTokenBuilder) SetClientId(clientId string) *AccessTokenBuilder {
+// WithClientId sets the client ID value.
+func (b *AccessTokenBuilder) WithClientId(clientId string) *AccessTokenBuilder {
 	b.clientId = clientId
 	return b
 }
 
-// SetClient sets the client reference.
-func (b *AccessTokenBuilder) SetClient(client *OauthClient) *AccessTokenBuilder {
+// WithClient sets the client reference.
+func (b *AccessTokenBuilder) WithClient(client *OauthClient) *AccessTokenBuilder {
 	b.client = client
 	return b
 }
@@ -75,7 +70,9 @@ func (b *AccessTokenBuilder) SetClient(client *OauthClient) *AccessTokenBuilder 
 // Build constructs an AccessToken instance.
 func (b *AccessTokenBuilder) Build() *AccessToken {
 	return &AccessToken{
+		Id:        uuid.New().String(),
 		Token:     b.token,
+		TokenType: b.tokenType,
 		Scope:     b.scope,
 		ExpiresAt: b.expiresAt,
 		ClientId:  b.clientId,

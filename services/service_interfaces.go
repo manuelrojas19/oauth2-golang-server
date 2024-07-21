@@ -11,7 +11,7 @@ type GrantService interface {
 }
 
 type TokenService interface {
-	GrantAccessToken(command *commands.GrantAccessTokenCommand) (string, error)
+	GrantAccessToken(command *commands.GrantAccessTokenCommand) (*oauth.Token, error)
 }
 
 type OauthClientService interface {

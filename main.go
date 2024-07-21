@@ -22,8 +22,9 @@ func main() {
 	// Initialize repositories and services
 	oauthClientRepository := repositories.NewOauthClientRepository(db)
 	accessTokenRepository := repositories.NewAccessTokenRepository(db)
+	refreshTokenRepository := repositories.NewRefreshTokenRepository(db)
 	oauthClientService := services.NewOauthClientService(oauthClientRepository)
-	tokenService := services.NewTokenService(accessTokenRepository, oauthClientService)
+	tokenService := services.NewTokenService(accessTokenRepository, refreshTokenRepository, oauthClientService)
 	registerHandler := handlers.NewRegisterHandler(oauthClientService)
 	tokenHandler := handlers.NewTokenHandler(tokenService)
 	log.Println("Services and handlers initialized successfully")

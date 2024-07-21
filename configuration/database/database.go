@@ -15,7 +15,7 @@ func InitDatabaseConnection() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	err = datasource.AutoMigrate(&entities.OauthClient{}, &entities.AccessToken{})
+	err = datasource.AutoMigrate(&entities.OauthClient{}, &entities.AccessToken{}, &entities.RefreshToken{})
 	if err != nil {
 		return nil, err
 	}
