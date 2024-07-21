@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
+const AccessTokenDuration = 1 * time.Hour
 const RefreshTokenDuration = 30 * 24 * time.Hour
-const AccessTokenDuration = 10 * time.Second
 
 type tokenService struct {
 	accessTokenRepository  repositories.AccessTokenRepository
