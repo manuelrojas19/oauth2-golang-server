@@ -21,7 +21,9 @@ func (ot *accessTokenRepository) Save(token *entities.AccessToken) (*entities.Ac
 
 	tx := ot.Db.Begin()
 
-	expiredTokensQuery := tx.Unscoped().Where("client_id = ?", token.ClientId).Where("expires_at <= ?", time.Now())
+	expiredTokensQuery := tx.Unscoped().
+		Where("client_id = ?", token.ClientId).
+		Where("expires_at <= ?", time.Now())
 
 	if err := expiredTokensQuery.Delete(new(entities.AccessToken)).Error; err != nil {
 		log.Printf("Error deleting expired tokens for client_key %s: %v", token.ClientId, err)

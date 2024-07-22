@@ -13,6 +13,7 @@ import (
 
 var (
 	JWTGenerationKeys KeyPair
+	JWEGenerationKeys KeyPair
 	once              sync.Once
 )
 
@@ -22,7 +23,7 @@ type KeyPair struct {
 	PublicKey  *rsa.PublicKey
 }
 
-// Initialize initializes the JWT keys. It is thread-safe and will only run once.
+// Initialize initializes the JWT and JWE keys. It is thread-safe and will only run once.
 func Initialize() error {
 	var err error
 	once.Do(func() {
@@ -44,6 +45,16 @@ func GetJWTPrivateKey() (*rsa.PrivateKey, error) {
 	return getPrivateKey(JWTGenerationKeys.PrivateKey, "JWT")
 }
 
+// GetJWEPublicKey returns the public key for JWE.
+func GetJWEPublicKey() (*rsa.PublicKey, error) {
+	return getPublicKey(JWEGenerationKeys.PublicKey, "JWE")
+}
+
+// GetJWEPrivateKey returns the private key for JWE.
+func GetJWEPrivateKey() (*rsa.PrivateKey, error) {
+	return getPrivateKey(JWEGenerationKeys.PrivateKey, "JWE")
+}
+
 func getPublicKey(key *rsa.PublicKey, keyType string) (*rsa.PublicKey, error) {
 	if key == nil {
 		return nil, fmt.Errorf("%s public key is not initialized", keyType)
@@ -61,11 +72,19 @@ func getPrivateKey(key *rsa.PrivateKey, keyType string) (*rsa.PrivateKey, error)
 func generateAndSaveKeys() error {
 	var err error
 
+	// Generate JWT keys
 	JWTGenerationKeys.PrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return fmt.Errorf("failed to generate JWT private key: %w", err)
 	}
 	JWTGenerationKeys.PublicKey = &JWTGenerationKeys.PrivateKey.PublicKey
+
+	// Generate JWE keys
+	JWEGenerationKeys.PrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return fmt.Errorf("failed to generate JWE private key: %w", err)
+	}
+	JWEGenerationKeys.PublicKey = &JWEGenerationKeys.PrivateKey.PublicKey
 
 	if err = saveKeys(); err != nil {
 		return fmt.Errorf("failed to save keys: %w", err)
@@ -81,6 +100,14 @@ func saveKeys() error {
 	if err := savePublicKeyToFile("jwt_public_key.pem", JWTGenerationKeys.PublicKey); err != nil {
 		return err
 	}
+
+	if err := saveKeyToFile("jwe_private_key.pem", JWEGenerationKeys.PrivateKey); err != nil {
+		return err
+	}
+	if err := savePublicKeyToFile("jwe_public_key.pem", JWEGenerationKeys.PublicKey); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -110,16 +137,23 @@ func saveToFile(filename, blockType string, bytes []byte) error {
 }
 
 func loadKeys() error {
-	if err := loadKeyFromFile("jwt_private_key.pem", &JWTGenerationKeys.PrivateKey); err != nil {
+	if err := loadPrivateKeyFromFile("jwt_private_key.pem", &JWTGenerationKeys.PrivateKey); err != nil {
 		return err
 	}
 	if err := loadPublicKeyFromFile("jwt_public_key.pem", &JWTGenerationKeys.PublicKey); err != nil {
 		return err
 	}
+
+	if err := loadPrivateKeyFromFile("jwe_private_key.pem", &JWEGenerationKeys.PrivateKey); err != nil {
+		return err
+	}
+	if err := loadPublicKeyFromFile("jwe_public_key.pem", &JWEGenerationKeys.PublicKey); err != nil {
+		return err
+	}
 	return nil
 }
 
-func loadKeyFromFile(filename string, key **rsa.PrivateKey) error {
+func loadPrivateKeyFromFile(filename string, key **rsa.PrivateKey) error {
 	bytes, err := readFile(filename)
 	if err != nil {
 		return err
