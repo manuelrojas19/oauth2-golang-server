@@ -21,17 +21,12 @@ func (ot *refreshTokenRepository) InvalidateRefreshTokensByAccessTokenId(tokenId
 	// Begin a new transaction
 	tx := ot.Db.Begin()
 
-	result := tx.Exec(`DELETE FROM refresh_tokens WHERE access_token_id = $1`, tokenId)
+	usedDeleteTokenQuery := tx.Unscoped().
+		Where("access_token_id = ?", tokenId)
 
-	if result.Error != nil {
-		log.Printf("ERROR: Failed to execute delete query for access token ID '%s': %v", tokenId, result.Error)
-		return fmt.Errorf("failed to delete refresh token: %w", result.Error)
-	}
-
-	if result.RowsAffected == 0 {
-		err := errors.New("refresh token not found")
-		log.Printf("WARNING: No refresh token found for access token ID '%s': %v", tokenId, err)
-		return err
+	if err := usedDeleteTokenQuery.Delete(new(entities.RefreshToken)).Error; err != nil {
+		log.Printf("ERROR: Failed to execute delete query for access token ID '%s': %v", tokenId, err)
+		return fmt.Errorf("failed to delete refresh token: %w", err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
