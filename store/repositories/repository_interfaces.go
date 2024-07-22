@@ -14,4 +14,5 @@ type AccessTokenRepository interface {
 type RefreshTokenRepository interface {
 	Save(token *entities.RefreshToken) (*entities.RefreshToken, error)
 	FindByToken(token string) (*entities.RefreshToken, error)
+	InvalidateRefreshTokensByAccessTokenId(tokenId string) error
 }

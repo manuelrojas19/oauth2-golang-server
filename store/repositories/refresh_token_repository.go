@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"errors"
+	"fmt"
 	"github.com/manuelrojas19/go-oauth2-server/store/entities"
 	"gorm.io/gorm"
 	"log"
@@ -16,22 +17,39 @@ func NewRefreshTokenRepository(db *gorm.DB) RefreshTokenRepository {
 	return &refreshTokenRepository{Db: db}
 }
 
+func (ot *refreshTokenRepository) InvalidateRefreshTokensByAccessTokenId(tokenId string) error {
+	// Begin a new transaction
+	tx := ot.Db.Begin()
+
+	result := tx.Exec(`DELETE FROM refresh_tokens WHERE access_token_id = $1`, tokenId)
+
+	if result.Error != nil {
+		log.Printf("ERROR: Failed to execute delete query for access token ID '%s': %v", tokenId, result.Error)
+		return fmt.Errorf("failed to delete refresh token: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		err := errors.New("refresh token not found")
+		log.Printf("WARNING: No refresh token found for access token ID '%s': %v", tokenId, err)
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Printf("Error committing transaction for new refresh token with access_token_id %s: %v", tokenId, err)
+		tx.Rollback()
+		return err
+	}
+
+	log.Printf("INFO: Successfully deleted refresh tokens for access token ID '%s'", tokenId)
+	return nil
+}
+
 // Save stores a new refresh token in the database after invalidating previous tokens associated with the same access token ID.
 func (ot *refreshTokenRepository) Save(token *entities.RefreshToken) (*entities.RefreshToken, error) {
 	log.Printf("Starting transaction to save refresh token for access_token_id %s", token.AccessTokenId)
 
 	// Begin a new transaction
 	tx := ot.Db.Begin()
-
-	// Invalidate previous refresh tokens associated with the same access token ID
-	previousRefreshTokens := tx.Unscoped().
-		Where("access_token_id = ?", token.AccessTokenId)
-
-	if err := previousRefreshTokens.Delete(new(entities.RefreshToken)).Error; err != nil {
-		log.Printf("Error deleting previous refresh tokens for access_token_id %s: %v", token.AccessTokenId, err)
-		tx.Rollback()
-		return nil, err
-	}
 
 	// Create the new refresh token
 	if err := tx.Create(token).Error; err != nil {
