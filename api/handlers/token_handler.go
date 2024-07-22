@@ -32,7 +32,7 @@ func (handler *tokenHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req request.TokenRequest
-	if err := utils.DecodeTokenRequest(r, &req); err != nil {
+	if err := request.DecodeTokenRequest(r, &req); err != nil {
 		log.Printf("Error decoding request body: %v", err)
 		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
 		return

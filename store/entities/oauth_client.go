@@ -22,6 +22,7 @@ type OauthClient struct {
 	RedirectURIs            pq.StringArray `gorm:"type:text[]"`
 	CreatedAt               time.Time      `gorm:"default:now()"`
 	UpdatedAt               time.Time      `gorm:"default:now()"`
+	IsConfidential          bool
 }
 
 // ValidateSecret compares a plaintext secret with a bcrypt hash and returns a boolean indicating whether they match.

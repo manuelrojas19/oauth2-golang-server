@@ -97,12 +97,10 @@ func GenerateJWT(clientId string, userId string, secretKey interface{}, tokenTyp
 			return "", errors.New("invalid key type for HS256")
 		}
 		token := jwt.NewWithClaims(signingMethod, jwt.MapClaims{
-			"clientId": clientId,
-			"userId":   userId,
-			"iat":      time.Now().Unix(),
-			"exp":      time.Now().Add(expirationTime).Unix(),
-			"type":     tokenType,
-			"jti":      generateRandomString(),
+			"iat":  time.Now().Unix(),
+			"exp":  time.Now().Add(expirationTime).Unix(),
+			"type": tokenType,
+			"jti":  generateRandomString(),
 		})
 		tokenString, err := token.SignedString(key)
 		if err != nil {

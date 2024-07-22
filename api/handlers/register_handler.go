@@ -29,7 +29,7 @@ func (handler *registerHandler) Handler(w http.ResponseWriter, r *http.Request) 
 
 	var req request.RegisterClientRequest
 
-	if err := utils.Decode(r, &req); err != nil {
+	if err := utils.DecodeJSON(r, &req); err != nil {
 		log.Printf("Error decoding request body: %v", err)
 		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
 		return
