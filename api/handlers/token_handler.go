@@ -9,7 +9,6 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
 	"net/http"
-	"strconv"
 )
 
 type tokenHandler struct {
@@ -63,7 +62,7 @@ func (handler *tokenHandler) Handler(w http.ResponseWriter, r *http.Request) {
 
 	res := response.NewTokenResponse(token.AccessToken,
 		"Bearer",
-		strconv.Itoa(int(token.AccessTokenExpiresAt.Seconds())),
+		int(token.AccessTokenExpiresAt.Seconds()),
 		token.RefreshToken)
 
 	// Send the response with the token

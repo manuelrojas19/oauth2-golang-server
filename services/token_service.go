@@ -155,6 +155,28 @@ func (t *tokenService) getTokenByRefreshTokenFlow(token string) (*oauth.Token, e
 
 	log.Println("New access token created and saved successfully for client:", refreshToken.ClientId)
 
+	// Step 3: Generate Refresh Token
+	refreshTokenJwt, err := utils.GenerateJWT(accessToken.Id, "user", []byte("secret"), "refresh")
+	if err != nil {
+		return nil, err
+	}
+
+	// Create and save Refresh Token
+	refreshToken = entities.NewRefreshTokenBuilder().
+		WithAccessToken(accessToken).
+		WithAccessTokenId(accessToken.Id).
+		WithClient(accessToken.Client).
+		WithClientId(accessToken.ClientId).
+		WithToken(refreshTokenJwt).
+		WithTokenType("JWT").
+		WithExpiresAt(time.Now().Add(RefreshTokenDuration)). // Example expiration
+		Build()
+
+	refreshToken, err = t.refreshTokenRepository.Save(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
 	// Step 3: Build and return the token response
 	newToken := oauth.NewTokenBuilder().
 		WithClientId(accessToken.ClientId).
@@ -162,7 +184,7 @@ func (t *tokenService) getTokenByRefreshTokenFlow(token string) (*oauth.Token, e
 		WithAccessToken(accessToken.Token).
 		WithAccessTokenCreatedAt(time.Now()).
 		WithAccessTokenExpiresAt(accessToken.ExpiresAt.Sub(time.Now())).
-		WithRefreshToken(refreshToken.Token). // Retain the same refresh token
+		WithRefreshToken(refreshToken.Token). // New refresh token
 		WithRefreshTokenCreatedAt(refreshToken.CreatedAt).
 		WithRefreshTokenExpiresAt(refreshToken.ExpiresAt.Sub(time.Now())).
 		WithExtension(nil). // If you have any extensions, set them here
