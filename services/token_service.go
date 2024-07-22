@@ -36,7 +36,7 @@ func (t *tokenService) GrantAccessToken(command *commands.GrantAccessTokenComman
 		return t.getTokenByClientCredentialsFlow(command.ClientId, command.ClientSecret)
 	case granttype.RefreshToken:
 		// Handle Refresh Token Grant
-		return t.getTokenByRefreshTokenFlow(command.RefreshToken, command.ClientId, command.ClientSecret)
+		return t.getTokenByRefreshTokenFlow(command.RefreshToken)
 	default:
 		return nil, fmt.Errorf("unsupported grant type: %s", command.GrantType)
 	}
@@ -59,18 +59,12 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 		return nil, err
 	}
 
-	// Step 2: Generate Access Token
-	accessTokenJwe, err := utils.GenerateJWE(accessTokenJwt)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create and save Access Token
 	accessToken := entities.NewAccessTokenBuilder().
 		WithClient(client).
 		WithClientId(clientId).
-		WithToken(accessTokenJwe).
-		WithTokenType("JWE").
+		WithToken(accessTokenJwt).
+		WithTokenType("JWT").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)). // Example expiration
 		Build()
 
@@ -118,18 +112,8 @@ func (t *tokenService) getTokenByClientCredentialsFlow(clientId, clientSecret st
 	return token, nil
 }
 
-func (t *tokenService) getTokenByRefreshTokenFlow(token, clientId, clientSecret string) (*oauth.Token, error) {
-	log.Println("Received refresh token request for client:", clientId)
-
-	// Step 0: Retrieve and validate client
-	client, err := t.client.FindOauthClient(clientId)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := client.ValidateSecret(clientSecret); err != nil {
-		return nil, err
-	}
+func (t *tokenService) getTokenByRefreshTokenFlow(token string) (*oauth.Token, error) {
+	log.Println("Received refresh token request")
 
 	// Step 1: Retrieve and validate the refresh token
 	refreshToken, err := t.refreshTokenRepository.FindByToken(token)
@@ -138,12 +122,15 @@ func (t *tokenService) getTokenByRefreshTokenFlow(token, clientId, clientSecret 
 		return nil, fmt.Errorf("failed to find refresh token: %w", err)
 	}
 
-	if refreshToken == nil || refreshToken.IsExpired() {
-		log.Println("Invalid or expired refresh token")
-		return nil, fmt.Errorf("invalid or expired refresh token")
+	// Validate the token
+	claims, err := utils.ValidateRefreshToken(token, []byte("secret"))
+	if err != nil {
+		return nil, err
 	}
 
-	log.Println("Refresh token validated successfully for client:", clientId)
+	log.Printf("JWT Claims: %+v", claims)
+
+	log.Println("Refresh token validated successfully for client:", refreshToken.ClientId)
 
 	// Step 2: Generate a new access token
 	accessTokenJwt, err := utils.GenerateJWT(refreshToken.ClientId, "user", []byte("secret"), "access")
@@ -154,7 +141,7 @@ func (t *tokenService) getTokenByRefreshTokenFlow(token, clientId, clientSecret 
 
 	// Create and save the new access token
 	accessToken := entities.NewAccessTokenBuilder().
-		WithClientId(client.ClientId).
+		WithClientId(refreshToken.ClientId).
 		WithToken(accessTokenJwt).
 		WithTokenType("JWT").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)). // Example expiration
@@ -170,7 +157,7 @@ func (t *tokenService) getTokenByRefreshTokenFlow(token, clientId, clientSecret 
 
 	// Step 3: Build and return the token response
 	newToken := oauth.NewTokenBuilder().
-		WithClientId(client.ClientId).
+		WithClientId(accessToken.ClientId).
 		WithUserId("user"). // Adjust according to your use case
 		WithAccessToken(accessToken.Token).
 		WithAccessTokenCreatedAt(time.Now()).

@@ -11,8 +11,8 @@ import (
 
 type RegisterClientRequest struct {
 	ClientName              string                                 `json:"client_name"`
-	GrantTypes              []granttype.GrantType                  `json:"grant_types"`
-	ResponseTypes           []responsetype.ResponseType            `json:"response_types"`
+	GrantTypes              []granttype.GrantType                  `json:"grant_type"`
+	ResponseTypes           []responsetype.ResponseType            `json:"response_type"`
 	TokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod `json:"token_endpoint_auth_method"`
 	RedirectUris            []string                               `json:"redirect_uris"`
 }
@@ -38,7 +38,6 @@ func (r *RegisterClientRequest) Validate() error {
 	if len(r.ResponseTypes) == 0 {
 		return errors.New("at least one response_type is required")
 	}
-
 	for _, responseType := range r.ResponseTypes {
 		if !isValidResponseType(responseType) {
 			return fmt.Errorf("invalid response_type: %s", responseType)

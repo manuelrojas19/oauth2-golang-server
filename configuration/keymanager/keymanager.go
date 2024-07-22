@@ -12,129 +12,155 @@ import (
 )
 
 var (
-	PrivateKey *rsa.PrivateKey
-	PublicKey  *rsa.PublicKey
-	once       sync.Once
+	JWTGenerationKeys KeyPair
+	once              sync.Once
 )
 
-// Initialize initializes the keys. It is thread-safe and will only run once.
+// KeyPair holds a private key and its corresponding public key.
+type KeyPair struct {
+	PrivateKey *rsa.PrivateKey
+	PublicKey  *rsa.PublicKey
+}
+
+// Initialize initializes the JWT keys. It is thread-safe and will only run once.
 func Initialize() error {
 	var err error
 	once.Do(func() {
-		err = LoadKeys()
-		if err != nil {
+		if err = loadKeys(); err != nil {
 			log.Printf("Failed to load keys: %v", err)
-			// If loading keys fails, generate new keys
-			PrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
-			if err != nil {
-				log.Printf("Failed to generate RSA key: %v", err)
-				return
-			}
-			PublicKey = &PrivateKey.PublicKey
-			err = SaveKeys(PrivateKey, PublicKey)
-			if err != nil {
-				log.Printf("Failed to save keys: %v", err)
-			}
+			err = generateAndSaveKeys()
 		}
 	})
 	return err
 }
 
-// GetPublicKey returns the public key
-func GetPublicKey() (*rsa.PublicKey, error) {
-	if PublicKey == nil {
-		err := fmt.Errorf("public key is not initialized")
-		log.Println(err)
-		return nil, err
-	}
-
-	return PublicKey, nil
+// GetJWTPublicKey returns the public key for JWT.
+func GetJWTPublicKey() (*rsa.PublicKey, error) {
+	return getPublicKey(JWTGenerationKeys.PublicKey, "JWT")
 }
 
-// GetPrivateKey returns the private key
-func GetPrivateKey() (*rsa.PrivateKey, error) {
-	if PrivateKey == nil {
-		err := fmt.Errorf("private key is not initialized")
-		log.Println(err)
-		return nil, err
-	}
-	return PrivateKey, nil
+// GetJWTPrivateKey returns the private key for JWT.
+func GetJWTPrivateKey() (*rsa.PrivateKey, error) {
+	return getPrivateKey(JWTGenerationKeys.PrivateKey, "JWT")
 }
 
-// SaveKeys saves the private and public keys to disk
-func SaveKeys(privateKey *rsa.PrivateKey, publicKey *rsa.PublicKey) error {
-	privFile, err := os.Create("private_key.pem")
-	if err != nil {
-		log.Printf("Failed to create private key file: %v", err)
-		return err
+func getPublicKey(key *rsa.PublicKey, keyType string) (*rsa.PublicKey, error) {
+	if key == nil {
+		return nil, fmt.Errorf("%s public key is not initialized", keyType)
 	}
-	defer privFile.Close()
+	return key, nil
+}
 
-	privBytes := x509.MarshalPKCS1PrivateKey(privateKey)
-	err = pem.Encode(privFile, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: privBytes})
-	if err != nil {
-		log.Printf("Failed to encode private key: %v", err)
-		return err
+func getPrivateKey(key *rsa.PrivateKey, keyType string) (*rsa.PrivateKey, error) {
+	if key == nil {
+		return nil, fmt.Errorf("%s private key is not initialized", keyType)
 	}
+	return key, nil
+}
 
-	pubFile, err := os.Create("public_key.pem")
-	if err != nil {
-		log.Printf("Failed to create public key file: %v", err)
-		return err
-	}
-	defer pubFile.Close()
+func generateAndSaveKeys() error {
+	var err error
 
-	pubBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+	JWTGenerationKeys.PrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		log.Printf("Failed to marshal public key: %v", err)
-		return err
+		return fmt.Errorf("failed to generate JWT private key: %w", err)
 	}
-	err = pem.Encode(pubFile, &pem.Block{Type: "PUBLIC KEY", Bytes: pubBytes})
-	if err != nil {
-		log.Printf("Failed to encode public key: %v", err)
-		return err
+	JWTGenerationKeys.PublicKey = &JWTGenerationKeys.PrivateKey.PublicKey
+
+	if err = saveKeys(); err != nil {
+		return fmt.Errorf("failed to save keys: %w", err)
 	}
 
 	return nil
 }
 
-// LoadKeys loads the private and public keys from disk
-func LoadKeys() error {
-	privFile, err := os.ReadFile("private_key.pem")
-	if err != nil {
-		log.Printf("Failed to read private key file: %v", err)
+func saveKeys() error {
+	if err := saveKeyToFile("jwt_private_key.pem", JWTGenerationKeys.PrivateKey); err != nil {
 		return err
 	}
-	privBlock, _ := pem.Decode(privFile)
-	if privBlock == nil || privBlock.Type != "RSA PRIVATE KEY" {
-		err := fmt.Errorf("failed to decode PEM block containing private key")
-		log.Println(err)
+	if err := savePublicKeyToFile("jwt_public_key.pem", JWTGenerationKeys.PublicKey); err != nil {
 		return err
 	}
-	privateKey, err := x509.ParsePKCS1PrivateKey(privBlock.Bytes)
-	if err != nil {
-		log.Printf("Failed to parse private key: %v", err)
-		return err
-	}
-	PrivateKey = privateKey
-
-	pubFile, err := os.ReadFile("public_key.pem")
-	if err != nil {
-		log.Printf("Failed to read public key file: %v", err)
-		return err
-	}
-	pubBlock, _ := pem.Decode(pubFile)
-	if pubBlock == nil || pubBlock.Type != "PUBLIC KEY" {
-		err := fmt.Errorf("failed to decode PEM block containing public key")
-		log.Println(err)
-		return err
-	}
-	pubKey, err := x509.ParsePKIXPublicKey(pubBlock.Bytes)
-	if err != nil {
-		log.Printf("Failed to parse public key: %v", err)
-		return err
-	}
-	PublicKey = pubKey.(*rsa.PublicKey)
-
 	return nil
+}
+
+func saveKeyToFile(filename string, key *rsa.PrivateKey) error {
+	return saveToFile(filename, "RSA PRIVATE KEY", x509.MarshalPKCS1PrivateKey(key))
+}
+
+func savePublicKeyToFile(filename string, key *rsa.PublicKey) error {
+	pubBytes, err := x509.MarshalPKIXPublicKey(key)
+	if err != nil {
+		return fmt.Errorf("failed to marshal public key: %w", err)
+	}
+	return saveToFile(filename, "PUBLIC KEY", pubBytes)
+}
+
+func saveToFile(filename, blockType string, bytes []byte) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to create file %s: %w", filename, err)
+	}
+	defer file.Close()
+
+	if err := pem.Encode(file, &pem.Block{Type: blockType, Bytes: bytes}); err != nil {
+		return fmt.Errorf("failed to encode %s in %s: %w", blockType, filename, err)
+	}
+	return nil
+}
+
+func loadKeys() error {
+	if err := loadKeyFromFile("jwt_private_key.pem", &JWTGenerationKeys.PrivateKey); err != nil {
+		return err
+	}
+	if err := loadPublicKeyFromFile("jwt_public_key.pem", &JWTGenerationKeys.PublicKey); err != nil {
+		return err
+	}
+	return nil
+}
+
+func loadKeyFromFile(filename string, key **rsa.PrivateKey) error {
+	bytes, err := readFile(filename)
+	if err != nil {
+		return err
+	}
+
+	block, _ := pem.Decode(bytes)
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
+		return fmt.Errorf("invalid or missing PEM block in %s", filename)
+	}
+
+	privKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return fmt.Errorf("failed to parse private key from %s: %w", filename, err)
+	}
+	*key = privKey
+	return nil
+}
+
+func loadPublicKeyFromFile(filename string, key **rsa.PublicKey) error {
+	bytes, err := readFile(filename)
+	if err != nil {
+		return err
+	}
+
+	block, _ := pem.Decode(bytes)
+	if block == nil || block.Type != "PUBLIC KEY" {
+		return fmt.Errorf("invalid or missing PEM block in %s", filename)
+	}
+
+	pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return fmt.Errorf("failed to parse public key from %s: %w", filename, err)
+	}
+	*key = pubKey.(*rsa.PublicKey)
+	return nil
+}
+
+func readFile(filename string) ([]byte, error) {
+	bytes, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", filename, err)
+	}
+	return bytes, nil
 }
