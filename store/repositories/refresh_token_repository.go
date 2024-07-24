@@ -18,49 +18,65 @@ func NewRefreshTokenRepository(db *gorm.DB) RefreshTokenRepository {
 }
 
 func (ot *refreshTokenRepository) InvalidateRefreshTokensByAccessTokenId(tokenId string) error {
-	// Begin a new transaction
 	tx := ot.Db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			log.Printf("PANIC: Rolled back transaction for access token ID '%s' due to: %v", tokenId, r)
+		}
+	}()
 
-	usedDeleteTokenQuery := tx.Unscoped().
-		Where("access_token_id = ?", tokenId)
+	if err := tx.Error; err != nil {
+		log.Printf("ERROR: Failed to start transaction for access token ID '%s': %v", tokenId, err)
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
 
+	usedDeleteTokenQuery := tx.Unscoped().Where("access_token_id = ?", tokenId)
 	if err := usedDeleteTokenQuery.Delete(new(entities.RefreshToken)).Error; err != nil {
 		log.Printf("ERROR: Failed to execute delete query for access token ID '%s': %v", tokenId, err)
+		tx.Rollback()
 		return fmt.Errorf("failed to delete refresh token: %w", err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Printf("Error committing transaction for new refresh token with access_token_id %s: %v", tokenId, err)
+		log.Printf("ERROR: Error committing transaction for access token ID '%s': %v", tokenId, err)
 		tx.Rollback()
-		return err
+		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	log.Printf("INFO: Successfully deleted refresh tokens for access token ID '%s'", tokenId)
 	return nil
 }
 
-// Save stores a new refresh token in the database after invalidating previous tokens associated with the same access token ID.
 func (ot *refreshTokenRepository) Save(token *entities.RefreshToken) (*entities.RefreshToken, error) {
 	log.Printf("Starting transaction to save refresh token for access_token_id %s", token.AccessTokenId)
 
-	// Begin a new transaction
 	tx := ot.Db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			log.Printf("PANIC: Rolled back transaction for access token ID '%s' due to: %v", token.AccessTokenId, r)
+		}
+	}()
 
-	// Create the new refresh token
+	if err := tx.Error; err != nil {
+		log.Printf("ERROR: Failed to start transaction for access token ID '%s': %v", token.AccessTokenId, err)
+		return nil, fmt.Errorf("failed to start transaction: %w", err)
+	}
+
 	if err := tx.Create(token).Error; err != nil {
-		log.Printf("Error creating new refresh token for access_token_id %s: %v", token.AccessTokenId, err)
+		log.Printf("ERROR: Error creating new refresh token for access_token_id %s: %v", token.AccessTokenId, err)
 		tx.Rollback()
-		return nil, err
+		return nil, fmt.Errorf("failed to create refresh token: %w", err)
 	}
 
-	// Commit the transaction
 	if err := tx.Commit().Error; err != nil {
-		log.Printf("Error committing transaction for new refresh token with access_token_id %s: %v", token.AccessTokenId, err)
+		log.Printf("ERROR: Error committing transaction for new refresh token with access_token_id %s: %v", token.AccessTokenId, err)
 		tx.Rollback()
-		return nil, err
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	log.Printf("Successfully saved new refresh token for access_token_id %s", token.AccessTokenId)
+	log.Printf("INFO: Successfully saved new refresh token for access_token_id %s", token.AccessTokenId)
 	return token, nil
 }
 
@@ -76,15 +92,10 @@ func (ot *refreshTokenRepository) FindByToken(token string) (*entities.RefreshTo
 
 	// Handle errors during the query
 	if result.Error != nil {
-		log.Printf("Error finding refresh token with token string %s: %v", token, result.Error)
-		return nil, result.Error
-	}
-
-	// Handle case where no token was found
-	if result.RowsAffected == 0 {
-		err := errors.New("refresh token not found")
-		log.Printf("No refresh token found with token string %s: %v", token, err)
-		return nil, err
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("RefreshToken not found or invalidated")
+		}
+		return nil, fmt.Errorf("error finding Refresh Token: %w", result.Error)
 	}
 
 	log.Printf("Successfully found refresh token with token string %s", token)

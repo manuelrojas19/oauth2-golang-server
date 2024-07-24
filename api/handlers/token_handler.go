@@ -12,7 +12,7 @@ import (
 )
 
 type tokenHandler struct {
-	tokenService services.TokenService // A service for generating and managing tokens
+	tokenService services.TokenService // A wellKnownService for generating and managing tokens
 }
 
 // NewTokenHandler creates a new instance of the handler.

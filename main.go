@@ -31,14 +31,19 @@ func main() {
 	refreshTokenRepository := repositories.NewRefreshTokenRepository(db)
 	oauthClientService := services.NewOauthClientService(oauthClientRepository)
 	tokenService := services.NewTokenService(accessTokenRepository, refreshTokenRepository, oauthClientService)
+	wellKnownService := services.NewWellKnownService()
 	registerHandler := handlers.NewRegisterHandler(oauthClientService)
 	tokenHandler := handlers.NewTokenHandler(tokenService)
+	jwksHandler := handlers.NewJwksHandler(wellKnownService)
 	log.Println("Services and handlers initialized successfully")
 
 	// Setup HTTP handler
 	http.HandleFunc("/oauth/register", registerHandler.Handler)
 	http.HandleFunc("/oauth/token", tokenHandler.Handler)
+	http.HandleFunc("/.well-known/jwks.json", jwksHandler.Handler)
 	log.Println("HTTP handler for /register is set up")
+	log.Println("HTTP handler for /oauth/token is set up")
+	log.Println("HTTP handler for /.well-known/jwks.json is set up")
 
 	// Start HTTP server
 	log.Println("Starting HTTP server on :8080")

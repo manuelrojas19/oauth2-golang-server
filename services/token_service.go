@@ -62,18 +62,12 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 		return nil, fmt.Errorf("failed to generate access token JWT: %w", err)
 	}
 
-	accessTokenJwe, err := utils.GenerateJWE(accessTokenJwt)
-	if err != nil {
-		log.Printf("Error generating JWE for access token: %v", err)
-		return nil, fmt.Errorf("failed to generate JWE: %w", err)
-	}
-
 	// Create and save the new access token
 	accessToken := entities.NewAccessTokenBuilder().
 		WithClient(client).
 		WithClientId(clientId).
-		WithToken(accessTokenJwe).
-		WithTokenType("JWE").
+		WithToken(accessTokenJwt).
+		WithTokenType("JWT").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)).
 		Build()
 
@@ -168,16 +162,10 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		return nil, fmt.Errorf("failed to generate new access token JWT: %w", err)
 	}
 
-	accessTokenJwe, err := utils.GenerateJWE(accessTokenJwt)
-	if err != nil {
-		log.Printf("Error generating JWE for new access token: %v", err)
-		return nil, fmt.Errorf("failed to generate JWE: %w", err)
-	}
-
 	newAccessToken := entities.NewAccessTokenBuilder().
 		WithClientId(refreshToken.ClientId).
-		WithToken(accessTokenJwe).
-		WithTokenType("JWE").
+		WithToken(accessTokenJwt).
+		WithTokenType("JWT").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)).
 		Build()
 
