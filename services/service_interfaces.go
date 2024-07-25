@@ -23,3 +23,12 @@ type OauthClientService interface {
 type WellKnownService interface {
 	GetJwk() (*jwk.Set, error)
 }
+
+type AuthorizationService interface {
+	Authorize(command *commands.Authorization) (*oauth.AuthCode, error)
+}
+
+type UserConsentService interface {
+	Save(userID, clientID, scope string) error
+	HasUserConsented(userID, clientID, scope string) bool
+}

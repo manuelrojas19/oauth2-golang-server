@@ -16,3 +16,12 @@ type RefreshTokenRepository interface {
 	FindByToken(token string) (*entities.RefreshToken, error)
 	InvalidateRefreshTokensByAccessTokenId(tokenId string) error
 }
+
+type UserConsentRepository interface {
+	HasUserConsented(userID, clientID, scope string) (bool, error)
+	Save(userID, clientID, scope string) (bool, error)
+}
+
+type AuthorizationRepository interface {
+	Save(authCode *entities.AuthorizationCode) (*entities.AuthorizationCode, error)
+}
