@@ -5,6 +5,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/services/commands"
 	"net/http"
+	"net/url"
 )
 
 type AuthorizeHandler struct {
@@ -22,12 +23,24 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	scope := r.URL.Query().Get("scope")
 	redirectUri := r.URL.Query().Get("redirect_uri")
 	responseType := r.URL.Query().Get("response_type")
+
+	// Validate response_type
 	if responseType != "code" {
-		http.Error(w, "Unsupported response type", http.StatusBadRequest)
+		http.Error(w, "unsupported_response_type", http.StatusBadRequest)
 		return
 	}
 
-	// Call the authorization function
+	// URL-encode parameters
+	encodedClientId := url.QueryEscape(clientId)
+	encodedScope := url.QueryEscape(scope)
+	encodedRedirectUri := url.QueryEscape(redirectUri)
+	encodedResponseType := url.QueryEscape(responseType)
+
+	// Prepare the query parameters string
+	queryParams := fmt.Sprintf("client_id=%s&scope=%s&redirect_uri=%s&response_type=%s",
+		encodedClientId, encodedScope, encodedRedirectUri, encodedResponseType)
+
+	// Authorization request
 	command := &commands.Authorization{
 		ClientId:     clientId,
 		Scope:        scope,
@@ -38,22 +51,22 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	authCode, err := a.authorizationService.Authorize(command)
 
 	if err != nil {
-		// Handle redirections
 		switch err.Error() {
-		case services.ErrNotAuthenticated:
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+		case services.ErrUserNotAuthenticated:
+			loginURL := fmt.Sprintf("/login?%s", queryParams)
+			http.Redirect(w, r, loginURL, http.StatusSeeOther)
 			return
 		case services.ErrConsentRequired:
-			consentURL := fmt.Sprintf("/consent?client_id=%s&scope=%s", clientId, scope)
+			consentURL := fmt.Sprintf("/consent?%s", queryParams)
 			http.Redirect(w, r, consentURL, http.StatusSeeOther)
 			return
 		default:
-			http.Error(w, "Authorization failed", http.StatusInternalServerError)
+			http.Error(w, "server_error", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	// If no errors, proceed with the authorization code flow
-	redirectURI := r.URL.Query().Get("redirect_uri")
-	http.Redirect(w, r, fmt.Sprintf("%s?code=%s", redirectURI, authCode), http.StatusSeeOther)
+	// Redirect to the redirect_uri with authorization code
+	redirectURL := fmt.Sprintf("%s?code=%s", encodedRedirectUri, authCode)
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }

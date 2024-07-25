@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	ErrNotAuthenticated = "user not authenticated"
-	ErrConsentRequired  = "user consent required"
+	ErrUserNotAuthenticated = "user not authenticated"
+	ErrConsentRequired      = "user consent required"
 )
 
 type authorizationService struct {
@@ -46,7 +46,7 @@ func (a authorizationService) Authorize(command *commands.Authorization) (*oauth
 	// Get user consent
 	if !userIsAuthenticated(user.ID, command.ClientId, command.Scope) {
 		// If not, present the consent screen (this could be a redirect to a consent page)
-		return nil, fmt.Errorf(ErrNotAuthenticated)
+		return nil, fmt.Errorf(ErrUserNotAuthenticated)
 	}
 
 	// Get user consent
