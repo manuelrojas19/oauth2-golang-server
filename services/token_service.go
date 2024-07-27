@@ -40,6 +40,8 @@ func (t *tokenService) GrantAccessToken(command *commands.GrantAccessTokenComman
 		return t.handleClientCredentialsFlow(command.ClientId, command.ClientSecret)
 	case granttype.RefreshToken:
 		return t.handleRefreshTokenFlow(command.ClientId, command.ClientSecret, command.RefreshToken)
+	case granttype.AuthorizationCode:
+		return t.handleAuthorizationCodeFlow(command.ClientId, command.ClientSecret, command.Code, command.RedirectUri)
 	default:
 		return nil, fmt.Errorf("unsupported grant type: %s", command.GrantType)
 	}
@@ -263,7 +265,7 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	}
 
 	if time.Now().After(authCode.ExpiresAt) {
-		log.Printf("Authorization code '%s' has expired", code)
+		log.Printf("Authorize code '%s' has expired", code)
 		return nil, fmt.Errorf("authorization code has expired")
 	}
 

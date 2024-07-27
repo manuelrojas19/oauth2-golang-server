@@ -50,7 +50,13 @@ func (handler *tokenHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	grantAccessTokenCommand := commands.NewGrantAccessTokenCommand(req.ClientId, req.ClientSecret, req.GrantType, req.RefreshToken)
+	grantAccessTokenCommand := commands.NewGrantAccessTokenCommand(req.ClientId,
+		req.ClientSecret,
+		req.GrantType,
+		req.RefreshToken,
+		req.AuthCode,
+		req.RedirectUri,
+	)
 
 	// Generate an access token
 	token, err := handler.tokenService.GrantAccessToken(grantAccessTokenCommand)

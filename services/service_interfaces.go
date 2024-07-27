@@ -25,7 +25,7 @@ type WellKnownService interface {
 }
 
 type AuthorizationService interface {
-	Authorize(command *commands.Authorization) (*oauth.AuthCode, error)
+	Authorize(command *commands.Authorize) (*oauth.AuthCode, error)
 }
 
 type UserConsentService interface {

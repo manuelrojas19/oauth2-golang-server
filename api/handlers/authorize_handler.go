@@ -30,8 +30,8 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Authorization request
-	command := &commands.Authorization{
+	// Authorize request
+	command := &commands.Authorize{
 		ClientId:     clientId,
 		Scope:        scope,
 		RedirectUri:  redirectUri,

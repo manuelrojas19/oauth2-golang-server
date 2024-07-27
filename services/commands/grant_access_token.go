@@ -7,8 +7,17 @@ type GrantAccessTokenCommand struct {
 	ClientSecret string
 	RefreshToken string
 	GrantType    granttype.GrantType
+	Code         string
+	RedirectUri  string
 }
 
-func NewGrantAccessTokenCommand(clientId string, clientSecret string, grantType granttype.GrantType, refreshToken string) *GrantAccessTokenCommand {
-	return &GrantAccessTokenCommand{ClientId: clientId, ClientSecret: clientSecret, GrantType: grantType, RefreshToken: refreshToken}
+func NewGrantAccessTokenCommand(clientId string, clientSecret string, grantType granttype.GrantType, refreshToken string, code string, redirectUri string) *GrantAccessTokenCommand {
+	return &GrantAccessTokenCommand{
+		ClientId:     clientId,
+		ClientSecret: clientSecret,
+		GrantType:    grantType,
+		RefreshToken: refreshToken,
+		Code:         code,
+		RedirectUri:  redirectUri,
+	}
 }

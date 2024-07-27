@@ -15,6 +15,8 @@ type TokenRequest struct {
 	ClientSecret string
 	RefreshToken string
 	GrantType    granttype.GrantType
+	AuthCode     string
+	RedirectUri  string
 }
 
 // DecodeTokenRequest function to handle URL encoded data and Authorization header.
@@ -30,7 +32,13 @@ func DecodeTokenRequest(r *http.Request, request *TokenRequest) error {
 
 	// Handle different grant types
 	switch request.GrantType {
-	case granttype.AuthorizationCode, granttype.Implicit, granttype.Password, granttype.ClientCredentials:
+	case granttype.AuthorizationCode:
+		// For these grant type, client credentials, code and redirect Uri are required
+		request.ClientId = r.FormValue("client_id")
+		request.ClientSecret = r.FormValue("client_secret")
+		request.AuthCode = r.FormValue("code")
+		request.RedirectUri = r.FormValue("redirect_uri")
+	case granttype.Implicit, granttype.Password, granttype.ClientCredentials:
 		// For these grant types, client credentials are required
 		request.ClientId = r.FormValue("client_id")
 		request.ClientSecret = r.FormValue("client_secret")

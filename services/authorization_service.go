@@ -34,7 +34,7 @@ func NewAuthorizationService(oauthClientService OauthClientService,
 }
 
 // Authorize authorizes and generate an Auth Code
-func (a authorizationService) Authorize(command *commands.Authorization) (*oauth.AuthCode, error) {
+func (a authorizationService) Authorize(command *commands.Authorize) (*oauth.AuthCode, error) {
 	clientId := command.ClientId
 
 	// Retrieve the OAuth client

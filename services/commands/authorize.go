@@ -1,6 +1,6 @@
 package commands
 
-type Authorization struct {
+type Authorize struct {
 	ClientId     string
 	Scope        string
 	RedirectUri  string
