@@ -14,7 +14,7 @@ import (
 
 type OauthClient struct {
 	ClientId                string         `gorm:"primaryKey;type:varchar(255);unique;not null"`
-	ClientSecret            string         `gorm:"type:varchar(255);unique;not null"`
+	ClientSecret            string         `gorm:"type:text;not null"`
 	ClientName              string         `gorm:"type:varchar(255);unique;not null"`
 	ResponseTypes           pq.StringArray `gorm:"type:text[];not null"`
 	GrantTypes              pq.StringArray `gorm:"type:text[];not null"`
@@ -53,7 +53,7 @@ func NewOauthClientBuilder() *OauthClientBuilder {
 	return &OauthClientBuilder{}
 }
 
-// WithClientID sets the client ID.
+// WithClientID sets the client Id.
 func (b *OauthClientBuilder) WithClientID(clientID string) *OauthClientBuilder {
 	b.clientID = clientID
 	return b
@@ -98,7 +98,7 @@ func (b *OauthClientBuilder) WithRedirectURI(redirectURI []string) *OauthClientB
 // Build constructs the OauthClient object.
 func (b *OauthClientBuilder) Build() *OauthClient {
 	if b.clientID == "" {
-		// Generate client ID if not set
+		// Generate client Id if not set
 		b.clientID = uuid.New().String()
 	}
 
