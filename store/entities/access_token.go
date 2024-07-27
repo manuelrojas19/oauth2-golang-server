@@ -56,7 +56,7 @@ func (b *AccessTokenBuilder) WithExpiresAt(expiresAt time.Time) *AccessTokenBuil
 	return b
 }
 
-// WithClientId sets the client ID value.
+// WithClientId sets the client Id value.
 func (b *AccessTokenBuilder) WithClientId(clientId string) *AccessTokenBuilder {
 	b.clientId = clientId
 	return b

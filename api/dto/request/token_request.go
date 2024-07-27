@@ -64,7 +64,7 @@ func parseBasicAuth(authHeader string, request *TokenRequest) error {
 	if err != nil {
 		return fmt.Errorf("failed to decode Basic Authentication header: %w", err)
 	}
-	// Split credentials into client ID and client secret
+	// Split credentials into client Id and client secret
 	credentials := strings.SplitN(string(decodedCredentials), ":", 2)
 	if len(credentials) != 2 {
 		return errors.New("invalid Authorization header format")

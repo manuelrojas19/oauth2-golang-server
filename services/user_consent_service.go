@@ -17,5 +17,5 @@ func (c userConsentService) Save(userID, clientID, scope string) error {
 
 func (c userConsentService) HasUserConsented(userID, clientID, scope string) bool {
 	//TODO implement me
-	panic("implement me")
+	return false
 }

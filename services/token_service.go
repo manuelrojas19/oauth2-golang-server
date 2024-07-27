@@ -46,12 +46,12 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 	// Step 1: Retrieve and validate the client
 	client, err := t.client.FindOauthClient(clientId)
 	if err != nil {
-		log.Printf("Error retrieving client with ID '%s': %v", clientId, err)
+		log.Printf("Error retrieving client with Id '%s': %v", clientId, err)
 		return nil, fmt.Errorf("failed to find client: %w", err)
 	}
 
 	if err := client.ValidateSecret(clientSecret); err != nil {
-		log.Printf("Client authentication failed for ID '%s': %v", clientId, err)
+		log.Printf("Client authentication failed for Id '%s': %v", clientId, err)
 		return nil, fmt.Errorf("authentication failed: %w", err)
 	}
 
@@ -73,7 +73,7 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 
 	savedAccessToken, err := t.accessTokenRepository.Save(accessToken)
 	if err != nil {
-		log.Printf("Error saving new access token for client ID '%s': %v", clientId, err)
+		log.Printf("Error saving new access token for client Id '%s': %v", clientId, err)
 		return nil, fmt.Errorf("failed to save access token: %w", err)
 	}
 
@@ -96,7 +96,7 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 
 	savedRefreshToken, err := t.refreshTokenRepository.Save(refreshToken)
 	if err != nil {
-		log.Printf("Error saving new refresh token for access token ID '%s': %v", savedAccessToken.Id, err)
+		log.Printf("Error saving new refresh token for access token Id '%s': %v", savedAccessToken.Id, err)
 		return nil, fmt.Errorf("failed to save refresh token: %w", err)
 	}
 
@@ -129,20 +129,20 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	}
 
 	if clientId == "" {
-		log.Println("Client ID not provided; using Client ID from refresh token")
+		log.Println("Client Id not provided; using Client Id from refresh token")
 		clientId = refreshToken.ClientId
 	}
 
 	// Step 2: Retrieve and validate the client
 	client, err := t.client.FindOauthClient(clientId)
 	if err != nil {
-		log.Printf("Error retrieving client with ID '%s': %v", clientId, err)
+		log.Printf("Error retrieving client with Id '%s': %v", clientId, err)
 		return nil, fmt.Errorf("failed to find client: %w", err)
 	}
 
 	if client.IsConfidential {
 		if err := authenticateClient(clientId, clientSecret, client); err != nil {
-			log.Printf("Client authentication failed for ID '%s': %v", clientId, err)
+			log.Printf("Client authentication failed for Id '%s': %v", clientId, err)
 			return nil, fmt.Errorf("client authentication failed: %w", err)
 		}
 	}
@@ -171,10 +171,10 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 
 	savedAccessToken, err := t.accessTokenRepository.Save(newAccessToken)
 	if err != nil {
-		log.Printf("Error saving new access token for Client ID '%s': %v", refreshToken.ClientId, err)
+		log.Printf("Error saving new access token for Client Id '%s': %v", refreshToken.ClientId, err)
 		return nil, fmt.Errorf("failed to save new access token: %w", err)
 	}
-	log.Printf("New access token successfully created and saved for Client ID '%s'", refreshToken.ClientId)
+	log.Printf("New access token successfully created and saved for Client Id '%s'", refreshToken.ClientId)
 
 	// Step 5: Invalidate used refresh token
 	err = t.refreshTokenRepository.InvalidateRefreshTokensByAccessTokenId(refreshToken.AccessTokenId)
@@ -202,7 +202,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 
 	savedRefreshToken, err := t.refreshTokenRepository.Save(newRefreshToken)
 	if err != nil {
-		log.Printf("Error saving new refresh token for Access Token ID '%s': %v", savedAccessToken.Id, err)
+		log.Printf("Error saving new refresh token for Access Token Id '%s': %v", savedAccessToken.Id, err)
 		return nil, fmt.Errorf("failed to save new refresh token: %w", err)
 	}
 
@@ -219,7 +219,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		WithExtension(nil).
 		Build()
 
-	log.Printf("Token response successfully built for Client ID '%s'", savedAccessToken.ClientId)
+	log.Printf("Token response successfully built for Client Id '%s'", savedAccessToken.ClientId)
 
 	return newToken, nil
 }
