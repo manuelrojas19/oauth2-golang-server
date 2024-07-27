@@ -32,3 +32,9 @@ type UserConsentService interface {
 	Save(userID, clientID, scope string) error
 	HasUserConsented(userID, clientID, scope string) bool
 }
+
+type SessionService interface {
+	CreateSession(userId, email string) (string, error)
+	SessionExists(sessionID string) bool
+	GetUserIdFromSession(sessionID string) (string, error)
+}
