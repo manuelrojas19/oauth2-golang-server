@@ -18,6 +18,7 @@ const RefreshTokenDuration = 30*24*time.Hour + 1*time.Second
 type tokenService struct {
 	accessTokenRepository  repositories.AccessTokenRepository
 	refreshTokenRepository repositories.RefreshTokenRepository
+	authRepository         repositories.AuthorizationRepository
 	client                 OauthClientService
 }
 
@@ -235,4 +236,100 @@ func authenticateClient(clientId, clientSecret string, client *entities.OauthCli
 		return fmt.Errorf("authentication failed: %w", err)
 	}
 	return nil
+}
+
+// handleAuthorizationCodeFlow processes the authorization code grant type by validating the authorization code,
+// generating an access token, and issuing a refresh token.
+func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code, redirectUri string) (*oauth.Token, error) {
+	// Step 1: Retrieve and validate the authorization code
+	authCode, err := t.authRepository.FindByCode(code)
+	if err != nil {
+		log.Printf("Error finding authorization code '%s': %v", code, err)
+		return nil, fmt.Errorf("failed to find authorization code: %w", err)
+	}
+
+	if authCode.ClientId != clientId {
+		log.Printf("Client ID mismatch: expected '%s', got '%s'", authCode.ClientId, clientId)
+		return nil, fmt.Errorf("client ID mismatch")
+	}
+
+	if authCode.RedirectURI != redirectUri {
+		log.Printf("Redirect URI mismatch: expected '%s', got '%s'", authCode.RedirectURI, redirectUri)
+		return nil, fmt.Errorf("redirect URI mismatch")
+	}
+
+	if time.Now().After(authCode.ExpiresAt) {
+		log.Printf("Authorization code '%s' has expired", code)
+		return nil, fmt.Errorf("authorization code has expired")
+	}
+
+	// Step 2: Retrieve and validate the client
+	client, err := t.client.FindOauthClient(clientId)
+	if err != nil {
+		log.Printf("Error retrieving client with ID '%s': %v", clientId, err)
+		return nil, fmt.Errorf("failed to find client: %w", err)
+	}
+
+	if err := authenticateClient(clientId, clientSecret, client); err != nil {
+		log.Printf("Client authentication failed for ID '%s': %v", clientId, err)
+		return nil, fmt.Errorf("client authentication failed: %w", err)
+	}
+
+	// Step 3: Generate a new access token
+	accessTokenJwt, err := utils.GenerateJWT(clientId, "user", []byte("secret"), "access")
+	if err != nil {
+		log.Printf("Error generating JWT for access token: %v", err)
+		return nil, fmt.Errorf("failed to generate access token JWT: %w", err)
+	}
+
+	newAccessToken := entities.NewAccessTokenBuilder().
+		WithClientId(clientId).
+		WithToken(accessTokenJwt).
+		WithTokenType("JWT").
+		WithExpiresAt(time.Now().Add(AccessTokenDuration)).
+		Build()
+
+	savedAccessToken, err := t.accessTokenRepository.Save(newAccessToken)
+	if err != nil {
+		log.Printf("Error saving new access token for Client ID '%s': %v", clientId, err)
+		return nil, fmt.Errorf("failed to save new access token: %w", err)
+	}
+
+	// Step 4: Generate a new refresh token
+	refreshTokenJwt, err := utils.GenerateJWT(savedAccessToken.Id, "user", []byte("secret"), "refresh")
+	if err != nil {
+		log.Printf("Error generating JWT for refresh token: %v", err)
+		return nil, fmt.Errorf("failed to generate refresh token JWT: %w", err)
+	}
+
+	newRefreshToken := entities.NewRefreshTokenBuilder().
+		WithAccessToken(savedAccessToken).
+		WithAccessTokenId(savedAccessToken.Id).
+		WithClient(savedAccessToken.Client).
+		WithClientId(clientId).
+		WithToken(refreshTokenJwt).
+		WithTokenType("JWT").
+		WithExpiresAt(time.Now().Add(RefreshTokenDuration)).
+		Build()
+
+	savedRefreshToken, err := t.refreshTokenRepository.Save(newRefreshToken)
+	if err != nil {
+		log.Printf("Error saving new refresh token for Access Token ID '%s': %v", savedAccessToken.Id, err)
+		return nil, fmt.Errorf("failed to save new refresh token: %w", err)
+	}
+
+	// Step 5: Build and return the token response
+	token := oauth.NewTokenBuilder().
+		WithClientId(savedAccessToken.ClientId).
+		WithUserId("user").
+		WithAccessToken(savedAccessToken.Token).
+		WithAccessTokenCreatedAt(savedAccessToken.CreatedAt).
+		WithAccessTokenExpiresAt(savedAccessToken.ExpiresAt.Sub(time.Now())).
+		WithRefreshToken(savedRefreshToken.Token).
+		WithRefreshTokenCreatedAt(savedRefreshToken.CreatedAt).
+		WithRefreshTokenExpiresAt(savedRefreshToken.ExpiresAt.Sub(time.Now())).
+		WithExtension(nil).
+		Build()
+
+	return token, nil
 }

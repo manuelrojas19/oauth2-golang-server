@@ -21,3 +21,15 @@ func (r *authorizationRepository) Save(authCode *entities.AuthorizationCode) (*e
 	}
 	return authCode, nil
 }
+
+// FindByCode retrieves an authorization code by its code string.
+func (r *authorizationRepository) FindByCode(code string) (*entities.AuthorizationCode, error) {
+	var authCode entities.AuthorizationCode
+	if err := r.Db.Where("code = ?", code).First(&authCode).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil // Return nil if the record is not found
+		}
+		return nil, err
+	}
+	return &authCode, nil
+}

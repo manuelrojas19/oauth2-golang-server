@@ -24,4 +24,5 @@ type UserConsentRepository interface {
 
 type AuthorizationRepository interface {
 	Save(authCode *entities.AuthorizationCode) (*entities.AuthorizationCode, error)
+	FindByCode(code string) (*entities.AuthorizationCode, error)
 }
