@@ -81,7 +81,7 @@ func (g googleAuthorizeCallbackHandler) Handler(writer http.ResponseWriter, requ
 		Path:     "/",
 		HttpOnly: true, // Prevent client-side scripts from accessing the cookie
 		Secure:   true, // Use HTTPS in production
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteNoneMode,
 		Expires:  time.Now().Add(1 * time.Hour), // Adjust expiration as needed
 	})
 

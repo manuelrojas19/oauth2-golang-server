@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"github.com/manuelrojas19/go-oauth2-server/api/dto/request"
 	"github.com/manuelrojas19/go-oauth2-server/api/dto/response"
 	"github.com/manuelrojas19/go-oauth2-server/services"
@@ -41,12 +40,6 @@ func (handler *tokenHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	// Validate the request data
 	if err := req.Validate(); err != nil {
 		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
-		return
-	}
-
-	// Validate the grant_type
-	if !(req.GrantType == "client_credentials" || req.GrantType == "refresh_token") {
-		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(errors.New("invalid grant_type")))
 		return
 	}
 

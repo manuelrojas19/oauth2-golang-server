@@ -26,3 +26,8 @@ type AuthorizationRepository interface {
 	Save(authCode *entities.AuthorizationCode) (*entities.AuthorizationCode, error)
 	FindByCode(code string) (*entities.AuthorizationCode, error)
 }
+
+type UserRepository interface {
+	Save(authCode *entities.User) (*entities.User, error)
+	FindByUserId(id string) (*entities.User, error)
+}

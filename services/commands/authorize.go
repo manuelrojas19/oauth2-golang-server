@@ -6,4 +6,5 @@ type Authorize struct {
 	RedirectUri  string
 	ResponseType string
 	SessionId    string
+	State        string
 }

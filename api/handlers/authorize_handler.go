@@ -23,6 +23,7 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	scope := r.URL.Query().Get("scope")
 	redirectUri := r.URL.Query().Get("redirect_uri")
 	responseType := r.URL.Query().Get("response_type")
+	state := r.URL.Query().Get("state")
 
 	// Validate response_type
 	if responseType != "code" {
@@ -36,6 +37,7 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		Scope:        scope,
 		RedirectUri:  redirectUri,
 		ResponseType: responseType,
+		State:        state,
 	}
 
 	// SessionId
@@ -68,7 +70,7 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Redirect to the redirect_uri with authorization code
-	redirectURL := fmt.Sprintf("%s?code=%s", redirectUri, authCode.Code)
+	redirectURL := fmt.Sprintf("%s?code=%s&state=%s", redirectUri, authCode.Code, state)
 	log.Printf("Redirecting to: %s", redirectURL)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
