@@ -43,3 +43,5 @@ go.mod
 
 # PEM files
 *.pem
+
+*.env
