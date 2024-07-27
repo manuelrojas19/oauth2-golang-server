@@ -23,19 +23,28 @@ func NewSessionService(redisClient *redis.Client) SessionService {
 }
 
 func (u *sessionService) CreateSession(userId, email string) (string, error) {
+	// Generate a new session ID
 	sessionID := uuid.New().String()
-	sessionData := map[string]string{
+	sessionData := map[string]interface{}{
 		"user_id": userId,
 		"email":   email,
 	}
 
-	err := u.redisClient.HSet(context.Background(), sessionID, sessionData).Err()
-	if err != nil {
-		return "", err
-	}
+	// Create a new context with a timeout to prevent hanging operations
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Start a transaction
+	pipe := u.redisClient.TxPipeline()
+
+	// Set session data
+	pipe.HMSet(ctx, sessionID, sessionData)
 
 	// Set expiration for the session
-	err = u.redisClient.Expire(context.Background(), sessionID, 1*time.Hour).Err()
+	pipe.Expire(ctx, sessionID, 1*time.Hour)
+
+	// Execute the transaction
+	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -54,7 +63,6 @@ func (u *sessionService) SessionExists(sessionID string) bool {
 	// Check if the session key exists in Redis
 	existsCmd := u.redisClient.Exists(u.ctx, sessionKey)
 	result, err := existsCmd.Result()
-
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			// Session does not exist
@@ -73,7 +81,21 @@ func (u *sessionService) SessionExists(sessionID string) bool {
 		return false
 	}
 
-	// Session exists
+	// Check the remaining TTL of the session key
+	ttlCmd := u.redisClient.TTL(u.ctx, sessionKey)
+	ttl, err := ttlCmd.Result()
+	if err != nil {
+		log.Printf("Failed to check session TTL: %v\n", err)
+		return false
+	}
+
+	if ttl <= 0 {
+		// Session has expired or does not exist
+		log.Println("Session has expired")
+		return false
+	}
+
+	// Session exists and is not expired
 	return true
 }
 
