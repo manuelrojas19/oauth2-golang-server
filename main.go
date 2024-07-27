@@ -48,7 +48,7 @@ func main() {
 	authorizationRepository := repositories.NewAuthorizationRepository(db)
 	userConsentService := services.NewUserConsentService(userConsentRepository)
 	oauthClientService := services.NewOauthClientService(oauthClientRepository)
-	tokenService := services.NewTokenService(accessTokenRepository, refreshTokenRepository, oauthClientService)
+	tokenService := services.NewTokenService(accessTokenRepository, refreshTokenRepository, authorizationRepository, oauthClientService)
 	authorizationService := services.NewAuthorizationService(oauthClientService, userConsentService, authorizationRepository, userSessionService)
 	wellKnownService := services.NewWellKnownService()
 	registerHandler := handlers.NewRegisterHandler(oauthClientService)

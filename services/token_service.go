@@ -22,11 +22,15 @@ type tokenService struct {
 	client                 OauthClientService
 }
 
-func NewTokenService(tokenRepository repositories.AccessTokenRepository,
+func NewTokenService(
+	accessTokenRepository repositories.AccessTokenRepository,
 	refreshTokenRepository repositories.RefreshTokenRepository,
+	authRepository repositories.AuthorizationRepository,
 	client OauthClientService) TokenService {
-	return &tokenService{accessTokenRepository: tokenRepository,
+	return &tokenService{
+		accessTokenRepository:  accessTokenRepository,
 		refreshTokenRepository: refreshTokenRepository,
+		authRepository:         authRepository,
 		client:                 client}
 }
 
