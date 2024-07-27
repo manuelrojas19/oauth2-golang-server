@@ -15,7 +15,9 @@ func NewAuthorizationRepository(db *gorm.DB) AuthorizationRepository {
 	}
 }
 
-func (authorizationRepository) Save(authCode *entities.AuthorizationCode) (*entities.AuthorizationCode, error) {
-	//TODO implement me
-	panic("implement me")
+func (r *authorizationRepository) Save(authCode *entities.AuthorizationCode) (*entities.AuthorizationCode, error) {
+	if err := r.Db.Create(authCode).Error; err != nil {
+		return nil, err
+	}
+	return authCode, nil
 }

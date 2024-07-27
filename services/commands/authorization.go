@@ -5,4 +5,5 @@ type Authorization struct {
 	Scope        string
 	RedirectUri  string
 	ResponseType string
+	SessionId    string
 }

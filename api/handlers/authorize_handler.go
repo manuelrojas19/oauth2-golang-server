@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/services/commands"
+	"log"
 	"net/http"
-	"net/url"
 )
 
 type AuthorizeHandler struct {
@@ -30,16 +30,6 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// URL-encode parameters
-	encodedClientId := url.QueryEscape(clientId)
-	encodedScope := url.QueryEscape(scope)
-	encodedRedirectUri := url.QueryEscape(redirectUri)
-	encodedResponseType := url.QueryEscape(responseType)
-
-	// Prepare the query parameters string
-	queryParams := fmt.Sprintf("client_id=%s&scope=%s&redirect_uri=%s&response_type=%s",
-		encodedClientId, encodedScope, encodedRedirectUri, encodedResponseType)
-
 	// Authorization request
 	command := &commands.Authorization{
 		ClientId:     clientId,
@@ -48,16 +38,27 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		ResponseType: responseType,
 	}
 
+	// SessionId
+	cookie, err := r.Cookie("session_id")
+	if err == nil && cookie != nil {
+		log.Println("Session cookie found")
+		command.SessionId = cookie.Value
+	}
+
 	authCode, err := a.authorizationService.Authorize(command)
+
+	// Prepare the query parameters string
+	queryParams := fmt.Sprintf("client_id=%s&scope=%s&redirect_uri=%s&response_type=%s",
+		clientId, scope, redirectUri, responseType)
 
 	if err != nil {
 		switch err.Error() {
 		case services.ErrUserNotAuthenticated:
-			loginURL := fmt.Sprintf("/login?%s", queryParams)
+			loginURL := fmt.Sprintf("/google/authorize?%s", queryParams)
 			http.Redirect(w, r, loginURL, http.StatusSeeOther)
 			return
 		case services.ErrConsentRequired:
-			consentURL := fmt.Sprintf("/consent?%s", queryParams)
+			consentURL := fmt.Sprintf("/oauth/consent?%s", queryParams)
 			http.Redirect(w, r, consentURL, http.StatusSeeOther)
 			return
 		default:
@@ -67,6 +68,7 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Redirect to the redirect_uri with authorization code
-	redirectURL := fmt.Sprintf("%s?code=%s", encodedRedirectUri, authCode)
+	redirectURL := fmt.Sprintf("%s?code=%s", redirectUri, authCode.Code)
+	log.Printf("Redirecting to: %s", redirectURL)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
