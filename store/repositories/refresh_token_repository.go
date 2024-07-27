@@ -22,29 +22,29 @@ func (ot *refreshTokenRepository) InvalidateRefreshTokensByAccessTokenId(tokenId
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
-			log.Printf("PANIC: Rolled back transaction for access token ID '%s' due to: %v", tokenId, r)
+			log.Printf("PANIC: Rolled back transaction for access token Id '%s' due to: %v", tokenId, r)
 		}
 	}()
 
 	if err := tx.Error; err != nil {
-		log.Printf("ERROR: Failed to start transaction for access token ID '%s': %v", tokenId, err)
+		log.Printf("ERROR: Failed to start transaction for access token Id '%s': %v", tokenId, err)
 		return fmt.Errorf("failed to start transaction: %w", err)
 	}
 
 	usedDeleteTokenQuery := tx.Unscoped().Where("access_token_id = ?", tokenId)
 	if err := usedDeleteTokenQuery.Delete(new(entities.RefreshToken)).Error; err != nil {
-		log.Printf("ERROR: Failed to execute delete query for access token ID '%s': %v", tokenId, err)
+		log.Printf("ERROR: Failed to execute delete query for access token Id '%s': %v", tokenId, err)
 		tx.Rollback()
 		return fmt.Errorf("failed to delete refresh token: %w", err)
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Printf("ERROR: Error committing transaction for access token ID '%s': %v", tokenId, err)
+		log.Printf("ERROR: Error committing transaction for access token Id '%s': %v", tokenId, err)
 		tx.Rollback()
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	log.Printf("INFO: Successfully deleted refresh tokens for access token ID '%s'", tokenId)
+	log.Printf("INFO: Successfully deleted refresh tokens for access token Id '%s'", tokenId)
 	return nil
 }
 
@@ -55,12 +55,12 @@ func (ot *refreshTokenRepository) Save(token *entities.RefreshToken) (*entities.
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
-			log.Printf("PANIC: Rolled back transaction for access token ID '%s' due to: %v", token.AccessTokenId, r)
+			log.Printf("PANIC: Rolled back transaction for access token Id '%s' due to: %v", token.AccessTokenId, r)
 		}
 	}()
 
 	if err := tx.Error; err != nil {
-		log.Printf("ERROR: Failed to start transaction for access token ID '%s': %v", token.AccessTokenId, err)
+		log.Printf("ERROR: Failed to start transaction for access token Id '%s': %v", token.AccessTokenId, err)
 		return nil, fmt.Errorf("failed to start transaction: %w", err)
 	}
 
