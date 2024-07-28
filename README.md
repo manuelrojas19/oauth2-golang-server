@@ -78,6 +78,7 @@ go run main.go
 ### Authorize: `/Authorize`
 
 - **Description**: This endpoint handles the authorization of registered OAuth2 clients.
+- **Prerequisite**: Client Id and Client Secret from a Client previously registered on Register endpoint.
 - **Method**: `POST`
 - **Request**:
     - **Headers**:
@@ -101,6 +102,8 @@ go run main.go
 
 - **Description**: This endpoint exchanges an authorization code or refresh token for an access token, or handles other
   token-related requests.
+- **Prerequisite**: Client Id and Client Secret from a Client previously registered on Register endpoint, Auth Code or
+  Refresh Token previously generated depending on grant type.
 - **Method**: `POST`
 - **Request**:
     - **Headers**:
@@ -171,6 +174,7 @@ To get an access token, you can use the following `curl` command:
 
 ```bash
 curl -X POST http://localhost:8080/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=authorization_code" \
   -d "code=AUTH_CODE" \
   -d "client_id=CLIENT_ID" \
@@ -183,7 +187,9 @@ curl -X POST http://localhost:8080/oauth/token \
 ```bash
 curl -X POST http://localhost:8080/token \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "grant_type=client_credentials&client_id=CLIENT_ID&client_secret=CLIENT_SECRET"
+    -d "grant_type=client_credentials" \
+    -d "client_id=CLIENT_ID" \
+    -d "client_secret=CLIENT_SECRET"
 ```
 
 - `refresh_token` Grant Type
@@ -191,5 +197,8 @@ curl -X POST http://localhost:8080/token \
 ```bash
 curl -X POST http://localhost:8080/token \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "grant_type=refresh_token&refresh_token=REFRESH_TOKEN&client_id=CLIENT_ID&client_secret=CLIENT_SECRET"
+    -d "grant_type=refresh_token" \
+    -d "refresh_token=REFRESH_TOKEN" \
+    -d "client_id=CLIENT_ID" \
+    -d "client_secret=CLIENT_SECRET"
 ```
