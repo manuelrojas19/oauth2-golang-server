@@ -12,7 +12,7 @@ var tmpl *template.Template
 
 func init() {
 	var err error
-	tmpl, err = template.ParseFiles("templates/consent.html")
+	tmpl, err = template.ParseFiles("templates/login.html")
 	if err != nil {
 		log.Fatalf("Error parsing template: %v", err)
 	}

@@ -60,7 +60,7 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err.Error() {
 		case services.ErrUserNotAuthenticated:
-			loginURL := fmt.Sprintf("/google/authorize?%s", queryParams)
+			loginURL := fmt.Sprintf("/oauth/login?%s", queryParams)
 			http.Redirect(w, r, loginURL, http.StatusSeeOther)
 			return
 		case services.ErrConsentRequired:

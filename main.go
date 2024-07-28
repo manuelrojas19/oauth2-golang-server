@@ -57,17 +57,17 @@ func main() {
 	jwksHandler := handlers.NewJwksHandler(wellKnownService)
 	authorizeHandler := handlers.NewAuthorizeHandler(authorizationService)
 	requestConsentHandler := handlers.NewRequestConsentHandler()
-	googleLoginHandler := idp.NewGoogleLoginHandler()
 	googleAuthorizeCallbackHandler := idp.NewGoogleAuthorizeCallbackHandler(userSessionService)
+	loginHandler := handlers.NewLoginHandler()
 	log.Println("Services and handlers initialized successfully")
 
 	// Setup HTTP handler
 	http.HandleFunc("/oauth/register", registerHandler.Handler)
 	http.HandleFunc("/oauth/token", tokenHandler.Handler)
 	http.HandleFunc("/oauth/authorize", authorizeHandler.Handler)
-	http.HandleFunc("/.well-known/jwks.json", jwksHandler.Handler)
 	http.HandleFunc("/oauth/consent", requestConsentHandler.Handler)
-	http.HandleFunc("/google/authorize", googleLoginHandler.Handler)
+	http.HandleFunc("/oauth/login", loginHandler.Handler)
+	http.HandleFunc("/.well-known/jwks.json", jwksHandler.Handler)
 	http.HandleFunc("/google/authorize/callback", googleAuthorizeCallbackHandler.Handler)
 
 	log.Println("HTTP handler for /register is set up")
