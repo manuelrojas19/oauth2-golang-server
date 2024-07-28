@@ -1,23 +1,18 @@
 # OAuth2 Server Implementation
 
-This project is a minimal implementation of an OAuth2 server using Go and PostgreSQL, designed to follow the OAuth2 RFC
+This project is an implementation of an OAuth2 server using Go and PostgreSQL, designed to follow the OAuth2 RFC
 specifications. It provides endpoints for client registration and will include additional OAuth2 functionality such as
 authorization, token management, and user information retrieval. The application is containerized using Docker Compose
 for easy setup and deployment.
 
 ## Features
 
-- OAuth2 Registration Endpoint (More endpoints based on OAuth2 RFC will be implemented)
+- OAuth2 Registration, Authorize, Token Endpoints (More endpoints based on OAuth2 RFC will be implemented)
 - Built with Go
 - PostgreSQL for data storage
+- Redis for session storage
+- Google as Identity Provider (IDP)
 - Docker Compose for easy setup
-
-## Project Structure
-
-- `main.go`: Entry point for the application.
-- `store/entities`: Contains GORM models for database interaction.
-- `handlers/`: Contains HTTP handlers for various endpoints.
-- `docker-compose.yml`: Docker Compose configuration for running and PostgreSQL instance.
 
 ## Prerequisites
 
@@ -46,9 +41,9 @@ docker-compose up -d
 go run main.go
 ``` 
 
-### API Endpoints (Implemented)
+## API Endpoints (Implemented)
 
-#### Register: `/register`
+### Register: `/register`
 
 - **Description**: This endpoint allows for the registration of OAuth2 clients.
 - **Method**: `POST`
@@ -80,7 +75,7 @@ go run main.go
       }
       ```
 
-#### Authorize: `/Authorize`
+### Authorize: `/Authorize`
 
 - **Description**: This endpoint handles the authorization of registered OAuth2 clients.
 - **Method**: `POST`
@@ -101,8 +96,8 @@ go run main.go
     - **Status**: `302 Found` (on successful authorization)
     - **Headers**
         - `Location: https://example.com/callback?code=authorization_code&state=string`
-    
-#### Token: `/token`
+
+### Token: `/token`
 
 - **Description**: This endpoint exchanges an authorization code or refresh token for an access token, or handles other
   token-related requests.
@@ -137,7 +132,9 @@ go run main.go
       }
       ```
 
-#### Example `curl` Command
+## Example `curl` Commands
+
+### Register
 
 To register a new OAuth2 client, you can use the following `curl` command:
 
@@ -152,6 +149,21 @@ curl -X POST http://localhost:8080/register \
         "redirect_uris": ["https://example.com/callback"]
     }'
 ```
+
+### Authorize
+
+To get an auth code, you can use the following  `curl` command:
+
+```bash
+curl -G \
+-d "response_type=code" \
+-d "client_id=CLIENT_ID" \
+-d "redirect_uri=REDIRECT_URI" \
+-d "scope=SCOPE" \
+"http://localhost:8080/oauth/authorize"
+```
+
+### Token
 
 To get an access token, you can use the following `curl` command:
 
