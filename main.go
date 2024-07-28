@@ -3,49 +3,50 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
-	"github.com/manuelrojas19/go-oauth2-server/api/handlers"
-	"github.com/manuelrojas19/go-oauth2-server/configuration/database"
-	"github.com/manuelrojas19/go-oauth2-server/configuration/googleauth"
-	"github.com/manuelrojas19/go-oauth2-server/configuration/keymanager"
-	"github.com/manuelrojas19/go-oauth2-server/configuration/session"
+	"github.com/manuelrojas19/go-oauth2-server/configuration"
+	"github.com/manuelrojas19/go-oauth2-server/handlers"
+	"github.com/manuelrojas19/go-oauth2-server/idp"
 	"github.com/manuelrojas19/go-oauth2-server/services"
-	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
+	"github.com/manuelrojas19/go-oauth2-server/session"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 	"log"
 	"net/http"
 )
 
 func main() {
-
+	// Load Google Secrets
 	err := godotenv.Load()
 	if err != nil {
-		fmt.Printf("Error loading .env file: %v\n", err)
+		fmt.Println("Error loading .env file")
 		return
 	}
-	// Load Google Secrets
-	googleauth.LoadSecrets()
+
+	configuration.LoadGoogleSecrets()
+	configuration.LoadDbSecrets()
+	configuration.LoadRedisSecrets()
+
 	// Initialize database connection
-	db, err := database.InitDatabaseConnection()
+	db, err := configuration.InitDatabaseConnection()
 	if err != nil {
 		log.Fatalf("Failed to initialize database connection: %v", err)
 		return
 	}
 	log.Println("Database connection initialized successfully")
 
-	err = keymanager.Initialize()
+	err = configuration.Initialize()
 	if err != nil {
 		log.Fatalf("Failed to initialize keys: %v", err)
 	}
 
 	redisClient := session.NewRedisClient()
-
-	userSessionService := services.NewSessionService(redisClient)
+	userSessionService := session.NewSessionService(redisClient)
 
 	// Initialize repositories and services
-	oauthClientRepository := repositories.NewOauthClientRepository(db)
-	accessTokenRepository := repositories.NewAccessTokenRepository(db)
-	refreshTokenRepository := repositories.NewRefreshTokenRepository(db)
-	userConsentRepository := repositories.NewUserConsentRepository(db)
-	authorizationRepository := repositories.NewAuthorizationRepository(db)
+	oauthClientRepository := store.NewOauthClientRepository(db)
+	accessTokenRepository := store.NewAccessTokenRepository(db)
+	refreshTokenRepository := store.NewRefreshTokenRepository(db)
+	userConsentRepository := store.NewUserConsentRepository(db)
+	authorizationRepository := store.NewAuthorizationRepository(db)
 	userConsentService := services.NewUserConsentService(userConsentRepository)
 	oauthClientService := services.NewOauthClientService(oauthClientRepository)
 	tokenService := services.NewTokenService(accessTokenRepository, refreshTokenRepository, authorizationRepository, oauthClientService)
@@ -56,8 +57,8 @@ func main() {
 	jwksHandler := handlers.NewJwksHandler(wellKnownService)
 	authorizeHandler := handlers.NewAuthorizeHandler(authorizationService)
 	requestConsentHandler := handlers.NewRequestConsentHandler()
-	googleLoginHandler := handlers.NewGoogleLoginHandler()
-	googleAuthorizeCallbackHandler := handlers.NewGoogleAuthorizeCallbackHandler(userSessionService)
+	googleLoginHandler := idp.NewGoogleLoginHandler()
+	googleAuthorizeCallbackHandler := idp.NewGoogleAuthorizeCallbackHandler(userSessionService)
 	log.Println("Services and handlers initialized successfully")
 
 	// Setup HTTP handler

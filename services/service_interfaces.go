@@ -2,30 +2,29 @@ package services
 
 import (
 	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
-	"github.com/manuelrojas19/go-oauth2-server/services/commands"
-	"github.com/manuelrojas19/go-oauth2-server/store/entities"
+	oauth2 "github.com/manuelrojas19/go-oauth2-server/oauth"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 )
 
 type GrantService interface {
-	ResolveGrantType(command *commands.GrantAccessTokenCommand) (string, error)
+	ResolveGrantType(command *GrantAccessTokenCommand) (string, error)
 }
 
 type TokenService interface {
-	GrantAccessToken(command *commands.GrantAccessTokenCommand) (*oauth.Token, error)
+	GrantAccessToken(command *GrantAccessTokenCommand) (*oauth2.Token, error)
+}
+
+type AuthorizationService interface {
+	Authorize(command *AuthorizeCommand) (*oauth2.AuthCode, error)
 }
 
 type OauthClientService interface {
-	CreateOauthClient(command *commands.RegisterOauthClientCommand) (*oauth.Client, error)
-	FindOauthClient(clientId string) (*entities.OauthClient, error)
+	CreateOauthClient(command *RegisterOauthClientCommand) (*oauth2.Client, error)
+	FindOauthClient(clientId string) (*store.OauthClient, error)
 }
 
 type WellKnownService interface {
 	GetJwk() (*jwk.Set, error)
-}
-
-type AuthorizationService interface {
-	Authorize(command *commands.Authorize) (*oauth.AuthCode, error)
 }
 
 type UserConsentService interface {

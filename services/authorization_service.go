@@ -2,10 +2,8 @@ package services
 
 import (
 	"fmt"
-	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
-	"github.com/manuelrojas19/go-oauth2-server/services/commands"
-	"github.com/manuelrojas19/go-oauth2-server/store/entities"
-	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
+	"github.com/manuelrojas19/go-oauth2-server/oauth"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
 	"time"
@@ -16,16 +14,25 @@ const (
 	ErrConsentRequired      = "user consent required"
 )
 
+type AuthorizeCommand struct {
+	ClientId     string
+	Scope        string
+	RedirectUri  string
+	ResponseType string
+	SessionId    string
+	State        string
+}
+
 type authorizationService struct {
 	oauthClientService OauthClientService
 	consentService     UserConsentService
-	authRepository     repositories.AuthorizationRepository
+	authRepository     store.AuthorizationRepository
 	sessionService     SessionService
 }
 
 // NewAuthorizationService initializes a new AuthorizationService
 func NewAuthorizationService(oauthClientService OauthClientService,
-	consentService UserConsentService, authRepository repositories.AuthorizationRepository,
+	consentService UserConsentService, authRepository store.AuthorizationRepository,
 	userSessionService SessionService) AuthorizationService {
 	return &authorizationService{oauthClientService: oauthClientService,
 		consentService: consentService,
@@ -34,7 +41,7 @@ func NewAuthorizationService(oauthClientService OauthClientService,
 }
 
 // Authorize authorizes and generate an Auth Code
-func (a authorizationService) Authorize(command *commands.Authorize) (*oauth.AuthCode, error) {
+func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthCode, error) {
 	clientId := command.ClientId
 
 	// Retrieve the OAuth client
@@ -68,7 +75,7 @@ func (a authorizationService) Authorize(command *commands.Authorize) (*oauth.Aut
 	}
 
 	// Build authorization code entity
-	authCodeEntity := entities.NewAuthorizationCodeBuilder().
+	authCodeEntity := store.NewAuthorizationCodeBuilder().
 		WithCode(code).
 		WithClientID(client.ClientId).
 		WithClient(client).

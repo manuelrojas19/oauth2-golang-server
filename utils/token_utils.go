@@ -12,7 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/manuelrojas19/go-oauth2-server/configuration/keymanager"
+	"github.com/manuelrojas19/go-oauth2-server/configuration"
 	"gopkg.in/square/go-jose.v2"
 	"io/ioutil"
 	"strconv"
@@ -71,7 +71,7 @@ func GenerateJWT(clientId string, userId string, secretKey interface{}, tokenTyp
 	case "access":
 		expirationTime = time.Hour
 		signingMethod = jwt.SigningMethodRS256
-		privateKey, err := keymanager.GetJWTPrivateKey()
+		privateKey, err := configuration.GetJWTPrivateKey()
 		if err != nil {
 			return "", fmt.Errorf("private key is not initialized: %w", err)
 		}
@@ -149,7 +149,7 @@ func ValidateRefreshToken(tokenString string, secretKey []byte) (jwt.MapClaims, 
 
 // GenerateJWE creates a JWE token from the JWT payload using global keys
 func GenerateJWE(jwtToken string) (string, error) {
-	publicKey, err := keymanager.GetJWTPublicKey()
+	publicKey, err := configuration.GetJWTPublicKey()
 	if err != nil {
 		return "", err
 	}

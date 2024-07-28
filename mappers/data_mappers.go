@@ -1,14 +1,13 @@
 package mappers
 
 import (
-	"github.com/manuelrojas19/go-oauth2-server/api/dto/request"
-	"github.com/manuelrojas19/go-oauth2-server/api/dto/response"
-	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
-	"github.com/manuelrojas19/go-oauth2-server/services/commands"
+	"github.com/manuelrojas19/go-oauth2-server/api"
+	"github.com/manuelrojas19/go-oauth2-server/oauth"
+	"github.com/manuelrojas19/go-oauth2-server/services"
 )
 
-func NewRegisterClientResponseFromClientModel(client *oauth.Client) *response.RegisterClientResponse {
-	return &response.RegisterClientResponse{
+func NewRegisterClientResponseFromClientModel(client *oauth.Client) *api.RegisterClientResponse {
+	return &api.RegisterClientResponse{
 		ClientId:                client.ClientId,
 		ClientSecret:            client.ClientSecret,
 		ClientName:              client.ClientName,
@@ -19,8 +18,8 @@ func NewRegisterClientResponseFromClientModel(client *oauth.Client) *response.Re
 	}
 }
 
-func NewCreateOauthClientCommandFromRequest(req *request.RegisterClientRequest) *commands.RegisterOauthClientCommand {
-	return &commands.RegisterOauthClientCommand{
+func NewCreateOauthClientCommandFromRequest(req *api.RegisterClientRequest) *services.RegisterOauthClientCommand {
+	return &services.RegisterOauthClientCommand{
 		ClientName:              req.ClientName,
 		GrantTypes:              req.GrantTypes,
 		ResponseTypes:           req.ResponseTypes,

@@ -2,11 +2,9 @@ package services
 
 import (
 	"fmt"
-	"github.com/manuelrojas19/go-oauth2-server/models/oauth"
-	"github.com/manuelrojas19/go-oauth2-server/models/oauth/granttype"
-	"github.com/manuelrojas19/go-oauth2-server/services/commands"
-	"github.com/manuelrojas19/go-oauth2-server/store/entities"
-	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
+	"github.com/manuelrojas19/go-oauth2-server/oauth"
+	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
 	"time"
@@ -15,17 +13,37 @@ import (
 const AccessTokenDuration = 1*time.Hour + 1*time.Second
 const RefreshTokenDuration = 30*24*time.Hour + 1*time.Second
 
+type GrantAccessTokenCommand struct {
+	ClientId     string
+	ClientSecret string
+	RefreshToken string
+	GrantType    granttype.GrantType
+	Code         string
+	RedirectUri  string
+}
+
+func NewGrantAccessTokenCommand(clientId string, clientSecret string, grantType granttype.GrantType, refreshToken string, code string, redirectUri string) *GrantAccessTokenCommand {
+	return &GrantAccessTokenCommand{
+		ClientId:     clientId,
+		ClientSecret: clientSecret,
+		GrantType:    grantType,
+		RefreshToken: refreshToken,
+		Code:         code,
+		RedirectUri:  redirectUri,
+	}
+}
+
 type tokenService struct {
-	accessTokenRepository  repositories.AccessTokenRepository
-	refreshTokenRepository repositories.RefreshTokenRepository
-	authRepository         repositories.AuthorizationRepository
+	accessTokenRepository  store.AccessTokenRepository
+	refreshTokenRepository store.RefreshTokenRepository
+	authRepository         store.AuthorizationRepository
 	client                 OauthClientService
 }
 
 func NewTokenService(
-	accessTokenRepository repositories.AccessTokenRepository,
-	refreshTokenRepository repositories.RefreshTokenRepository,
-	authRepository repositories.AuthorizationRepository,
+	accessTokenRepository store.AccessTokenRepository,
+	refreshTokenRepository store.RefreshTokenRepository,
+	authRepository store.AuthorizationRepository,
 	client OauthClientService) TokenService {
 	return &tokenService{
 		accessTokenRepository:  accessTokenRepository,
@@ -34,7 +52,7 @@ func NewTokenService(
 		client:                 client}
 }
 
-func (t *tokenService) GrantAccessToken(command *commands.GrantAccessTokenCommand) (*oauth.Token, error) {
+func (t *tokenService) GrantAccessToken(command *GrantAccessTokenCommand) (*oauth.Token, error) {
 	switch command.GrantType {
 	case granttype.ClientCredentials:
 		return t.handleClientCredentialsFlow(command.ClientId, command.ClientSecret)
@@ -70,7 +88,7 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 	}
 
 	// Create and save the new access token
-	accessToken := entities.NewAccessTokenBuilder().
+	accessToken := store.NewAccessTokenBuilder().
 		WithClient(client).
 		WithClientId(clientId).
 		WithToken(accessTokenJwt).
@@ -91,7 +109,7 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 		return nil, fmt.Errorf("failed to generate refresh token JWT: %w", err)
 	}
 
-	refreshToken := entities.NewRefreshTokenBuilder().
+	refreshToken := store.NewRefreshTokenBuilder().
 		WithAccessToken(savedAccessToken).
 		WithAccessTokenId(savedAccessToken.Id).
 		WithClient(client).
@@ -169,7 +187,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		return nil, fmt.Errorf("failed to generate new access token JWT: %w", err)
 	}
 
-	newAccessToken := entities.NewAccessTokenBuilder().
+	newAccessToken := store.NewAccessTokenBuilder().
 		WithClientId(refreshToken.ClientId).
 		WithToken(accessTokenJwt).
 		WithTokenType("JWT").
@@ -197,7 +215,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		return nil, fmt.Errorf("failed to generate new refresh token JWT: %w", err)
 	}
 
-	newRefreshToken := entities.NewRefreshTokenBuilder().
+	newRefreshToken := store.NewRefreshTokenBuilder().
 		WithAccessToken(savedAccessToken).
 		WithAccessTokenId(savedAccessToken.Id).
 		WithClient(savedAccessToken.Client).
@@ -232,7 +250,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 }
 
 // authenticateClient checks if the client is confidential and validates the provided client secret.
-func authenticateClient(clientId, clientSecret string, client *entities.OauthClient) error {
+func authenticateClient(clientId, clientSecret string, client *store.OauthClient) error {
 	if clientSecret == "" {
 		log.Printf("Client '%s' is confidential but no client secret provided", clientId)
 		return fmt.Errorf("client secret is required for confidential clients")
@@ -265,7 +283,7 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	}
 
 	if time.Now().After(authCode.ExpiresAt) {
-		log.Printf("Authorize code '%s' has expired", code)
+		log.Printf("AuthorizeCommand code '%s' has expired", code)
 		return nil, fmt.Errorf("authorization code has expired")
 	}
 
@@ -288,7 +306,7 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 		return nil, fmt.Errorf("failed to generate access token JWT: %w", err)
 	}
 
-	newAccessToken := entities.NewAccessTokenBuilder().
+	newAccessToken := store.NewAccessTokenBuilder().
 		WithClientId(clientId).
 		WithToken(accessTokenJwt).
 		WithTokenType("JWT").
@@ -308,7 +326,7 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 		return nil, fmt.Errorf("failed to generate refresh token JWT: %w", err)
 	}
 
-	newRefreshToken := entities.NewRefreshTokenBuilder().
+	newRefreshToken := store.NewRefreshTokenBuilder().
 		WithAccessToken(savedAccessToken).
 		WithAccessTokenId(savedAccessToken.Id).
 		WithClient(savedAccessToken.Client).

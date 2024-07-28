@@ -5,7 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/manuelrojas19/go-oauth2-server/configuration/keymanager"
+	"github.com/manuelrojas19/go-oauth2-server/configuration"
 )
 
 type wellKnownService struct {
@@ -19,7 +19,7 @@ func NewWellKnownService() WellKnownService {
 func (w wellKnownService) GetJwk() (*jwk.Set, error) {
 	set := jwk.NewSet()
 
-	publicKey, err := keymanager.GetJWTPublicKey()
+	publicKey, err := configuration.GetJWTPublicKey()
 	if err != nil {
 		return nil, err
 	}
