@@ -159,10 +159,10 @@ To get an auth code, you can use the following  `curl` command:
 
 ```bash
 curl -G "http://localhost:8080/oauth/authorize" \
-  -d "response_type=code" \
-  -d "client_id=CLIENT_ID" \
-  -d "redirect_uri=REDIRECT_URI" \
-  -d "scope=SCOPE"
+    -d "response_type=code" \
+    -d "client_id=CLIENT_ID" \
+    -d "redirect_uri=REDIRECT_URI" \
+    -d "scope=SCOPE"
 ```
 
 ### Token
@@ -173,12 +173,12 @@ To get an access token, you can use the following `curl` command:
 
 ```bash
 curl -X POST http://localhost:8080/oauth/token \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=authorization_code" \
-  -d "code=AUTH_CODE" \
-  -d "client_id=CLIENT_ID" \
-  -d "client_secret=CLIENT_SECRET" \
-  -d "redirect_uri=REDIRECT_URI" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "grant_type=authorization_code" \
+    -d "code=AUTH_CODE" \
+    -d "client_id=CLIENT_ID" \
+    -d "client_secret=CLIENT_SECRET" \
+    -d "redirect_uri=REDIRECT_URI" \
 ```
 
 - `client_credentials` Grant Type
