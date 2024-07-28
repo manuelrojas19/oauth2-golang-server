@@ -55,7 +55,6 @@ go run main.go
 - **Request**:
     - **Headers**:
         - `Content-Type: application/json`
-        - `Authorization: Bearer YOUR_ACCESS_TOKEN`
     - **Body**:
       ```json
       {
@@ -81,6 +80,28 @@ go run main.go
       }
       ```
 
+#### Authorize: `/Authorize`
+
+- **Description**: This endpoint handles the authorization of registered OAuth2 clients.
+- **Method**: `POST`
+- **Request**:
+    - **Headers**:
+        - `Content-Type: application/json`
+    - **Body**:
+      ```json
+      {
+        "client_id": "string",
+        "redirect_uri": "https://example.com/callback",
+        "response_type": "code",
+        "scope": "read write",
+        "state": "string"
+      }
+      ```
+- **Response**:
+    - **Status**: `302 Found` (on successful authorization)
+    - **Headers**
+        - `Location: https://example.com/callback?code=authorization_code&state=string`
+    
 #### Token: `/token`
 
 - **Description**: This endpoint exchanges an authorization code or refresh token for an access token, or handles other
@@ -90,11 +111,19 @@ go run main.go
     - **Headers**:
         - `Content-Type: application/x-www-form-urlencoded`
 
-    - **Body:**  
-      For `client_credentials` grant type:
-      ```
-      grant_type=client_credentials&client_id=CLIENT_ID&client_secret=CLIENT_SECRET
-      ```
+    - **Query Params:**
+        - For `client_credentials` grant type:
+          ```
+          grant_type=authorization_code&code=AUTH_CODE&redirect_uri=https://your-app.com/callback&client_id=CLIENT_ID&client_secret=CLIENT_SECRET
+          ```
+        - For `client_credentials` grant type:
+          ```
+          grant_type=client_credentials&client_id=CLIENT_ID&client_secret=CLIENT_SECRET
+          ```
+        - For `refresh_token` grant type:
+          ```
+          grant_type=refresh_token&client_id=CLIENT_ID&client_secret=CLIENT_SECRET
+          ```
 - **Response**:
     - **Status**: `200 Okey` (on successful token issuance)
     - **Body**:
@@ -126,8 +155,29 @@ curl -X POST http://localhost:8080/register \
 
 To get an access token, you can use the following `curl` command:
 
+- `authorization_code` Grant Type
+
+```bash
+curl -X POST http://localhost:8080/oauth/token \
+  -d "code=NDU2ZWFLNMITN2M5NS0ZODBJLWFHNZITY2UWYZMWZWRMZDK2" \
+  -d "client_id=d1734396-476f-4a40-95b3-4349524be2e4" \
+  -d "client_secret=61a7f6ac-e922-46ad-9b27-f49713d9a4a2" \
+  -d "redirect_uri=https://your-app.com/callback" \
+  -d "grant_type=authorization_code"
+```
+
+- `client_credentials` Grant Type
+
 ```bash
 curl -X POST http://localhost:8080/token \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d 'grant_type=client_credentials&client_id=CLIENT_ID&client_secret=CLIENT_SECRET'
+    -d "grant_type=client_credentials&client_id=CLIENT_ID&client_secret=CLIENT_SECRET"
+```
+
+- `refresh_token` Grant Type
+
+```bash
+curl -X POST http://localhost:8080/token \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "grant_type=refresh_token&refresh_token=REFRESH_TOKEN&client_id=CLIENT_ID&client_secret=CLIENT_SECRET"
 ```
