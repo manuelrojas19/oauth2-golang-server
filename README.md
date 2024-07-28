@@ -158,12 +158,11 @@ curl -X POST http://localhost:8080/register \
 To get an auth code, you can use the following  `curl` command:
 
 ```bash
-curl -G \
--d "response_type=code" \
--d "client_id=CLIENT_ID" \
--d "redirect_uri=REDIRECT_URI" \
--d "scope=SCOPE" \
-"http://localhost:8080/oauth/authorize"
+curl -G "http://localhost:8080/oauth/authorize" \
+  -d "response_type=code" \
+  -d "client_id=CLIENT_ID" \
+  -d "redirect_uri=REDIRECT_URI" \
+  -d "scope=SCOPE"
 ```
 
 ### Token
