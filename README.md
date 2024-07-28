@@ -159,11 +159,11 @@ To get an access token, you can use the following `curl` command:
 
 ```bash
 curl -X POST http://localhost:8080/oauth/token \
-  -d "code=NDU2ZWFLNMITN2M5NS0ZODBJLWFHNZITY2UWYZMWZWRMZDK2" \
-  -d "client_id=d1734396-476f-4a40-95b3-4349524be2e4" \
-  -d "client_secret=61a7f6ac-e922-46ad-9b27-f49713d9a4a2" \
-  -d "redirect_uri=https://your-app.com/callback" \
-  -d "grant_type=authorization_code"
+  -d "grant_type=authorization_code" \
+  -d "code=AUTH_CODE" \
+  -d "client_id=CLIENT_ID" \
+  -d "client_secret=CLIENT_SECRET" \
+  -d "redirect_uri=REDIRECT_URI" \
 ```
 
 - `client_credentials` Grant Type
