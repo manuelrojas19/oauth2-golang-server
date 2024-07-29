@@ -1,8 +1,6 @@
 package store
 
-import (
-	"time"
-)
+import "time"
 
 // AccessConsent represents the user's consent for a client and scope.
 type AccessConsent struct {
@@ -10,6 +8,7 @@ type AccessConsent struct {
 	UserId    string    `gorm:"index;not null"`
 	ClientId  string    `gorm:"index;not null"`
 	ScopeId   string    `gorm:"index;not null"`
+	Consented bool      `gorm:"not null;default:false"`
 	CreatedAt time.Time `gorm:"default:now()"`
 	UpdatedAt time.Time `gorm:"default:now()"`
 
