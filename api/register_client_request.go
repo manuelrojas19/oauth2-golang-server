@@ -12,8 +12,8 @@ import (
 
 type RegisterClientRequest struct {
 	ClientName              string                                 `json:"client_name"`
-	GrantTypes              []granttype.GrantType                  `json:"grant_type"`
-	ResponseTypes           []responsetype.ResponseType            `json:"response_type"`
+	GrantTypes              []granttype.GrantType                  `json:"grant_types"`
+	ResponseTypes           []responsetype.ResponseType            `json:"response_types"`
 	TokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod `json:"token_endpoint_auth_method"`
 	RedirectUris            []string                               `json:"redirect_uris"`
 }
