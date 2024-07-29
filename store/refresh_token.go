@@ -11,10 +11,13 @@ type RefreshToken struct {
 	TokenType     string    `gorm:"type:varchar(255);not null"`
 	ExpiresAt     time.Time `gorm:"not null"`
 	CreatedAt     time.Time `gorm:"default:now()"`
-	Client        *OauthClient
-	ClientId      string `gorm:"index;not null"`
-	AccessToken   *AccessToken
-	AccessTokenId string `gorm:"index;not null;constraint:OnDelete:CASCADE"`
+	AccessTokenId string    `gorm:"index;not null;constraint:OnDelete:CASCADE"`
+	ClientId      string    `gorm:"index;not null"`
+	UserId        string    `gorm:"index;not null"`
+
+	AccessToken *AccessToken
+	Client      *OauthClient
+	User        *User
 }
 
 // IsExpired checks if the refresh token has expired
@@ -32,6 +35,8 @@ type RefreshTokenBuilder struct {
 	clientId      string
 	accessToken   *AccessToken
 	accessTokenId string
+	user          *User
+	userId        string
 }
 
 func NewRefreshTokenBuilder() *RefreshTokenBuilder {
@@ -84,16 +89,33 @@ func (b *RefreshTokenBuilder) WithAccessTokenId(accessTokenId string) *RefreshTo
 	return b
 }
 
+// WithUserId sets the userId reference.
+func (b *RefreshTokenBuilder) WithUserId(userId string) *RefreshTokenBuilder {
+	b.userId = userId
+	return b
+}
+
+// WithUser sets the user reference.
+func (b *RefreshTokenBuilder) WithUser(user *User) *RefreshTokenBuilder {
+	b.user = user
+	if user != nil {
+		b.accessTokenId = user.Id
+	}
+	return b
+}
+
 func (b *RefreshTokenBuilder) Build() *RefreshToken {
 	return &RefreshToken{
 		Id:            uuid.New().String(),
 		Token:         b.token,
 		TokenType:     b.tokenType,
 		ExpiresAt:     b.expiresAt,
-		CreatedAt:     b.createdAt,
 		Client:        b.client,
 		ClientId:      b.clientId,
 		AccessToken:   b.accessToken,
 		AccessTokenId: b.accessTokenId,
+		User:          b.user,
+		UserId:        b.userId,
+		CreatedAt:     time.Now(),
 	}
 }

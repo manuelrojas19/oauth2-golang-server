@@ -14,15 +14,21 @@ import (
 
 type OauthClient struct {
 	ClientId                string         `gorm:"primaryKey;type:varchar(255);unique;not null"`
-	ClientSecret            string         `gorm:"type:text;not null"`
 	ClientName              string         `gorm:"type:varchar(255);unique;not null"`
+	ClientSecret            string         `gorm:"type:text;not null"`
 	ResponseTypes           pq.StringArray `gorm:"type:text[];not null"`
 	GrantTypes              pq.StringArray `gorm:"type:text[];not null"`
 	TokenEndpointAuthMethod string         `gorm:"type:varchar(255);not null"`
 	RedirectURIs            pq.StringArray `gorm:"type:text[]"`
 	CreatedAt               time.Time      `gorm:"default:now()"`
 	UpdatedAt               time.Time      `gorm:"default:now()"`
-	IsConfidential          bool
+	Confidential            bool
+	Scopes                  []Scope `gorm:"many2many:oauth_client_scopes;foreignKey:ClientId;joinForeignKey:ClientId;References:Id;JoinReferences:ScopeId"`
+}
+
+// TableName returns the table name for the OauthClient model.
+func (OauthClient) TableName() string {
+	return "oauth_clients"
 }
 
 // ValidateSecret compares a plaintext secret with a bcrypt hash and returns a boolean indicating whether they match.
@@ -46,6 +52,7 @@ type OauthClientBuilder struct {
 	grantTypes              []granttype.GrantType
 	tokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod
 	redirectURI             []string
+	confidential            bool
 }
 
 // NewOauthClientBuilder initializes a new OauthClientBuilder.
@@ -53,7 +60,7 @@ func NewOauthClientBuilder() *OauthClientBuilder {
 	return &OauthClientBuilder{}
 }
 
-// WithClientID sets the client Id.
+// WithClientID sets the client ID.
 func (b *OauthClientBuilder) WithClientID(clientID string) *OauthClientBuilder {
 	b.clientID = clientID
 	return b
@@ -71,34 +78,40 @@ func (b *OauthClientBuilder) WithClientName(clientName string) *OauthClientBuild
 	return b
 }
 
-// WithResponseTypes sets the responsetype types.
+// WithResponseTypes sets the response types.
 func (b *OauthClientBuilder) WithResponseTypes(responseTypes []responsetype.ResponseType) *OauthClientBuilder {
 	b.responseTypes = responseTypes
 	return b
 }
 
-// WithGrantTypes sets the granttype types.
+// WithGrantTypes sets the grant types.
 func (b *OauthClientBuilder) WithGrantTypes(grantTypes []granttype.GrantType) *OauthClientBuilder {
 	b.grantTypes = grantTypes
 	return b
 }
 
-// WithTokenEndpointAuthMethod sets the token endpoint authmethodtype method.
+// WithTokenEndpointAuthMethod sets the token endpoint authentication method.
 func (b *OauthClientBuilder) WithTokenEndpointAuthMethod(authMethod authmethodtype.TokenEndpointAuthMethod) *OauthClientBuilder {
 	b.tokenEndpointAuthMethod = authMethod
 	return b
 }
 
-// WithRedirectURI sets the redirect URI.
-func (b *OauthClientBuilder) WithRedirectURI(redirectURI []string) *OauthClientBuilder {
+// WithRedirectURIs sets the redirect URI.
+func (b *OauthClientBuilder) WithRedirectURIs(redirectURI []string) *OauthClientBuilder {
 	b.redirectURI = redirectURI
+	return b
+}
+
+// WithConfidential sets the confidentiality of the client.
+func (b *OauthClientBuilder) WithConfidential(confidential bool) *OauthClientBuilder {
+	b.confidential = confidential
 	return b
 }
 
 // Build constructs the OauthClient object.
 func (b *OauthClientBuilder) Build() *OauthClient {
 	if b.clientID == "" {
-		// Generate client Id if not set
+		// Generate client ID if not set
 		b.clientID = uuid.New().String()
 	}
 
@@ -112,5 +125,6 @@ func (b *OauthClientBuilder) Build() *OauthClient {
 		RedirectURIs:            b.redirectURI,
 		CreatedAt:               time.Now().UTC(),
 		UpdatedAt:               time.Now().UTC(),
+		Confidential:            b.confidential,
 	}
 }

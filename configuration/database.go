@@ -4,6 +4,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"log"
 	"os"
 )
 
@@ -21,15 +22,26 @@ func InitDatabaseConnection() (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	err = datasource.AutoMigrate(
+		&store.Scope{},
 		&store.OauthClient{},
 		&store.AccessToken{},
 		&store.RefreshToken{},
 		&store.User{},
 		&store.AuthCode{},
+		&store.AccessConsent{},
 	)
 
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+
+	// Create composite unique index
+	err = datasource.Exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth_client_scope_unique
+        ON oauth_client_scopes (client_id, scope_id);
+    `).Error
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Scope represents an OAuth scope.
 type Scope struct {
 	Id          string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
 	Name        string    `gorm:"type:varchar(255);not null"`
@@ -35,7 +36,7 @@ func (s *ScopeBuilder) WithDescription(description string) *ScopeBuilder {
 	return s
 }
 
-// Build creates a new ClientScope instance using the builder's settings.
+// Build creates a new OauthClientScope instance using the builder's settings.
 func (b *ScopeBuilder) Build() *Scope {
 	return &Scope{
 		Id:          uuid.New().String(),

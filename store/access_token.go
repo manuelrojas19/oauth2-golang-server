@@ -11,10 +11,13 @@ type AccessToken struct {
 	TokenType     string    `gorm:"type:varchar(255);not null"`
 	Scope         string    `gorm:"type:varchar(255);not null"`
 	ExpiresAt     time.Time `gorm:"not null"`
+	Code          string    `gorm:"type:text"` // Reference to authorization code
+	UserId        string    `gorm:"index;not null"`
+	ClientId      string    `gorm:"index;not null"`
 	CreatedAt     time.Time `gorm:"default:now()"`
 	UpdatedAt     time.Time `gorm:"default:now()"`
+	User          *User
 	Client        *OauthClient
-	ClientId      string         `gorm:"index;not null"`
 	RefreshTokens []RefreshToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:CASCADE"`
 }
 
@@ -25,6 +28,8 @@ type AccessTokenBuilder struct {
 	expiresAt time.Time
 	clientId  string
 	client    *OauthClient
+	userId    string
+	user      *User
 }
 
 // NewAccessTokenBuilder initializes a new builder instance.
@@ -56,7 +61,7 @@ func (b *AccessTokenBuilder) WithExpiresAt(expiresAt time.Time) *AccessTokenBuil
 	return b
 }
 
-// WithClientId sets the client Id value.
+// WithClientId sets the client ScopeId value.
 func (b *AccessTokenBuilder) WithClientId(clientId string) *AccessTokenBuilder {
 	b.clientId = clientId
 	return b
@@ -65,6 +70,18 @@ func (b *AccessTokenBuilder) WithClientId(clientId string) *AccessTokenBuilder {
 // WithClient sets the client reference.
 func (b *AccessTokenBuilder) WithClient(client *OauthClient) *AccessTokenBuilder {
 	b.client = client
+	return b
+}
+
+// WithUserId sets the userId reference.
+func (b *AccessTokenBuilder) WithUserId(userId string) *AccessTokenBuilder {
+	b.userId = userId
+	return b
+}
+
+// WithUser sets the user reference.
+func (b *AccessTokenBuilder) WithUser(user *User) *AccessTokenBuilder {
+	b.user = user
 	return b
 }
 
@@ -78,6 +95,8 @@ func (b *AccessTokenBuilder) Build() *AccessToken {
 		ExpiresAt: b.expiresAt,
 		ClientId:  b.clientId,
 		Client:    b.client,
+		UserId:    b.userId,
+		User:      b.user,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
