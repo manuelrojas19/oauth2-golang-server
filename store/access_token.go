@@ -30,6 +30,7 @@ type AccessTokenBuilder struct {
 	client    *OauthClient
 	userId    string
 	user      *User
+	code      string
 }
 
 // NewAccessTokenBuilder initializes a new builder instance.
@@ -85,6 +86,11 @@ func (b *AccessTokenBuilder) WithUser(user *User) *AccessTokenBuilder {
 	return b
 }
 
+func (b *AccessTokenBuilder) WithCode(code string) *AccessTokenBuilder {
+	b.code = code
+	return b
+}
+
 // Build constructs an AccessToken instance.
 func (b *AccessTokenBuilder) Build() *AccessToken {
 	return &AccessToken{
@@ -96,6 +102,7 @@ func (b *AccessTokenBuilder) Build() *AccessToken {
 		ClientId:  b.clientId,
 		Client:    b.client,
 		UserId:    b.userId,
+		Code:      b.code,
 		User:      b.user,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
