@@ -52,9 +52,10 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		return nil, fmt.Errorf("failed to retrieve client: %w", err)
 	}
 
-	// Validate if response type request si
+	// Validate if response type request is supported
 	if !isSupportedResponseType(command.ResponseType, client) {
 		log.Printf("Response type '%s' is not supported by the client '%s'", command.ResponseType, clientId)
+		// If not, return an error indicating the response type is not supported
 		return nil, fmt.Errorf("response type not supported by the client")
 	}
 
