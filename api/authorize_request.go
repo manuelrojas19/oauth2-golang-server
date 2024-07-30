@@ -6,6 +6,8 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"net/http"
+	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -37,7 +39,62 @@ func DecodeAuthorizeRequest(r *http.Request) (*AuthorizeRequest, error) {
 		State:        r.FormValue("state"),
 	}
 
+	err := sanitizeAuthorizeRequest(request)
+	if err != nil {
+		return nil, err
+	}
+
 	return request, nil
+}
+
+// sanitizeAuthorizeRequest sanitizes and validates the input values of an AuthorizeRequest
+func sanitizeAuthorizeRequest(request *AuthorizeRequest) error {
+	// Trim whitespace from all fields
+	request.ResponseType = responsetype.ResponseType(strings.TrimSpace(string(request.ResponseType)))
+	request.ClientId = strings.TrimSpace(request.ClientId)
+	request.RedirectUri = strings.TrimSpace(request.RedirectUri)
+	request.Scope = strings.TrimSpace(request.Scope)
+	request.State = strings.TrimSpace(request.State)
+
+	// Validate ClientId length
+	if len(request.ClientId) < 1 || len(request.ClientId) > 256 {
+		return errors.New("client_id length is invalid")
+	}
+
+	// Optionally validate State length
+	if len(request.State) > 256 {
+		return errors.New("state length is invalid")
+	}
+
+	// Validate RedirectUri
+	if _, err := url.ParseRequestURI(request.RedirectUri); err != nil {
+		return errors.New("redirect_uri is invalid")
+	}
+
+	// Additional checks for potential injection attacks
+	if containsInjectionPatterns(request.ClientId) || containsInjectionPatterns(request.State) {
+		return errors.New("client_id or state contains invalid characters")
+	}
+
+	return nil
+}
+
+// containsInjectionPatterns checks for common injection patterns
+func containsInjectionPatterns(s string) bool {
+	// Define common patterns for injection attacks
+	injectionPatterns := []string{
+		`(<[^>]+>)`, // HTML tags
+		`(\bselect\b|\bunion\b|\bupdate\b|\bdelete\b|\binsert\b)`, // SQL injection
+		`(\bscript\b)`, // JavaScript
+	}
+
+	for _, pattern := range injectionPatterns {
+		matched, _ := regexp.MatchString(pattern, s)
+		if matched {
+			return true
+		}
+	}
+	return false
 }
 
 // Validate validates the fields of the AuthorizeRequest
@@ -47,7 +104,7 @@ func (r *AuthorizeRequest) Validate() error {
 		return errors.New("response_type is required")
 	}
 	if !utils.IsValidResponseType(r.ResponseType) {
-		return fmt.Errorf("invalid response_type: %s", r.ResponseType)
+		return fmt.Errorf("the authorization server does not support obtaining an authorization code using this method")
 	}
 
 	// Validate ClientId
