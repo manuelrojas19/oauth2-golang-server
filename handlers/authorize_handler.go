@@ -68,7 +68,7 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, consentURL, http.StatusSeeOther)
 			return
 		default:
-			http.Error(w, "server_error", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("server error: %s", err), http.StatusInternalServerError)
 			return
 		}
 	}

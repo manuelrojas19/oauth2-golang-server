@@ -7,7 +7,6 @@ import (
 
 type User struct {
 	Id        string          `gorm:"primaryKey;type:varchar(255);unique;not null"`
-	Username  string          `gorm:"type:varchar(255);unique;not null"`
 	Name      string          `gorm:"type:varchar(255);not null"`
 	Email     string          `gorm:"type:varchar(255);unique"`
 	IdpName   string          `gorm:"type:varchar(255);not null"`
@@ -18,11 +17,10 @@ type User struct {
 
 // UserBuilder helps in constructing User instances with optional configurations.
 type UserBuilder struct {
-	id       string
-	username string
-	name     string
-	email    string
-	idpName  string
+	id      string
+	name    string
+	email   string
+	idpName string
 }
 
 // NewUserBuilder initializes a new UserBuilder.
@@ -33,12 +31,6 @@ func NewUserBuilder() *UserBuilder {
 // WithID sets the ScopeId field in the builder.
 func (b *UserBuilder) WithID(id string) *UserBuilder {
 	b.id = id
-	return b
-}
-
-// WithUsername sets the Username field in the builder.
-func (b *UserBuilder) WithUsername(username string) *UserBuilder {
-	b.username = username
 	return b
 }
 
@@ -68,7 +60,6 @@ func (b *UserBuilder) Build() *User {
 
 	return &User{
 		Id:        b.id,
-		Username:  b.username,
 		Name:      b.name,
 		Email:     b.email,
 		IdpName:   b.idpName,

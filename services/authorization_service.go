@@ -29,16 +29,22 @@ type authorizationService struct {
 	consentService     UserConsentService
 	authRepository     store.AuthorizationRepository
 	sessionService     SessionService
+	userRepository     store.UserRepository
 }
 
 // NewAuthorizationService initializes a new AuthorizationService
 func NewAuthorizationService(oauthClientService OauthClientService,
-	consentService UserConsentService, authRepository store.AuthorizationRepository,
-	userSessionService SessionService) AuthorizationService {
+	consentService UserConsentService,
+	authRepository store.AuthorizationRepository,
+	userSessionService SessionService,
+	userRepository store.UserRepository,
+) AuthorizationService {
 	return &authorizationService{oauthClientService: oauthClientService,
 		consentService: consentService,
 		authRepository: authRepository,
-		sessionService: userSessionService}
+		sessionService: userSessionService,
+		userRepository: userRepository,
+	}
 }
 
 // Authorize authorizes and generate an Auth Code
@@ -75,6 +81,13 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		return nil, fmt.Errorf("failed to retrieve user from session: %w", err)
 	}
 
+	user, err := a.userRepository.FindByUserId(userId)
+
+	if err != nil {
+		log.Printf("Error retrieving user from user ID '%s': %v", userId, err)
+		return nil, fmt.Errorf("failed to retrieve user from user ID: %w", err)
+	}
+
 	// Generate authorization code
 	code, err := utils.GenerateAuthCode(client.ClientId, userId)
 	if err != nil {
@@ -87,6 +100,7 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		WithCode(code).
 		WithClientId(client.ClientId).
 		WithClient(client).
+		WithUserId(user.Id).
 		WithRedirectURI(command.RedirectUri).
 		WithExpiresAt(time.Now().Add(10 * time.Minute)). // Set an expiration time
 		Build()

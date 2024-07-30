@@ -8,6 +8,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/configuration"
 	"github.com/manuelrojas19/go-oauth2-server/handlers"
 	"github.com/manuelrojas19/go-oauth2-server/services"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 	"io"
 	"io/ioutil"
 	"log"
@@ -32,10 +33,14 @@ type UserInfo struct {
 
 type googleAuthorizeCallbackHandler struct {
 	userSessionService services.SessionService
+	userRepository     store.UserRepository
 }
 
-func NewGoogleAuthorizeCallbackHandler(userSessionService services.SessionService) handlers.Handler {
-	return &googleAuthorizeCallbackHandler{userSessionService: userSessionService}
+func NewGoogleAuthorizeCallbackHandler(
+	userSessionService services.SessionService,
+	userRepository store.UserRepository,
+) handlers.Handler {
+	return &googleAuthorizeCallbackHandler{userSessionService: userSessionService, userRepository: userRepository}
 }
 
 func (g googleAuthorizeCallbackHandler) Handler(writer http.ResponseWriter, request *http.Request) {
@@ -67,7 +72,21 @@ func (g googleAuthorizeCallbackHandler) Handler(writer http.ResponseWriter, requ
 
 	log.Printf("User info: %v", userInfo)
 
-	sessionId, err := g.userSessionService.CreateSession(userInfo.ID, userInfo.Email)
+	user := store.NewUserBuilder().
+		WithID(userInfo.ID).
+		WithName(userInfo.Name).
+		WithEmail(userInfo.Email).
+		WithIdpName("Google Authorize").
+		Build()
+
+	user, err = g.userRepository.Save(user)
+
+	if err != nil {
+		http.Error(writer, fmt.Sprintf("Failed to save user: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	sessionId, err := g.userSessionService.CreateSession(user.Id, user.Email)
 
 	if err != nil {
 		log.Printf("Failed to create session: %s", err.Error())
