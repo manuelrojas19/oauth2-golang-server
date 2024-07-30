@@ -62,6 +62,12 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		return nil, fmt.Errorf(errors.ErrUnsupportedResponseType)
 	}
 
+	// Validate if redirect URI is in the client's list of valid redirect URIs
+	if !isValidRedirectUri(command, client) {
+		log.Printf("Redirect URI '%s' is not valid for client '%s'", command.RedirectUri, clientId)
+		return nil, fmt.Errorf(errors.ErrInvalidRedirectUri)
+	}
+
 	// Check if user is authenticated
 	if !a.sessionService.SessionExists(command.SessionId) {
 		log.Printf("Session ID does not exist, user not authenticated")
@@ -124,4 +130,15 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	log.Printf("Successfully generated authorization code for client ID '%s' and user ID '%s'", client.ClientId, userId)
 
 	return oauthCode, nil
+}
+
+func isValidRedirectUri(command *AuthorizeCommand, client *store.OauthClient) bool {
+	validRedirectUri := false
+	for _, uri := range client.RedirectURIs {
+		if command.RedirectUri == uri {
+			validRedirectUri = true
+			break
+		}
+	}
+	return validRedirectUri
 }
