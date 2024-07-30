@@ -6,6 +6,7 @@ type AuthCode struct {
 	Code        string
 	ClientId    string
 	RedirectURI string
+	Scope       string
 	ExpiresAt   time.Time
 	CreatedAt   time.Time
 }
@@ -45,6 +46,11 @@ func (b *AuthCodeBuilder) WithExpiresAt(expiresAt time.Time) *AuthCodeBuilder {
 
 func (b *AuthCodeBuilder) WithCreatedAt(createdAt time.Time) *AuthCodeBuilder {
 	b.authCode.CreatedAt = createdAt
+	return b
+}
+
+func (b *AuthCodeBuilder) WithScope(scope string) *AuthCodeBuilder {
+	b.authCode.Scope = scope
 	return b
 }
 

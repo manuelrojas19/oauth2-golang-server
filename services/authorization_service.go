@@ -103,6 +103,7 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		WithClientId(client.ClientId).
 		WithClient(client).
 		WithUserId(user.Id).
+		WithScope(command.Scope).
 		WithRedirectURI(command.RedirectUri).
 		WithExpiresAt(time.Now().Add(configuration.AuthCodeExpireTime)). // Set an expiration time
 		Build()
@@ -118,6 +119,7 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	oauthCode := oauth.NewAuthCodeBuilder().
 		WithCode(authCodeEntity.Code).
 		WithClientId(authCodeEntity.ClientId).
+		WithScope(authCodeEntity.Scope).
 		WithRedirectURI(authCodeEntity.RedirectURI).
 		WithCreatedAt(authCodeEntity.CreatedAt).
 		WithExpiresAt(authCodeEntity.ExpiresAt).
