@@ -46,7 +46,7 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		WithResponseTypes(command.ResponseTypes).
 		WithGrantTypes(command.GrantTypes).
 		WithTokenEndpointAuthMethod(command.TokenEndpointAuthMethod).
-		WithRedirectURI(command.RedirectUris).
+		WithRedirectURIs(command.RedirectUris).
 		Build()
 
 	// Save the client entity
@@ -69,11 +69,11 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 	return clientModel, nil
 }
 
-// FindOauthClient retrieves an OAuth client by its client Id.
+// FindOauthClient retrieves an OAuth client by its client ScopeId.
 func (s *oauthClientService) FindOauthClient(clientId string) (*store.OauthClient, error) {
 	client, err := s.oauthClientRepository.FindByClientId(clientId)
 	if err != nil {
-		log.Printf("Error finding OAuth client by Id: %v", err)
+		log.Printf("Error finding OAuth client by ScopeId: %v", err)
 		return nil, err
 	}
 	return client, nil
