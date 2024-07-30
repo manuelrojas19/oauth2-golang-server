@@ -63,8 +63,8 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	}
 
 	// Validate if redirect URI is in the client's list of valid redirect URIs
-	if !isValidRedirectUri(command, client) {
-		log.Printf("Redirect URI '%s' is not valid for client '%s'", command.RedirectUri, clientId)
+	if !isRegisteredRedirectUri(command, client) {
+		log.Printf("Redirect URI '%s' is not registered for client '%s'", command.RedirectUri, clientId)
 		return nil, fmt.Errorf(errors.ErrInvalidRedirectUri)
 	}
 
@@ -132,7 +132,7 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	return oauthCode, nil
 }
 
-func isValidRedirectUri(command *AuthorizeCommand, client *store.OauthClient) bool {
+func isRegisteredRedirectUri(command *AuthorizeCommand, client *store.OauthClient) bool {
 	validRedirectUri := false
 	for _, uri := range client.RedirectURIs {
 		if command.RedirectUri == uri {
