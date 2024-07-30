@@ -73,8 +73,17 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Build the redirect URL
+	redirectURL := authRequest.RedirectUri
+
+	// Check if state is not empty
+	if authRequest.State != "" {
+		redirectURL = fmt.Sprintf("%s?code=%s&state=%s", redirectURL, authCode.Code, authRequest.State)
+	} else {
+		redirectURL = fmt.Sprintf("%s?code=%s", redirectURL, authCode.Code)
+	}
+
 	// Redirect to the redirect_uri with the authorization code
-	redirectURL := fmt.Sprintf("%s?code=%s&state=%s", authRequest.RedirectUri, authCode.Code, authRequest.State)
 	log.Printf("Redirecting to: %s", redirectURL)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
