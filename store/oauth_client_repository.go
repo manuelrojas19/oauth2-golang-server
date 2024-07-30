@@ -63,9 +63,9 @@ func (ocd *oauthClientRepository) FindByClientId(clientId string) (*OauthClient,
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("OAuth client with ScopeId '%s' not found", clientId)
+			return nil, fmt.Errorf("OAuth client with clientId '%s' not found", clientId)
 		}
-		return nil, fmt.Errorf("error finding OAuth client with ScopeId '%s': %w", clientId, result.Error)
+		return nil, fmt.Errorf("error finding OAuth client with ClientId '%s': %w", clientId, result.Error)
 	}
 
 	return oauthClient, nil
@@ -75,7 +75,7 @@ func (ocd *oauthClientRepository) clientExists(clientKey string) bool {
 	var exists bool
 	result := ocd.Db.Raw("SELECT EXISTS (SELECT 1 FROM oauth_clients WHERE LOWER(client_id) = ?)", strings.ToLower(clientKey)).Scan(&exists)
 	if result.Error != nil {
-		log.Printf("Error checking existence of client with ScopeId '%s': %v", clientKey, result.Error)
+		log.Printf("Error checking existence of client with ClientId '%s': %v", clientKey, result.Error)
 		return false
 	}
 	return exists
