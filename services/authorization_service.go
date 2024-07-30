@@ -51,6 +51,14 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		return nil, fmt.Errorf("failed to retrieve client: %w", err)
 	}
 
+	// Validate if response type request is supported
+	for _, rt := range client.ResponseTypes {
+		if rt == command.ResponseType {
+			log.Printf("Response type '%s' is not supported by the client '%s'", command.ResponseType, clientId)
+			return nil, fmt.Errorf("response type not supported by the client")
+		}
+	}
+
 	// Check if user is authenticated
 	if !a.sessionService.SessionExists(command.SessionId) {
 		log.Printf("Session ID does not exist, user not authenticated")
@@ -77,7 +85,7 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	// Build authorization code entity
 	authCodeEntity := store.NewAuthorizationCodeBuilder().
 		WithCode(code).
-		WithClientID(client.ClientId).
+		WithClientId(client.ClientId).
 		WithClient(client).
 		WithRedirectURI(command.RedirectUri).
 		WithExpiresAt(time.Now().Add(10 * time.Minute)). // Set an expiration time
