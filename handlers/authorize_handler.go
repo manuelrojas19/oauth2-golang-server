@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"github.com/manuelrojas19/go-oauth2-server/api"
+	"github.com/manuelrojas19/go-oauth2-server/errors"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"log"
 	"net/http"
@@ -60,20 +61,20 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		switch err.Error() {
-		case services.ErrUserNotAuthenticated:
+		case errors.ErrUserNotAuthenticated:
 			loginURL := fmt.Sprintf("/oauth/login?%s", queryParams)
 			http.Redirect(w, r, loginURL, http.StatusSeeOther)
 			return
-		case services.ErrConsentRequired:
+		case errors.ErrConsentRequired:
 			consentURL := fmt.Sprintf("/oauth/consent?%s", queryParams)
 			http.Redirect(w, r, consentURL, http.StatusSeeOther)
 			return
-		case services.ErrUnsupportedResponseType:
+		case errors.ErrUnsupportedResponseType:
 			handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, "unsupported_response_type", err.Error())
 			return
 		default:
 			handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, "server_error",
-				"The authorization server encountered an unexpected condition that prevented it from fulfilling the request.")
+				"the authorization server encountered an unexpected condition that prevented it from fulfilling the request")
 			return
 		}
 	}

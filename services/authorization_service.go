@@ -3,18 +3,13 @@ package services
 import (
 	"fmt"
 	"github.com/manuelrojas19/go-oauth2-server/configuration"
+	"github.com/manuelrojas19/go-oauth2-server/errors"
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
 	"time"
-)
-
-const (
-	ErrUserNotAuthenticated    = "user not authenticated"
-	ErrConsentRequired         = "user consent required"
-	ErrUnsupportedResponseType = "The authorization server does not support obtaining an authorization code using this method."
 )
 
 type AuthorizeCommand struct {
@@ -64,14 +59,14 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	if !(command.ResponseType == responsetype.Code) {
 		log.Printf("Response type '%s' is not supported by the client '%s'", command.ResponseType, clientId)
 		// If not, return an error indicating the response type is not supported
-		return nil, fmt.Errorf(ErrUnsupportedResponseType)
+		return nil, fmt.Errorf(errors.ErrUnsupportedResponseType)
 	}
 
 	// Check if user is authenticated
 	if !a.sessionService.SessionExists(command.SessionId) {
 		log.Printf("Session ID does not exist, user not authenticated")
 		// If not, return an error indicating the user is not authenticated
-		return nil, fmt.Errorf(ErrUserNotAuthenticated)
+		return nil, fmt.Errorf(errors.ErrUserNotAuthenticated)
 	}
 
 	log.Printf("Session ID '%s' exists", command.SessionId)
