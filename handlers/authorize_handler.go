@@ -6,6 +6,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 type AuthorizeHandler struct {
@@ -24,14 +25,14 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Printf("Failed to decode authorization request: %v", err)
-		http.Error(w, "invalid_request", http.StatusBadRequest)
+		handleAuthError(w, r, "", "", "invalid_request", err.Error())
 		return
 	}
 
 	// Validate the authorization request
 	if err := authRequest.Validate(); err != nil {
 		log.Printf("Invalid authorization request: %v", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, "invalid_request", err.Error())
 		return
 	}
 
@@ -67,8 +68,12 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 			consentURL := fmt.Sprintf("/oauth/consent?%s", queryParams)
 			http.Redirect(w, r, consentURL, http.StatusSeeOther)
 			return
+		case services.ErrUnsupportedResponseType:
+			handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, "unsupported_response_type", err.Error())
+			return
 		default:
-			http.Error(w, fmt.Sprintf("server error: %s", err), http.StatusInternalServerError)
+			handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, "server_error",
+				"The authorization server encountered an unexpected condition that prevented it from fulfilling the request.")
 			return
 		}
 	}
@@ -86,4 +91,28 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 	// Redirect to the redirect_uri with the authorization code
 	log.Printf("Redirecting to: %s", redirectURL)
 	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+}
+
+func handleAuthError(w http.ResponseWriter, r *http.Request, redirectURI, state, errorCode, errorDescription string) {
+	// Default redirect URI if not provided
+	if redirectURI == "" {
+		redirectURI = "default/error/page" // Replace with your default error page
+	}
+
+	// Construct the error response URL
+	errorResponse := fmt.Sprintf("%s?error=%s", redirectURI, errorCode)
+
+	if errorDescription != "" {
+		errorResponse += fmt.Sprintf("&error_description=%s", url.QueryEscape(errorDescription))
+	}
+
+	if state != "" {
+		errorResponse += fmt.Sprintf("&state=%s", url.QueryEscape(state))
+	}
+
+	// Log the error for debugging purposes
+	log.Printf("Redirecting with error: %s", errorResponse)
+
+	// Redirect the client to the redirect URI with the error
+	http.Redirect(w, r, errorResponse, http.StatusFound)
 }

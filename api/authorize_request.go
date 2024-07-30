@@ -65,7 +65,7 @@ func (r *AuthorizeRequest) Validate() error {
 
 	// Optionally validate Scope (depending on your application's requirements)
 	if strings.TrimSpace(r.Scope) != "" && !utils.IsValidScope(r.Scope) {
-		return fmt.Errorf("invalid scope: %s", r.Scope)
+		return fmt.Errorf("the requested scope is invalid, unknown, or malformed")
 	}
 
 	// State is optional but can be validated if needed

@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	ErrUserNotAuthenticated = "user not authenticated"
-	ErrConsentRequired      = "user consent required"
+	ErrUserNotAuthenticated    = "user not authenticated"
+	ErrConsentRequired         = "user consent required"
+	ErrUnsupportedResponseType = "The authorization server does not support obtaining an authorization code using this method."
 )
 
 type AuthorizeCommand struct {
@@ -63,7 +64,7 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	if !(command.ResponseType == responsetype.Code) {
 		log.Printf("Response type '%s' is not supported by the client '%s'", command.ResponseType, clientId)
 		// If not, return an error indicating the response type is not supported
-		return nil, fmt.Errorf("response type not supported by the client")
+		return nil, fmt.Errorf(ErrUnsupportedResponseType)
 	}
 
 	// Check if user is authenticated
