@@ -59,8 +59,8 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		return nil, fmt.Errorf("failed to retrieve client: %w", err)
 	}
 
-	// Validate if response type request is supported
-	if !isSupportedResponseType(command.ResponseType, client) {
+	// Validate if response type request is supported, on authorize only supported Code response type
+	if !(command.ResponseType == responsetype.Code) {
 		log.Printf("Response type '%s' is not supported by the client '%s'", command.ResponseType, clientId)
 		// If not, return an error indicating the response type is not supported
 		return nil, fmt.Errorf("response type not supported by the client")
@@ -128,14 +128,4 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	log.Printf("Successfully generated authorization code for client ID '%s' and user ID '%s'", client.ClientId, userId)
 
 	return oauthCode, nil
-}
-
-func isSupportedResponseType(responseType responsetype.ResponseType, client *store.OauthClient) bool {
-	isSupported := false
-	for _, rt := range client.ResponseTypes {
-		if rt == string(responseType) {
-			isSupported = true
-		}
-	}
-	return isSupported
 }
