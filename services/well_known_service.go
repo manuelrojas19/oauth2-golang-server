@@ -43,7 +43,7 @@ func (w wellKnownService) GetJwk() (*jwk.Set, error) {
 	return &set, nil
 }
 
-// calculateKid generates a key Id based on the public key.
+// calculateKid generates a key ScopeId based on the public key.
 func calculateKid(publicKey *rsa.PublicKey) string {
 	keyData := publicKey.N.Bytes()
 	hasher := sha1.New()

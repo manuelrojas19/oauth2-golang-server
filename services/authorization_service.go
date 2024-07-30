@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
+	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
@@ -18,7 +19,7 @@ type AuthorizeCommand struct {
 	ClientId     string
 	Scope        string
 	RedirectUri  string
-	ResponseType string
+	ResponseType responsetype.ResponseType
 	SessionId    string
 	State        string
 }
@@ -51,12 +52,10 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		return nil, fmt.Errorf("failed to retrieve client: %w", err)
 	}
 
-	// Validate if response type request is supported
-	for _, rt := range client.ResponseTypes {
-		if rt == command.ResponseType {
-			log.Printf("Response type '%s' is not supported by the client '%s'", command.ResponseType, clientId)
-			return nil, fmt.Errorf("response type not supported by the client")
-		}
+	// Validate if response type request si
+	if !isSupportedResponseType(command.ResponseType, client) {
+		log.Printf("Response type '%s' is not supported by the client '%s'", command.ResponseType, clientId)
+		return nil, fmt.Errorf("response type not supported by the client")
 	}
 
 	// Check if user is authenticated
@@ -110,4 +109,14 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 	log.Printf("Successfully generated authorization code for client ID '%s' and user ID '%s'", client.ClientId, userId)
 
 	return oauthCode, nil
+}
+
+func isSupportedResponseType(responseType responsetype.ResponseType, client *store.OauthClient) bool {
+	isSupported := false
+	for _, rt := range client.ResponseTypes {
+		if rt == string(responseType) {
+			isSupported = true
+		}
+	}
+	return isSupported
 }

@@ -40,7 +40,7 @@ func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
 		ClientId:     authRequest.ClientId,
 		Scope:        authRequest.Scope,
 		RedirectUri:  authRequest.RedirectUri,
-		ResponseType: string(authRequest.ResponseType),
+		ResponseType: authRequest.ResponseType,
 		State:        authRequest.State,
 	}
 
