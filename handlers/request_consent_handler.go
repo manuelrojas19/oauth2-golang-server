@@ -8,11 +8,11 @@ import (
 	"net/url"
 )
 
-var tmpl *template.Template
+var requestTmpl *template.Template
 
 func init() {
 	var err error
-	tmpl, err = template.ParseFiles("templates/login.html")
+	requestTmpl, err = template.ParseFiles("templates/authorize.html")
 	if err != nil {
 		log.Fatalf("Error parsing template: %v", err)
 	}
@@ -58,7 +58,7 @@ func (h *RequestConsentHandler) Handler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Redirect the user to the consent page
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := requestTmpl.Execute(w, data); err != nil {
 		http.Error(w, "Error rendering template", http.StatusInternalServerError)
 	}
 }
