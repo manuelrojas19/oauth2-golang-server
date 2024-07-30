@@ -81,6 +81,7 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		return nil, fmt.Errorf("failed to retrieve user from session: %w", err)
 	}
 
+	// Validate if user is on database in order to add user db reference to auth code
 	user, err := a.userRepository.FindByUserId(userId)
 
 	if err != nil {
