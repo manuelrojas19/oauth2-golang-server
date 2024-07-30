@@ -13,8 +13,8 @@ type AuthCode struct {
 	Used        bool      `gorm:"not null;default:false"`
 	UserId      string    `gorm:"index;not null"`
 	ClientId    string    `gorm:"index;not null"`
-	ExpiresAt   time.Time `gorm:"default:now()"`
-	CreatedAt   time.Time `gorm:"default:now()"`
+	ExpiresAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	User        *User
 	Client      *OauthClient
 }

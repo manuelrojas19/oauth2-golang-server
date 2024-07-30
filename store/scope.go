@@ -10,8 +10,8 @@ type Scope struct {
 	Id          string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
 	Name        string    `gorm:"type:varchar(255);not null"`
 	Description string    `gorm:"type:varchar(800);not null"`
-	CreatedAt   time.Time `gorm:"default:now()"`
-	UpdatedAt   time.Time `gorm:"default:now()"`
+	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 }
 
 type ScopeBuilder struct {

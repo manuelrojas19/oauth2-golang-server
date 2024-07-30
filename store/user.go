@@ -10,8 +10,8 @@ type User struct {
 	Name      string          `gorm:"type:varchar(255);not null"`
 	Email     string          `gorm:"type:varchar(255);unique"`
 	IdpName   string          `gorm:"type:varchar(255);not null"`
-	CreatedAt time.Time       `gorm:"default:now()"`
-	UpdatedAt time.Time       `gorm:"default:now()"`
+	CreatedAt time.Time       `gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time       `gorm:"default:CURRENT_TIMESTAMP"`
 	Consents  []AccessConsent `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE"`
 }
 

@@ -7,17 +7,17 @@ import (
 	"log"
 )
 
-type authorizationCodeRepository struct {
+type authCodeRepository struct {
 	Db *gorm.DB
 }
 
-func NewAuthorizationRepository(db *gorm.DB) AuthorizationRepository {
-	return &authorizationCodeRepository{
+func NewAuthCodeRepository(db *gorm.DB) AuthorizationRepository {
+	return &authCodeRepository{
 		Db: db,
 	}
 }
 
-func (r *authorizationCodeRepository) Save(authCode *AuthCode) (*AuthCode, error) {
+func (r *authCodeRepository) Save(authCode *AuthCode) (*AuthCode, error) {
 	if err := r.Db.Create(authCode).Error; err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (r *authorizationCodeRepository) Save(authCode *AuthCode) (*AuthCode, error
 }
 
 // FindByCode retrieves a refresh token from the database using the token string.
-func (ot *authorizationCodeRepository) FindByCode(code string) (*AuthCode, error) {
+func (ot *authCodeRepository) FindByCode(code string) (*AuthCode, error) {
 	log.Printf("Searching  AuthCode %s", code)
 
 	// Initialize a new RefreshToken entity

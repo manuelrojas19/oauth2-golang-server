@@ -46,7 +46,7 @@ func main() {
 	accessTokenRepository := store.NewAccessTokenRepository(db)
 	refreshTokenRepository := store.NewRefreshTokenRepository(db)
 	userConsentRepository := store.NewUserConsentRepository(db)
-	authorizationRepository := store.NewAuthorizationRepository(db)
+	authorizationRepository := store.NewAuthCodeRepository(db)
 	userRepository := store.NewUserRepository(db)
 	userConsentService := services.NewUserConsentService(userConsentRepository)
 	oauthClientService := services.NewOauthClientService(oauthClientRepository)
