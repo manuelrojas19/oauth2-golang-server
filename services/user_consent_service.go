@@ -1,14 +1,14 @@
 package services
 
 import (
-	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 )
 
 type userConsentService struct {
-	consentRepo store.UserConsentRepository
+	consentRepo repositories.UserConsentRepository
 }
 
-func NewUserConsentService(consentRepo store.UserConsentRepository) UserConsentService {
+func NewUserConsentService(consentRepo repositories.UserConsentRepository) UserConsentService {
 	return &userConsentService{consentRepo: consentRepo}
 }
 

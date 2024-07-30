@@ -8,7 +8,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/idp"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/session"
-	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"log"
 	"net/http"
 )
@@ -42,12 +42,12 @@ func main() {
 	userSessionService := session.NewSessionService(redisClient)
 
 	// Initialize repositories and services
-	oauthClientRepository := store.NewOauthClientRepository(db)
-	accessTokenRepository := store.NewAccessTokenRepository(db)
-	refreshTokenRepository := store.NewRefreshTokenRepository(db)
-	userConsentRepository := store.NewUserConsentRepository(db)
-	authorizationRepository := store.NewAuthCodeRepository(db)
-	userRepository := store.NewUserRepository(db)
+	oauthClientRepository := repositories.NewOauthClientRepository(db)
+	accessTokenRepository := repositories.NewAccessTokenRepository(db)
+	refreshTokenRepository := repositories.NewRefreshTokenRepository(db)
+	userConsentRepository := repositories.NewUserConsentRepository(db)
+	authorizationRepository := repositories.NewAuthCodeRepository(db)
+	userRepository := repositories.NewUserRepository(db)
 	userConsentService := services.NewUserConsentService(userConsentRepository)
 	oauthClientService := services.NewOauthClientService(oauthClientRepository)
 	tokenService := services.NewTokenService(accessTokenRepository, refreshTokenRepository, authorizationRepository, oauthClientService)

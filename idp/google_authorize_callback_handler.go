@@ -9,6 +9,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/handlers"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"io"
 	"io/ioutil"
 	"log"
@@ -33,12 +34,12 @@ type UserInfo struct {
 
 type googleAuthorizeCallbackHandler struct {
 	userSessionService services.SessionService
-	userRepository     store.UserRepository
+	userRepository     repositories.UserRepository
 }
 
 func NewGoogleAuthorizeCallbackHandler(
 	userSessionService services.SessionService,
-	userRepository store.UserRepository,
+	userRepository repositories.UserRepository,
 ) handlers.Handler {
 	return &googleAuthorizeCallbackHandler{userSessionService: userSessionService, userRepository: userRepository}
 }

@@ -14,8 +14,8 @@ type AccessToken struct {
 	Code          string    `gorm:"type:text"` // Reference to authorization code
 	UserId        string    `gorm:"index;not null"`
 	ClientId      string    `gorm:"index;not null"`
-	CreatedAt     time.Time `gorm:"default:now()"`
-	UpdatedAt     time.Time `gorm:"default:now()"`
+	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	User          *User
 	Client        *OauthClient
 	RefreshTokens []RefreshToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:CASCADE"`

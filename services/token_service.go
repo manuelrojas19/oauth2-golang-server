@@ -5,6 +5,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
 	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
 	"time"
@@ -34,16 +35,16 @@ func NewGrantAccessTokenCommand(clientId string, clientSecret string, grantType 
 }
 
 type tokenService struct {
-	accessTokenRepository  store.AccessTokenRepository
-	refreshTokenRepository store.RefreshTokenRepository
-	authRepository         store.AuthorizationRepository
+	accessTokenRepository  repositories.AccessTokenRepository
+	refreshTokenRepository repositories.RefreshTokenRepository
+	authRepository         repositories.AuthorizationRepository
 	client                 OauthClientService
 }
 
 func NewTokenService(
-	accessTokenRepository store.AccessTokenRepository,
-	refreshTokenRepository store.RefreshTokenRepository,
-	authRepository store.AuthorizationRepository,
+	accessTokenRepository repositories.AccessTokenRepository,
+	refreshTokenRepository repositories.RefreshTokenRepository,
+	authRepository repositories.AuthorizationRepository,
 	client OauthClientService) TokenService {
 	return &tokenService{
 		accessTokenRepository:  accessTokenRepository,

@@ -1,8 +1,9 @@
-package store
+package repositories
 
 import (
 	"errors"
 	"fmt"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 	"gorm.io/gorm"
 	"log"
 )
@@ -31,7 +32,7 @@ func (ot *refreshTokenRepository) InvalidateRefreshTokensByAccessTokenId(tokenId
 	}
 
 	usedDeleteTokenQuery := tx.Unscoped().Where("access_token_id = ?", tokenId)
-	if err := usedDeleteTokenQuery.Delete(new(RefreshToken)).Error; err != nil {
+	if err := usedDeleteTokenQuery.Delete(new(store.RefreshToken)).Error; err != nil {
 		log.Printf("ERROR: Failed to execute delete query for access token ScopeId '%s': %v", tokenId, err)
 		tx.Rollback()
 		return fmt.Errorf("failed to delete refresh token: %w", err)
@@ -47,7 +48,7 @@ func (ot *refreshTokenRepository) InvalidateRefreshTokensByAccessTokenId(tokenId
 	return nil
 }
 
-func (ot *refreshTokenRepository) Save(token *RefreshToken) (*RefreshToken, error) {
+func (ot *refreshTokenRepository) Save(token *store.RefreshToken) (*store.RefreshToken, error) {
 	log.Printf("Starting transaction to save refresh token for access_token_id %s", token.AccessTokenId)
 
 	tx := ot.Db.Begin()
@@ -80,11 +81,11 @@ func (ot *refreshTokenRepository) Save(token *RefreshToken) (*RefreshToken, erro
 }
 
 // FindByToken retrieves a refresh token from the database using the token string.
-func (ot *refreshTokenRepository) FindByToken(token string) (*RefreshToken, error) {
+func (ot *refreshTokenRepository) FindByToken(token string) (*store.RefreshToken, error) {
 	log.Printf("Searching for refresh token with token string %s", token)
 
 	// Initialize a new RefreshToken entity
-	refreshToken := new(RefreshToken)
+	refreshToken := new(store.RefreshToken)
 
 	// Query the database for the token
 	result := ot.Db.Where("token = ?", token).First(refreshToken)

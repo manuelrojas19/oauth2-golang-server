@@ -1,8 +1,9 @@
-package store
+package repositories
 
 import (
 	"errors"
 	"fmt"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 	"log"
 	"strings"
 
@@ -17,7 +18,7 @@ func NewOauthClientRepository(db *gorm.DB) OauthClientRepository {
 	return &oauthClientRepository{Db: db}
 }
 
-func (ocd *oauthClientRepository) Save(client *OauthClient) (*OauthClient, error) {
+func (ocd *oauthClientRepository) Save(client *store.OauthClient) (*store.OauthClient, error) {
 	// Begin a new transaction
 	tx := ocd.Db.Begin()
 	defer func() {
@@ -57,8 +58,8 @@ func (ocd *oauthClientRepository) Save(client *OauthClient) (*OauthClient, error
 	return client, nil
 }
 
-func (ocd *oauthClientRepository) FindByClientId(clientId string) (*OauthClient, error) {
-	oauthClient := new(OauthClient)
+func (ocd *oauthClientRepository) FindByClientId(clientId string) (*store.OauthClient, error) {
+	oauthClient := new(store.OauthClient)
 	result := ocd.Db.Where("LOWER(client_id) = ?", strings.ToLower(clientId)).First(oauthClient)
 
 	if result.Error != nil {

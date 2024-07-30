@@ -1,8 +1,9 @@
-package store
+package repositories
 
 import (
 	"errors"
 	"fmt"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 	"gorm.io/gorm"
 	"log"
 )
@@ -17,7 +18,7 @@ func NewAuthCodeRepository(db *gorm.DB) AuthorizationRepository {
 	}
 }
 
-func (r *authCodeRepository) Save(authCode *AuthCode) (*AuthCode, error) {
+func (r *authCodeRepository) Save(authCode *store.AuthCode) (*store.AuthCode, error) {
 	if err := r.Db.Create(authCode).Error; err != nil {
 		return nil, err
 	}
@@ -25,11 +26,11 @@ func (r *authCodeRepository) Save(authCode *AuthCode) (*AuthCode, error) {
 }
 
 // FindByCode retrieves a refresh token from the database using the token string.
-func (ot *authCodeRepository) FindByCode(code string) (*AuthCode, error) {
+func (ot *authCodeRepository) FindByCode(code string) (*store.AuthCode, error) {
 	log.Printf("Searching  AuthCode %s", code)
 
 	// Initialize a new RefreshToken entity
-	authCode := new(AuthCode)
+	authCode := new(store.AuthCode)
 
 	// Query the database for the token
 	result := ot.Db.Where("code = ?", code).First(authCode)

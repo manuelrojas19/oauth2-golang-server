@@ -1,6 +1,8 @@
-package store
+package repositories
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type userConsentRepository struct {
 	Db *gorm.DB

@@ -1,8 +1,9 @@
-package store
+package repositories
 
 import (
 	"errors"
 	"fmt"
+	"github.com/manuelrojas19/go-oauth2-server/store"
 	"gorm.io/gorm"
 	"log"
 )
@@ -18,7 +19,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 }
 
 // Save creates or updates a user in the database
-func (r *userRepository) Save(user *User) (*User, error) {
+func (r *userRepository) Save(user *store.User) (*store.User, error) {
 	log.Printf("Saving user with ID %s", user.Id)
 
 	// Perform the save operation
@@ -35,11 +36,11 @@ func (r *userRepository) Save(user *User) (*User, error) {
 }
 
 // FindByUserId retrieves a user by ID from the database.
-func (r *userRepository) FindByUserId(id string) (*User, error) {
+func (r *userRepository) FindByUserId(id string) (*store.User, error) {
 	log.Printf("Searching for user with ID %s", id)
 
 	// Initialize a new User entity
-	user := new(User)
+	user := new(store.User)
 
 	// Query the database for the user
 	result := r.db.Where("id = ?", id).First(user)

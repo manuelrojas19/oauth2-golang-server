@@ -7,6 +7,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
 	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
 )
@@ -20,11 +21,11 @@ type RegisterOauthClientCommand struct {
 }
 
 type oauthClientService struct {
-	oauthClientRepository store.OauthClientRepository
+	oauthClientRepository repositories.OauthClientRepository
 }
 
 // NewOauthClientService initializes a new OauthClientService.
-func NewOauthClientService(oauthClientRepository store.OauthClientRepository) OauthClientService {
+func NewOauthClientService(oauthClientRepository repositories.OauthClientRepository) OauthClientService {
 	return &oauthClientService{oauthClientRepository: oauthClientRepository}
 }
 

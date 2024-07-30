@@ -7,6 +7,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
 	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
 	"time"
@@ -24,17 +25,17 @@ type AuthorizeCommand struct {
 type authorizationService struct {
 	oauthClientService OauthClientService
 	consentService     UserConsentService
-	authRepository     store.AuthorizationRepository
+	authRepository     repositories.AuthorizationRepository
 	sessionService     SessionService
-	userRepository     store.UserRepository
+	userRepository     repositories.UserRepository
 }
 
 // NewAuthorizationService initializes a new AuthorizationService
 func NewAuthorizationService(oauthClientService OauthClientService,
 	consentService UserConsentService,
-	authRepository store.AuthorizationRepository,
+	authRepository repositories.AuthorizationRepository,
 	userSessionService SessionService,
-	userRepository store.UserRepository,
+	userRepository repositories.UserRepository,
 ) AuthorizationService {
 	return &authorizationService{oauthClientService: oauthClientService,
 		consentService: consentService,
