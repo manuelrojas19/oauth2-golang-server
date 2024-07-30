@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"github.com/manuelrojas19/go-oauth2-server/configuration"
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
 	"github.com/manuelrojas19/go-oauth2-server/store"
@@ -103,7 +104,7 @@ func (a authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthC
 		WithClient(client).
 		WithUserId(user.Id).
 		WithRedirectURI(command.RedirectUri).
-		WithExpiresAt(time.Now().Add(10 * time.Minute)). // Set an expiration time
+		WithExpiresAt(time.Now().Add(configuration.AuthCodeExpireTime)). // Set an expiration time
 		Build()
 
 	// Save authorization code entity to repository
