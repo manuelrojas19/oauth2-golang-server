@@ -57,3 +57,17 @@ func (b *AuthCodeBuilder) WithScope(scope string) *AuthCodeBuilder {
 func (b *AuthCodeBuilder) Build() *AuthCode {
 	return &b.authCode
 }
+
+// Equal compares two AuthCode instances for equality, ignoring ext field of time.
+func (a *AuthCode) Equal(b *AuthCode) bool {
+	if a == b {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return a.Code == b.Code &&
+		a.ClientId == b.ClientId &&
+		a.RedirectURI == b.RedirectURI &&
+		a.Scope == b.Scope
+}

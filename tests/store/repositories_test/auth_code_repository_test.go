@@ -1,8 +1,9 @@
-package repositories
+package repositories_test
 
 import (
 	"errors"
 	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"testing"
 	"time"
 
@@ -25,7 +26,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 
 func TestAuthCodeRepository_Save(t *testing.T) {
 	db := setupTestDB(t)
-	repo := NewAuthCodeRepository(db)
+	repo := repositories.NewAuthCodeRepository(db)
 
 	authCode := &store.AuthCode{
 		Id:          "1",
@@ -52,7 +53,7 @@ func TestAuthCodeRepository_Save(t *testing.T) {
 
 func TestAuthCodeRepository_FindByCode(t *testing.T) {
 	db := setupTestDB(t)
-	repo := NewAuthCodeRepository(db)
+	repo := repositories.NewAuthCodeRepository(db)
 
 	authCode := &store.AuthCode{
 		Id:          "1",
@@ -76,7 +77,7 @@ func TestAuthCodeRepository_FindByCode(t *testing.T) {
 
 func TestAuthCodeRepository_FindByCode_RecordNotFound(t *testing.T) {
 	db := setupTestDB(t)
-	repo := NewAuthCodeRepository(db)
+	repo := repositories.NewAuthCodeRepository(db)
 
 	result, err := repo.FindByCode("non_existent_code")
 	assert.Error(t, err)
@@ -86,7 +87,7 @@ func TestAuthCodeRepository_FindByCode_RecordNotFound(t *testing.T) {
 
 func TestAuthCodeRepository_FindByCode_GenericError(t *testing.T) {
 	db := setupTestDB(t)
-	repo := NewAuthCodeRepository(db)
+	repo := repositories.NewAuthCodeRepository(db)
 
 	// Simulate a generic database error
 	db.Error = errors.New("generic database error") // Simulate a generic database error
