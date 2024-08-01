@@ -15,26 +15,12 @@ import (
 func SetupHTTPServer(
 	lc fx.Lifecycle,
 	mux *http.ServeMux,
-	registerHandler handlers.RegisterHandler,
-	tokenHandler handlers.TokenHandler,
-	authorizeHandler handlers.AuthorizeHandler,
-	requestConsentHandler handlers.RequestConsentHandler,
-	jwksHandler handlers.JwksHandler,
-	authorizeCallbackHandler handlers.AuthorizeCallbackHandler,
-	loginHandler handlers.LoginHandler,
+	routes handlers.Routes,
 ) {
-	// Register routes
-	mux.HandleFunc("/oauth/register", registerHandler.Register)
-	mux.HandleFunc("/oauth/token", tokenHandler.Token)
-	mux.HandleFunc("/oauth/authorize", authorizeHandler.Authorize)
-	mux.HandleFunc("/oauth/consent", requestConsentHandler.RequestConsent)
-	mux.HandleFunc("/oauth/login", loginHandler.Login)
-	mux.HandleFunc("/.well-known/jwks.json", jwksHandler.Jwks)
-	mux.HandleFunc("/google/authorize/callback", authorizeCallbackHandler.ProcessCallback)
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
-	})
+	// Register routes dynamically
+	for path, handler := range routes.Routes() {
+		mux.HandleFunc(path, handler)
+	}
 
 	// Register lifecycle hooks
 	lc.Append(fx.Hook{
