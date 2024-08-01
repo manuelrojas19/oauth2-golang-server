@@ -1,17 +1,13 @@
 package configuration
 
 import (
-	"os"
+	"github.com/redis/go-redis/v9"
 )
 
-var (
-	RedisAddr     string
-	RedisPassword string
-	RedisDB       int
-)
-
-func LoadRedisSecrets() {
-	RedisAddr = os.Getenv("REDIS_URL")
-	RedisPassword = os.Getenv("REDIS_PASSWORD")
-	RedisPassword = os.Getenv("REDIS_DB")
+func NewRedisClient() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     RedisAddr,
+		Password: RedisPassword,
+		DB:       RedisDB,
+	})
 }

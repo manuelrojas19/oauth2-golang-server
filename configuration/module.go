@@ -7,6 +7,7 @@ import (
 var Module = fx.Options(
 	fx.Provide(
 		NewDatabaseConnection,
+		NewRedisClient,
 	),
 	fx.Invoke(
 		LoadSecrets,

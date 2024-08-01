@@ -5,16 +5,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
-	"os"
 )
-
-var (
-	DatabaseUrl string
-)
-
-func LoadDbSecrets() {
-	DatabaseUrl = os.Getenv("DATABASE_URL")
-}
 
 func NewDatabaseConnection() (*gorm.DB, error) {
 	datasource, err := gorm.Open(postgres.Open(DatabaseUrl), &gorm.Config{})
