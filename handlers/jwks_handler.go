@@ -6,17 +6,17 @@ import (
 	"net/http"
 )
 
-type JwksHandler struct {
+type jwksHandler struct {
 	wellKnownService services.WellKnownService
 }
 
-func NewJwksHandler(wellKnownService services.WellKnownService) Handler {
-	return &JwksHandler{
+func NewJwksHandler(wellKnownService services.WellKnownService) JwksHandler {
+	return &jwksHandler{
 		wellKnownService: wellKnownService,
 	}
 }
 
-func (j JwksHandler) Handler(w http.ResponseWriter, _ *http.Request) {
+func (j jwksHandler) Jwks(w http.ResponseWriter, _ *http.Request) {
 	jwk, err := j.wellKnownService.GetJwk()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

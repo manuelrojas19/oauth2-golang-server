@@ -18,11 +18,11 @@ func init() {
 	}
 }
 
-type RequestConsentHandler struct {
+type requestConsentHandler struct {
 }
 
-func NewRequestConsentHandler() Handler {
-	return &RequestConsentHandler{}
+func NewRequestConsentHandler() RequestConsentHandler {
+	return &requestConsentHandler{}
 }
 
 type ConsentPageData struct {
@@ -33,7 +33,7 @@ type ConsentPageData struct {
 	ConsentPageURL string
 }
 
-func (h *RequestConsentHandler) Handler(w http.ResponseWriter, r *http.Request) {
+func (h *requestConsentHandler) RequestConsent(w http.ResponseWriter, r *http.Request) {
 	clientId := r.URL.Query().Get("client_id")
 	scope := r.URL.Query().Get("scope")
 	redirectUri := r.URL.Query().Get("redirect_uri")

@@ -6,13 +6,13 @@ import (
 	"net/url"
 )
 
-type HandleUserConsentHandler struct{}
+type acceptConsentHandler struct{}
 
-func NewHandleUserConsentHandler() *HandleUserConsentHandler {
-	return &HandleUserConsentHandler{}
+func NewAcceptConsentHandler() AcceptConsentHandler {
+	return &acceptConsentHandler{}
 }
 
-func (h *HandleUserConsentHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *acceptConsentHandler) AcceptConsent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return

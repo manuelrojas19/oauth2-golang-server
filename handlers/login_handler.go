@@ -25,7 +25,7 @@ func init() {
 type loginHandler struct {
 }
 
-func NewLoginHandler() Handler {
+func NewLoginHandler() LoginHandler {
 	return &loginHandler{}
 }
 
@@ -33,7 +33,7 @@ type LoginData struct {
 	GoogleURL string
 }
 
-func (l loginHandler) Handler(writer http.ResponseWriter, request *http.Request) {
+func (l loginHandler) Login(writer http.ResponseWriter, request *http.Request) {
 	// Redirect the user to the consent page
 	originalParams := map[string]string{
 		"client_id":     request.URL.Query().Get("client_id"),

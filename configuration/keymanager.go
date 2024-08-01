@@ -23,8 +23,8 @@ type KeyPair struct {
 	PublicKey  *rsa.PublicKey
 }
 
-// Initialize initializes the JWT and JWE keys. It is thread-safe and will only run once.
-func Initialize() error {
+// InitializeKeys initializes the JWT and JWE keys. It is thread-safe and will only run once.
+func InitializeKeys() error {
 	var err error
 	once.Do(func() {
 		if err = loadKeys(); err != nil {

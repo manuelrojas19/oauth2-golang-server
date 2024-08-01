@@ -13,14 +13,14 @@ type tokenHandler struct {
 }
 
 // NewTokenHandler creates a new instance of the handler.
-func NewTokenHandler(tokenService services.TokenService) Handler {
+func NewTokenHandler(tokenService services.TokenService) TokenHandler {
 	return &tokenHandler{
 		tokenService: tokenService,
 	}
 }
 
-// Handler processes the request for an access token using the Client Credentials Grant flow.
-func (handler *tokenHandler) Handler(w http.ResponseWriter, r *http.Request) {
+// Token processes the request for an access token using the Client Credentials Grant flow.
+func (handler *tokenHandler) Token(w http.ResponseWriter, r *http.Request) {
 	log.Println("Received token request")
 
 	if r.Method != http.MethodPost {

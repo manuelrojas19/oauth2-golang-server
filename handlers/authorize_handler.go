@@ -10,17 +10,17 @@ import (
 	"net/url"
 )
 
-type AuthorizeHandler struct {
+type authorizeHandler struct {
 	authorizationService services.AuthorizationService
 }
 
-func NewAuthorizeHandler(authorizationService services.AuthorizationService) Handler {
-	return &AuthorizeHandler{
+func NewAuthorizeHandler(authorizationService services.AuthorizationService) AuthorizeHandler {
+	return &authorizeHandler{
 		authorizationService: authorizationService,
 	}
 }
 
-func (a AuthorizeHandler) Handler(w http.ResponseWriter, r *http.Request) {
+func (a authorizeHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	// Decode the authorization request
 	authRequest, err := api.DecodeAuthorizeRequest(r)
 

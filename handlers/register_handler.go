@@ -13,13 +13,13 @@ type registerHandler struct {
 	oauthClientService services.OauthClientService
 }
 
-// NewRegisterHandler creates a new instance of Handler.
-func NewRegisterHandler(oauthClientService services.OauthClientService) Handler {
+// NewRegisterHandler creates a new instance of RegisterHandler.
+func NewRegisterHandler(oauthClientService services.OauthClientService) RegisterHandler {
 	return &registerHandler{oauthClientService: oauthClientService}
 }
 
-// Handler processes the registration of a new OAuth client.
-func (handler *registerHandler) Handler(w http.ResponseWriter, r *http.Request) {
+// Register processes the registration of a new OAuth client.
+func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request) {
 	log.Println("Received registration request")
 
 	if r.Method != http.MethodPost {

@@ -31,21 +31,21 @@ type UserInfo struct {
 	Name  string `json:"name"`
 }
 
-type googleAuthorizeCallbackHandler struct {
+type authorizeCallbackHandler struct {
 	userSessionService services.SessionService
 	userRepository     repositories.UserRepository
 }
 
-func NewGoogleAuthorizeCallbackHandler(
+func NewAuthorizeCallbackHandler(
 	userSessionService services.SessionService,
 	userRepository repositories.UserRepository,
-) Handler {
-	return &googleAuthorizeCallbackHandler{
+) AuthorizeCallbackHandler {
+	return &authorizeCallbackHandler{
 		userSessionService: userSessionService,
 		userRepository:     userRepository}
 }
 
-func (g googleAuthorizeCallbackHandler) Handler(writer http.ResponseWriter, request *http.Request) {
+func (g authorizeCallbackHandler) ProcessCallback(writer http.ResponseWriter, request *http.Request) {
 
 	state := request.URL.Query().Get("state")
 	if state == "" {

@@ -16,7 +16,7 @@ func LoadDbSecrets() {
 	DatabaseUrl = os.Getenv("DATABASE_URL")
 }
 
-func InitDatabaseConnection() (*gorm.DB, error) {
+func NewDatabaseConnection() (*gorm.DB, error) {
 	datasource, err := gorm.Open(postgres.Open(DatabaseUrl), &gorm.Config{})
 
 	if err != nil {
