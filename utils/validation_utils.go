@@ -30,10 +30,8 @@ func IsValidResponseType(rt responsetype.ResponseType) bool {
 	case responsetype.Code,
 		responsetype.Token,
 		responsetype.IDToken:
-		log.Printf("Valid response type: %s", rt)
 		return true
 	}
-	log.Printf("Invalid response type: %s", rt)
 	return false
 }
 
@@ -43,10 +41,8 @@ func IsValidAuthMethod(authMethod authmethodtype.TokenEndpointAuthMethod) bool {
 	case authmethodtype.ClientSecretBasic,
 		authmethodtype.ClientSecretPost,
 		authmethodtype.None:
-		log.Printf("Valid authentication method: %s", authMethod)
 		return true
 	}
-	log.Printf("Invalid authentication method: %s", authMethod)
 	return false
 }
 
@@ -54,10 +50,8 @@ func IsValidAuthMethod(authMethod authmethodtype.TokenEndpointAuthMethod) bool {
 func IsValidRedirectUri(redirectUri string) bool {
 	_, err := url.ParseRequestURI(redirectUri)
 	if err != nil {
-		log.Printf("Invalid redirect URI: %s, error: %v", redirectUri, err)
 		return false
 	}
-	log.Printf("Valid redirect URI: %s", redirectUri)
 	return true
 }
 
@@ -66,14 +60,11 @@ func IsValidScope(scope string) bool {
 	// Example: ensure scope contains only alphanumeric characters and spaces
 	matched, err := regexp.MatchString(`^[a-zA-Z0-9 ]*$`, scope)
 	if err != nil {
-		log.Printf("Error validating scope: %s, error: %v", scope, err)
 		return false
 	}
 	if matched {
-		log.Printf("Valid scope: %s", scope)
 		return true
 	}
-	log.Printf("Invalid scope: %s", scope)
 	return false
 }
 
@@ -82,13 +73,10 @@ func IsValidState(state string) bool {
 	// Example: ensure state is non-empty and contains only alphanumeric characters
 	matched, err := regexp.MatchString(`^[a-zA-Z0-9]*$`, state)
 	if err != nil {
-		log.Printf("Error validating state: %s, error: %v", state, err)
 		return false
 	}
 	if matched {
-		log.Printf("Valid state: %s", state)
 		return true
 	}
-	log.Printf("Invalid state: %s", state)
 	return false
 }

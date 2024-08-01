@@ -4,40 +4,45 @@ import (
 	"errors"
 	"fmt"
 	"github.com/manuelrojas19/go-oauth2-server/store"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"log"
 )
 
 // userRepository is a concrete implementation of UserRepository
 type userRepository struct {
-	db *gorm.DB
+	db     *gorm.DB
+	logger *zap.Logger
 }
 
 // NewUserRepository creates a new instance of userRepository
-func NewUserRepository(db *gorm.DB) UserRepository {
-	return &userRepository{db: db}
+func NewUserRepository(db *gorm.DB, logger *zap.Logger) UserRepository {
+	return &userRepository{db: db, logger: logger}
 }
 
 // Save creates or updates a user in the database
 func (r *userRepository) Save(user *store.User) (*store.User, error) {
-	log.Printf("Saving user with ID %s", user.Id)
+	r.logger.Info("Saving user", zap.String("userID", user.Id))
 
 	// Perform the save operation
 	result := r.db.Save(user)
 
 	// Handle errors during the save operation
 	if result.Error != nil {
-		log.Printf("Error saving user with ID %s: %v", user.Id, result.Error)
+		r.logger.Error("Error saving user",
+			zap.String("userID", user.Id),
+			zap.Error(result.Error),
+			zap.Stack("stacktrace"),
+		)
 		return nil, fmt.Errorf("error saving user: %w", result.Error)
 	}
 
-	log.Printf("Successfully saved user with ID %s", user.Id)
+	r.logger.Info("Successfully saved user", zap.String("userID", user.Id))
 	return user, nil
 }
 
 // FindByUserId retrieves a user by ID from the database.
 func (r *userRepository) FindByUserId(id string) (*store.User, error) {
-	log.Printf("Searching for user with ID %s", id)
+	r.logger.Info("Searching for user", zap.String("userID", id))
 
 	// Initialize a new User entity
 	user := new(store.User)
@@ -48,13 +53,17 @@ func (r *userRepository) FindByUserId(id string) (*store.User, error) {
 	// Handle errors during the query
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			log.Printf("User with ID %s not found", id)
+			r.logger.Warn("User not found", zap.String("userID", id))
 			return nil, fmt.Errorf("user not found")
 		}
-		log.Printf("Error finding user with ID %s: %v", id, result.Error)
+		r.logger.Error("Error finding user",
+			zap.String("userID", id),
+			zap.Error(result.Error),
+			zap.Stack("stacktrace"),
+		)
 		return nil, fmt.Errorf("error finding user: %w", result.Error)
 	}
 
-	log.Printf("Successfully found user with ID %s", id)
+	r.logger.Info("Successfully found user", zap.String("userID", id))
 	return user, nil
 }

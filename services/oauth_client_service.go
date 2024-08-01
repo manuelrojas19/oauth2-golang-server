@@ -9,7 +9,8 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
-	"log"
+	"go.uber.org/zap"
+	"time"
 )
 
 type RegisterOauthClientCommand struct {
@@ -22,21 +23,28 @@ type RegisterOauthClientCommand struct {
 
 type oauthClientService struct {
 	oauthClientRepository repositories.OauthClientRepository
+	logger                *zap.Logger
 }
 
 // NewOauthClientService initializes a new OauthClientService.
-func NewOauthClientService(oauthClientRepository repositories.OauthClientRepository) OauthClientService {
-	return &oauthClientService{oauthClientRepository: oauthClientRepository}
+func NewOauthClientService(oauthClientRepository repositories.OauthClientRepository, logger *zap.Logger) OauthClientService {
+	return &oauthClientService{oauthClientRepository: oauthClientRepository, logger: logger}
 }
 
 // CreateOauthClient creates a new OAuth client and returns it.
 func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientCommand) (*oauth.Client, error) {
-	// Encrypt the client secret
+	start := time.Now()
 	clientSecret := uuid.New().String()
 
+	// Encrypt the client secret
 	encryptedClientSecret, err := utils.EncryptText(clientSecret)
 	if err != nil {
-		log.Printf("Error encrypting client secret: %v", err)
+		s.logger.Error("Error encrypting client secret",
+			zap.String("clientName", command.ClientName),
+			zap.Error(err),
+			zap.Duration("duration", time.Since(start)),
+			zap.Stack("stacktrace"),
+		)
 		return nil, err
 	}
 
@@ -53,7 +61,12 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 	// Save the client entity
 	savedClient, err := s.oauthClientRepository.Save(clientEntity)
 	if err != nil {
-		log.Printf("Error saving OAuth client: %v", err)
+		s.logger.Error("Error saving OAuth client",
+			zap.String("clientName", command.ClientName),
+			zap.Error(err),
+			zap.Duration("duration", time.Since(start)),
+			zap.Stack("stacktrace"),
+		)
 		return nil, err
 	}
 
@@ -67,15 +80,34 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		WithTokenEndpointAuthMethod(authmethodtype.TokenEndpointAuthMethod(savedClient.TokenEndpointAuthMethod)).
 		WithRedirectUris(savedClient.RedirectURIs).
 		Build()
+
+	s.logger.Info("Successfully created OAuth client",
+		zap.String("clientId", savedClient.ClientId),
+		zap.String("clientName", savedClient.ClientName),
+		zap.Duration("duration", time.Since(start)),
+	)
+
 	return clientModel, nil
 }
 
-// FindOauthClient retrieves an OAuth client by its client ScopeId.
+// FindOauthClient retrieves an OAuth client by its client ID.
 func (s *oauthClientService) FindOauthClient(clientId string) (*store.OauthClient, error) {
+	start := time.Now()
 	client, err := s.oauthClientRepository.FindByClientId(clientId)
 	if err != nil {
-		log.Printf("Error finding OAuth client by ScopeId: %v", err)
+		s.logger.Error("Error finding OAuth client by clientId",
+			zap.String("clientId", clientId),
+			zap.Error(err),
+			zap.Duration("duration", time.Since(start)),
+			zap.Stack("stacktrace"),
+		)
 		return nil, err
 	}
+
+	s.logger.Info("Successfully found OAuth client",
+		zap.String("clientId", clientId),
+		zap.Duration("duration", time.Since(start)),
+	)
+
 	return client, nil
 }

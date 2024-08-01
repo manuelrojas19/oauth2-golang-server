@@ -12,6 +12,7 @@ import (
 
 func main() {
 	app := fx.New(
+
 		configuration.Module,
 		session.Module,
 		repositories.Module,
