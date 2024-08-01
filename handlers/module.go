@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"go.uber.org/fx"
-	"net/http"
 )
 
 var Module = fx.Options(
@@ -15,6 +14,5 @@ var Module = fx.Options(
 		NewRequestConsentHandler,
 		NewAuthorizeCallbackHandler,
 		NewLoginHandler,
-		func() *http.ServeMux { return http.NewServeMux() },
 	),
 )
