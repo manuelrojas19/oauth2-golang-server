@@ -5,7 +5,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/manuelrojas19/go-oauth2-server/configuration"
 	"github.com/manuelrojas19/go-oauth2-server/handlers"
-	"github.com/manuelrojas19/go-oauth2-server/idp"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/session"
 	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
@@ -58,7 +57,7 @@ func main() {
 	jwksHandler := handlers.NewJwksHandler(wellKnownService)
 	authorizeHandler := handlers.NewAuthorizeHandler(authorizationService)
 	requestConsentHandler := handlers.NewRequestConsentHandler()
-	googleAuthorizeCallbackHandler := idp.NewGoogleAuthorizeCallbackHandler(userSessionService, userRepository)
+	googleAuthorizeCallbackHandler := handlers.NewGoogleAuthorizeCallbackHandler(userSessionService, userRepository)
 	loginHandler := handlers.NewLoginHandler()
 	log.Println("Services and handlers initialized successfully")
 

@@ -1,4 +1,4 @@
-package idp
+package handlers
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/manuelrojas19/go-oauth2-server/configuration"
-	"github.com/manuelrojas19/go-oauth2-server/handlers"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
@@ -40,8 +39,10 @@ type googleAuthorizeCallbackHandler struct {
 func NewGoogleAuthorizeCallbackHandler(
 	userSessionService services.SessionService,
 	userRepository repositories.UserRepository,
-) handlers.Handler {
-	return &googleAuthorizeCallbackHandler{userSessionService: userSessionService, userRepository: userRepository}
+) Handler {
+	return &googleAuthorizeCallbackHandler{
+		userSessionService: userSessionService,
+		userRepository:     userRepository}
 }
 
 func (g googleAuthorizeCallbackHandler) Handler(writer http.ResponseWriter, request *http.Request) {

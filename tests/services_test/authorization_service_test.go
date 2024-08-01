@@ -16,15 +16,18 @@ import (
 )
 
 func TestAuthorize(t *testing.T) {
+	// Setup
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	// Mocks
 	mockConsentService := mocks.NewMockUserConsentService(ctrl)
 	mockUserRepository := mocks.NewMockUserRepository(ctrl)
 	mockOauthClientService := mocks.NewMockOauthClientService(ctrl)
 	mockAuthRepository := mocks.NewMockAuthorizationRepository(ctrl)
 	mockSessionService := mocks.NewMockSessionService(ctrl)
 
+	// Under test
 	authService := services.NewAuthorizationService(mockOauthClientService, mockConsentService, mockAuthRepository, mockSessionService, mockUserRepository)
 
 	t.Run("client not found", func(t *testing.T) {
