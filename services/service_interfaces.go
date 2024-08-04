@@ -28,8 +28,8 @@ type WellKnownService interface {
 }
 
 type UserConsentService interface {
-	Save(userID, clientID, scope string) error
-	HasUserConsented(userID, clientID, scope string) bool
+	Save(userId, clientId, scopeId string) error
+	HasUserConsented(userId, clientId, scopeId string) bool
 }
 
 type SessionService interface {

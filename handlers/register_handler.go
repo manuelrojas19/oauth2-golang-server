@@ -41,7 +41,14 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	command := mappers.NewCreateOauthClientCommandFromRequest(&req)
+	command := &services.RegisterOauthClientCommand{
+		ClientName:              req.ClientName,
+		GrantTypes:              req.GrantTypes,
+		ResponseTypes:           req.ResponseTypes,
+		TokenEndpointAuthMethod: req.TokenEndpointAuthMethod,
+		RedirectUris:            req.RedirectUris,
+		Scopes:                  req.Scopes,
+	}
 
 	client, err := handler.oauthClientService.CreateOauthClient(command)
 	if err != nil {

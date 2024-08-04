@@ -19,6 +19,7 @@ type RegisterOauthClientCommand struct {
 	ResponseTypes           []responsetype.ResponseType
 	TokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod
 	RedirectUris            []string
+	Scopes                  []oauth.Scope
 }
 
 type oauthClientService struct {
@@ -48,6 +49,13 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		return nil, err
 	}
 
+	// Adding scopes
+	scopes := make([]store.Scope, len(command.Scopes))
+	for i, scopeData := range command.Scopes {
+		scope := *store.NewScopeBuilder().WithName(scopeData.Name).WithDescription(scopeData.Description).Build()
+		scopes[i] = scope
+	}
+
 	// Build the client entity
 	clientEntity := store.NewOauthClientBuilder().
 		WithClientName(command.ClientName).
@@ -56,7 +64,10 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		WithGrantTypes(command.GrantTypes).
 		WithTokenEndpointAuthMethod(command.TokenEndpointAuthMethod).
 		WithRedirectURIs(command.RedirectUris).
+		WithScopes(scopes).
 		Build()
+
+	s.logger.Info("Client to be created", zap.Any("client", clientEntity))
 
 	// Save the client entity
 	savedClient, err := s.oauthClientRepository.Save(clientEntity)

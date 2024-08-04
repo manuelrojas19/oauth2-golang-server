@@ -59,8 +59,20 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		zap.String("scope", command.Scope),
 	)
 
-	// Retrieve the OAuth client
 	start := time.Now()
+
+	// Validate response type
+	if command.ResponseType != responsetype.Code {
+		a.logger.Error("Unsupported response type",
+			zap.String("responseType", string(command.ResponseType)),
+			zap.String("clientId", clientId),
+			zap.Duration("duration", time.Since(start)),
+			zap.Stack("stacktrace"),
+		)
+		return nil, fmt.Errorf(errors.ErrUnsupportedResponseType)
+	}
+
+	// Retrieve the OAuth client
 	client, err := a.oauthClientService.FindOauthClient(clientId)
 	if err != nil {
 		a.logger.Error("Error retrieving client",
@@ -75,17 +87,6 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		zap.String("clientId", clientId),
 		zap.Duration("duration", time.Since(start)),
 	)
-
-	// Validate response type
-	if command.ResponseType != responsetype.Code {
-		a.logger.Error("Unsupported response type",
-			zap.String("responseType", string(command.ResponseType)),
-			zap.String("clientId", clientId),
-			zap.Duration("duration", time.Since(start)),
-			zap.Stack("stacktrace"),
-		)
-		return nil, fmt.Errorf(errors.ErrUnsupportedResponseType)
-	}
 
 	// Validate redirect URI
 	if !isRegisteredRedirectUri(command, client) {
@@ -137,6 +138,11 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		return nil, fmt.Errorf("failed to retrieve user from user ID: %w", err)
 	}
 
+	// Validate access consent
+	if !a.consentService.HasUserConsented(user.Id, client.ClientId, command.Scope) {
+		return nil, fmt.Errorf(errors.ErrConsentRequired)
+	}
+
 	// Generate authorization code
 	code, err := utils.GenerateAuthCode(client.ClientId, userId)
 	if err != nil {
@@ -147,7 +153,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
 		)
-		return nil, fmt.Errorf("failed to generate authorization code: %w", err)
+		return nil, fmt.Errorf(errors.ErrConsentRequired)
 	}
 
 	// Build authorization code entity

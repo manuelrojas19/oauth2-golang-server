@@ -11,15 +11,20 @@ type AccessTokenRepository interface {
 	Save(token *store.AccessToken) (*store.AccessToken, error)
 }
 
+type ScopeRepository interface {
+	FindByIdList(ids []string) ([]*store.Scope, error)
+	Create(name, description string) (*store.Scope, error)
+}
+
 type RefreshTokenRepository interface {
 	Save(token *store.RefreshToken) (*store.RefreshToken, error)
 	FindByToken(token string) (*store.RefreshToken, error)
 	InvalidateRefreshTokensByAccessTokenId(tokenId string) error
 }
 
-type UserConsentRepository interface {
+type AccessConsentRepository interface {
 	HasUserConsented(userID, clientID, scope string) (bool, error)
-	Save(userID, clientID, scope string) (bool, error)
+	Save(userId, clientId, scope string) (*store.AccessConsent, error)
 }
 
 type AuthorizationRepository interface {

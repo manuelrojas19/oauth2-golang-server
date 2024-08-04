@@ -26,11 +26,6 @@ type OauthClient struct {
 	Scopes                  []Scope `gorm:"many2many:oauth_client_scopes;foreignKey:ClientId;joinForeignKey:ClientId;References:Id;JoinReferences:ScopeId"`
 }
 
-// TableName returns the table name for the OauthClient model.
-func (OauthClient) TableName() string {
-	return "oauth_clients"
-}
-
 // ValidateSecret compares a plaintext secret with a bcrypt hash and returns a boolean indicating whether they match.
 func (c *OauthClient) ValidateSecret(providedPassword string) error {
 	log.Println("Validating secret")
@@ -53,6 +48,7 @@ type OauthClientBuilder struct {
 	tokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod
 	redirectURI             []string
 	confidential            bool
+	scopes                  []Scope
 }
 
 // NewOauthClientBuilder initializes a new OauthClientBuilder.
@@ -108,10 +104,15 @@ func (b *OauthClientBuilder) WithConfidential(confidential bool) *OauthClientBui
 	return b
 }
 
+// WithScopes sets the client scopes.
+func (b *OauthClientBuilder) WithScopes(scopes []Scope) *OauthClientBuilder {
+	b.scopes = scopes
+	return b
+}
+
 // Build constructs the OauthClient object.
 func (b *OauthClientBuilder) Build() *OauthClient {
 	if b.clientID == "" {
-		// Generate client ID if not set
 		b.clientID = uuid.New().String()
 	}
 
@@ -126,5 +127,6 @@ func (b *OauthClientBuilder) Build() *OauthClient {
 		CreatedAt:               time.Now().UTC(),
 		UpdatedAt:               time.Now().UTC(),
 		Confidential:            b.confidential,
+		Scopes:                  b.scopes,
 	}
 }
