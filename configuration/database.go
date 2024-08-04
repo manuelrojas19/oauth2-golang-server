@@ -15,6 +15,7 @@ func NewDatabaseConnection() (*gorm.DB, error) {
 	}
 	err = datasource.AutoMigrate(
 		&store.Scope{},
+		&store.OauthResource{},
 		&store.OauthClient{},
 		&store.AccessToken{},
 		&store.RefreshToken{},

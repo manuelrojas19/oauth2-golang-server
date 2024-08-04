@@ -14,6 +14,7 @@ type Client struct {
 	ResponseTypes           []responsetype.ResponseType
 	TokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod
 	RedirectUris            []string
+	Scopes                  []Scope
 }
 
 type ClientBuilder struct {
@@ -64,6 +65,12 @@ func (b *ClientBuilder) WithTokenEndpointAuthMethod(authMethod authmethodtype.To
 // WithRedirectUris sets the RedirectUris for the builder.
 func (b *ClientBuilder) WithRedirectUris(redirectUris []string) *ClientBuilder {
 	b.client.RedirectUris = redirectUris
+	return b
+}
+
+// WithScopes sets the Scopes for the builder.
+func (b *ClientBuilder) WithScopes(scopes []Scope) *ClientBuilder {
+	b.client.Scopes = scopes
 	return b
 }
 

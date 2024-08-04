@@ -90,6 +90,7 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		WithGrantTypes(granttype.StringListToEnumList(savedClient.GrantTypes)).
 		WithTokenEndpointAuthMethod(authmethodtype.TokenEndpointAuthMethod(savedClient.TokenEndpointAuthMethod)).
 		WithRedirectUris(savedClient.RedirectURIs).
+		WithScopes(command.Scopes).
 		Build()
 
 	s.logger.Info("Successfully created OAuth client",

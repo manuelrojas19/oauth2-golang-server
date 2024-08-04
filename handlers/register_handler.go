@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/manuelrojas19/go-oauth2-server/api"
-	"github.com/manuelrojas19/go-oauth2-server/mappers"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"log"
@@ -58,6 +57,16 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 	}
 
 	log.Println("OAuth client created successfully")
-	res := mappers.NewRegisterClientResponseFromClientModel(client)
+	res := &api.RegisterClientResponse{
+		ClientId:                client.ClientId,
+		ClientSecret:            client.ClientSecret,
+		ClientName:              client.ClientName,
+		GrantTypes:              client.GrantTypes,
+		ResponseTypes:           client.ResponseTypes,
+		TokenEndpointAuthMethod: client.TokenEndpointAuthMethod,
+		RedirectUris:            client.RedirectUris,
+		Scopes:                  client.Scopes,
+	}
+
 	utils.RespondWithJSON(w, http.StatusCreated, res)
 }

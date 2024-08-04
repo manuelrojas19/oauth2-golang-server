@@ -4,17 +4,19 @@ import "time"
 
 // AccessConsent represents the user's consent for a client and scope.
 type AccessConsent struct {
-	Id        string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
-	UserId    string    `gorm:"index;not null"`
-	ClientId  string    `gorm:"index;not null"`
-	ScopeId   string    `gorm:"index;not null"`
-	Consented bool      `gorm:"not null;default:false"`
-	CreatedAt time.Time `gorm:"default:now()"`
-	UpdatedAt time.Time `gorm:"default:now()"`
+	Id         string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
+	UserId     string    `gorm:"index;not null"`
+	ClientId   string    `gorm:"index;not null"`
+	ResourceId string    `gorm:"index;not null"`
+	ScopeId    string    `gorm:"index;not null"`
+	Consented  bool      `gorm:"not null;default:false"`
+	CreatedAt  time.Time `gorm:"default:now()"`
+	UpdatedAt  time.Time `gorm:"default:now()"`
 
-	Client *OauthClient
-	User   *User
-	Scope  *Scope
+	Client   *OauthClient
+	User     *User
+	Resource *OauthResource
+	Scope    *Scope
 }
 
 // ConsentBuilder helps in constructing AccessConsent instances with optional configurations.

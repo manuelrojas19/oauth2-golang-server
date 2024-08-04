@@ -20,10 +20,11 @@ type OauthClient struct {
 	GrantTypes              pq.StringArray `gorm:"type:text[];not null"`
 	TokenEndpointAuthMethod string         `gorm:"type:varchar(255);not null"`
 	RedirectURIs            pq.StringArray `gorm:"type:text[]"`
-	CreatedAt               time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt               time.Time      `gorm:"default:CURRENT_TIMESTAMP"`
 	Confidential            bool
-	Scopes                  []Scope `gorm:"many2many:oauth_client_scopes;foreignKey:ClientId;joinForeignKey:ClientId;References:Id;JoinReferences:ScopeId"`
+	CreatedAt               time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	UpdatedAt               time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+
+	Scopes []Scope `gorm:"many2many:oauth_client_scopes;foreignKey:ClientId;joinForeignKey:ClientId;References:Id;JoinReferences:ScopeId"`
 }
 
 // ValidateSecret compares a plaintext secret with a bcrypt hash and returns a boolean indicating whether they match.
