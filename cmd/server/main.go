@@ -13,6 +13,7 @@ import (
 
 // main is the entry point of the application. It uses the fx framework to set up and run the application with various modules and dependencies.
 func main() {
+
 	// Create a new fx.App with the specified modules and invoke functions
 	app := fx.New(
 		// Include the configuration module which provides application configuration settings
