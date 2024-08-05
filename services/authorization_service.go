@@ -114,7 +114,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		zap.Duration("duration", time.Since(start)),
 	)
 
-	// Retrieve user ID from session
+	// Retrieve user Id from session
 	userId, err := a.sessionService.GetUserIdFromSession(command.SessionId)
 	if err != nil {
 		a.logger.Error("Error retrieving user from session",
@@ -135,7 +135,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
 		)
-		return nil, fmt.Errorf("failed to retrieve user from user ID: %w", err)
+		return nil, fmt.Errorf("failed to retrieve user from user Id: %w", err)
 	}
 
 	// Validate access consent

@@ -274,8 +274,8 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	}
 
 	if authCode.ClientId != clientId {
-		log.Printf("Client ID mismatch: expected '%s', got '%s'", authCode.ClientId, clientId)
-		return nil, fmt.Errorf("client ID mismatch")
+		log.Printf("Client Id mismatch: expected '%s', got '%s'", authCode.ClientId, clientId)
+		return nil, fmt.Errorf("client Id mismatch")
 	}
 
 	if authCode.RedirectURI != redirectUri {
@@ -291,12 +291,12 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	// Step 2: Retrieve and validate the client
 	client, err := t.client.FindOauthClient(clientId)
 	if err != nil {
-		log.Printf("Error retrieving client with ID '%s': %v", clientId, err)
+		log.Printf("Error retrieving client with Id '%s': %v", clientId, err)
 		return nil, fmt.Errorf("failed to find client: %w", err)
 	}
 
 	if err := authenticateClient(clientId, clientSecret, client); err != nil {
-		log.Printf("Client authentication failed for ID '%s': %v", clientId, err)
+		log.Printf("Client authentication failed for Id '%s': %v", clientId, err)
 		return nil, fmt.Errorf("client authentication failed: %w", err)
 	}
 
@@ -317,7 +317,7 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 
 	savedAccessToken, err := t.accessTokenRepository.Save(newAccessToken)
 	if err != nil {
-		log.Printf("Error saving new access token for Client ID '%s': %v", clientId, err)
+		log.Printf("Error saving new access token for Client Id '%s': %v", clientId, err)
 		return nil, fmt.Errorf("failed to save new access token: %w", err)
 	}
 
@@ -340,7 +340,7 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 
 	savedRefreshToken, err := t.refreshTokenRepository.Save(newRefreshToken)
 	if err != nil {
-		log.Printf("Error saving new refresh token for Access Token ID '%s': %v", savedAccessToken.Id, err)
+		log.Printf("Error saving new refresh token for Access Token Id '%s': %v", savedAccessToken.Id, err)
 		return nil, fmt.Errorf("failed to save new refresh token: %w", err)
 	}
 

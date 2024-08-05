@@ -37,3 +37,9 @@ type SessionService interface {
 	SessionExists(sessionID string) bool
 	GetUserIdFromSession(sessionID string) (string, error)
 }
+
+type ScopeService interface {
+	Save(scopeName, scopeDescription string) (*oauth2.Scope, error)
+	FindById(scopeId string) (*oauth2.Scope, bool)
+	FindByIdList(scopeIds []string) (*oauth2.Scope, error)
+}

@@ -33,3 +33,7 @@ type RequestConsentHandler interface {
 type TokenHandler interface {
 	Token(http.ResponseWriter, *http.Request)
 }
+
+type ScopeHandler interface {
+	CreateScope(http.ResponseWriter, *http.Request)
+}

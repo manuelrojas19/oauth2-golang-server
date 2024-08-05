@@ -40,7 +40,7 @@ func (r *userRepository) Save(user *store.User) (*store.User, error) {
 	return user, nil
 }
 
-// FindByUserId retrieves a user by ID from the database.
+// FindByUserId retrieves a user by Id from the database.
 func (r *userRepository) FindByUserId(id string) (*store.User, error) {
 	r.logger.Info("Searching for user", zap.String("userID", id))
 

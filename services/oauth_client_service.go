@@ -102,7 +102,7 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 	return clientModel, nil
 }
 
-// FindOauthClient retrieves an OAuth client by its client ID.
+// FindOauthClient retrieves an OAuth client by its client Id.
 func (s *oauthClientService) FindOauthClient(clientId string) (*store.OauthClient, error) {
 	start := time.Now()
 	client, err := s.oauthClientRepository.FindByClientId(clientId)

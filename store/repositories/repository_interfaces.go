@@ -14,6 +14,8 @@ type AccessTokenRepository interface {
 type ScopeRepository interface {
 	FindByIdList(ids []string) ([]*store.Scope, error)
 	Create(name, description string) (*store.Scope, error)
+	FindById(id string) (*store.Scope, error)
+	Exists(id string) (bool, error)
 }
 
 type RefreshTokenRepository interface {

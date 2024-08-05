@@ -64,7 +64,7 @@ func (u *sessionService) CreateSession(userId, email string) (string, error) {
 func (u *sessionService) SessionExists(sessionID string) bool {
 	start := time.Now()
 	if sessionID == "" {
-		u.logger.Warn("Session ID should not be empty")
+		u.logger.Warn("Session Id should not be empty")
 		return false
 	}
 

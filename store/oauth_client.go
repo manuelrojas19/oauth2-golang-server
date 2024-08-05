@@ -57,7 +57,7 @@ func NewOauthClientBuilder() *OauthClientBuilder {
 	return &OauthClientBuilder{}
 }
 
-// WithClientID sets the client ID.
+// WithClientID sets the client Id.
 func (b *OauthClientBuilder) WithClientID(clientID string) *OauthClientBuilder {
 	b.clientID = clientID
 	return b

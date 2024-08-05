@@ -2,8 +2,7 @@ package internal
 
 import (
 	"context"
-	"github.com/manuelrojas19/go-oauth2-server/handlers"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,17 +14,19 @@ import (
 func SetupHTTPServer(
 	lc fx.Lifecycle,
 	mux *http.ServeMux,
-	routes handlers.Routes,
+	log *zap.Logger,
+	routes map[string]http.HandlerFunc,
 ) {
 	// Register routes dynamically
-	for path, handler := range routes.Routes() {
+	for path, handler := range routes {
+		log.Info("Adding route", zap.String("path", path))
 		mux.HandleFunc(path, handler)
 	}
 
 	// Register lifecycle hooks
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			log.Println("Starting HTTP server on :8080")
+			log.Info("Starting HTTP server on :8080")
 			server := &http.Server{
 				Addr:    ":8080",
 				Handler: mux,
@@ -33,7 +34,7 @@ func SetupHTTPServer(
 
 			go func() {
 				if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-					log.Fatalf("Error starting HTTP server: %v", err)
+					log.Error("Error starting HTTP server", zap.Error(err))
 				}
 			}()
 
@@ -42,19 +43,19 @@ func SetupHTTPServer(
 				signal.Notify(stop, os.Interrupt)
 				<-stop
 
-				log.Println("Received interrupt signal, shutting down gracefully...")
+				log.Info("Received interrupt signal, shutting down gracefully...")
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 
 				if err := server.Shutdown(ctx); err != nil {
-					log.Fatalf("Server forced to shutdown: %v", err)
+					log.Error("Server forced to shutdown", zap.Error(err))
 				}
 			}()
 
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			log.Println("Stopping HTTP server")
+			log.Info("Stopping HTTP server")
 			// Here you can add additional cleanup logic if necessary
 			return nil
 		},

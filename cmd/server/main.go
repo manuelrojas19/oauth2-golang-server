@@ -4,6 +4,7 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/configuration"
 	"github.com/manuelrojas19/go-oauth2-server/handlers"
 	"github.com/manuelrojas19/go-oauth2-server/internal"
+	"github.com/manuelrojas19/go-oauth2-server/routes"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/session"
 	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
@@ -28,6 +29,9 @@ func main() {
 
 		// Include the handlers module which defines the HTTP handlers for the application
 		handlers.Module,
+
+		// Include the routes module which defines the path routes for the application
+		routes.Module,
 
 		// Invoke the SetupHTTPServer function from the internal package to set up the HTTP server
 		fx.Invoke(internal.SetupHTTPServer),

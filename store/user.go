@@ -55,7 +55,7 @@ func (b *UserBuilder) WithIdpName(idpName string) *UserBuilder {
 // Build creates a new User instance using the builder's settings.
 func (b *UserBuilder) Build() *User {
 	if b.id == "" {
-		b.id = uuid.New().String() // Generate a new UUID if ID is not provided
+		b.id = uuid.New().String() // Generate a new UUID if Id is not provided
 	}
 
 	return &User{
