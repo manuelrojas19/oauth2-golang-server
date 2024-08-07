@@ -1,6 +1,27 @@
 version: "3.8"
 
 services:
+  oauth-server:
+    container_name: go-oauth2-server
+    image: go-oauth2-server:latest
+    restart: always
+    ports:
+      - "8081:8080"
+    environment:
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URL=http://localhost:8080/google/authorize/callback
+      - GOOGLE_AUTH_URL=https://accounts.google.com/o/oauth2/auth
+      - GOOGLE_TOKEN_URL=https://oauth2.googleapis.com/token
+      - GOOGLE_USER_INFO_URL=https://www.googleapis.com/oauth2/v3/userinfo
+      - SCOPES=openid email profile
+      - DATABASE_URL=postgres://postgres:postgres@database:5432/oauthDB
+      - REDIS_URL=redis:6379
+      - REDIS_PASSWORD=my-password
+      - REDIS_DB=0
+    depends_on:
+      - database
+      - redis
   database:
     container_name: database
     image: postgres:12.8

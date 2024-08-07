@@ -1,8 +1,6 @@
 package configuration
 
 import (
-	"fmt"
-	"github.com/joho/godotenv"
 	"os"
 )
 
@@ -21,10 +19,6 @@ var (
 )
 
 func LoadSecrets() error {
-	if err := godotenv.Load(); err != nil {
-		fmt.Println("Error loading .env file")
-		return err
-	}
 	loadGoogleSecrets()
 	loadDbSecrets()
 	loadRedisSecrets()

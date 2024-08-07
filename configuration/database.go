@@ -17,6 +17,7 @@ func NewDatabaseConnection() (*gorm.DB, error) {
 		&store.Scope{},
 		&store.OauthResource{},
 		&store.OauthClient{},
+		&store.OauthResource{},
 		&store.AccessToken{},
 		&store.RefreshToken{},
 		&store.User{},
@@ -26,15 +27,6 @@ func NewDatabaseConnection() (*gorm.DB, error) {
 
 	if err != nil {
 		log.Println(err.Error())
-		return nil, err
-	}
-
-	// Create composite unique index
-	err = datasource.Exec(`
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth_client_scope_unique
-        ON oauth_client_scopes (client_id, scope_id);
-    `).Error
-	if err != nil {
 		return nil, err
 	}
 
