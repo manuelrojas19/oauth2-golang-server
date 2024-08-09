@@ -2,7 +2,6 @@ version: "3.8"
 
 services:
   oauth-server:
-    container_name: go-oauth2-server
     image: go-oauth2-server:latest
     restart: always
     ports:
@@ -23,7 +22,6 @@ services:
       - database
       - redis
   database:
-    container_name: database
     image: postgres:12.8
     restart: always
     environment:
