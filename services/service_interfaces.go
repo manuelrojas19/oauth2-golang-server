@@ -36,10 +36,23 @@ type SessionService interface {
 	CreateSession(userId, email string) (string, error)
 	SessionExists(sessionID string) bool
 	GetUserIdFromSession(sessionID string) (string, error)
+	DeleteSession(sessionID string) error
 }
 
 type ScopeService interface {
 	Save(scopeName, scopeDescription string) (*oauth2.Scope, error)
 	FindById(scopeId string) (*oauth2.Scope, bool)
 	FindByIdList(scopeIds []string) (*oauth2.Scope, error)
+}
+
+type UserinfoService interface {
+	GetUserinfo(command *GetUserinfoCommand) (*UserinfoResponse, error)
+}
+
+type IntrospectionService interface {
+	Introspect(command *IntrospectCommand) (*IntrospectionResponse, error)
+}
+
+type RevocationService interface {
+	Revoke(command *RevokeCommand) error
 }

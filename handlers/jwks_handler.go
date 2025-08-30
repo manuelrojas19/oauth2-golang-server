@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"net/http"
+
+	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
-	"net/http"
 )
 
 type jwksHandler struct {
@@ -19,12 +21,12 @@ func NewJwksHandler(wellKnownService services.WellKnownService) JwksHandler {
 func (j jwksHandler) Jwks(w http.ResponseWriter, _ *http.Request) {
 	jwk, err := j.wellKnownService.GetJwk()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.RespondWithJSON(w, http.StatusInternalServerError, api.ErrorResponseBody(api.ErrServerError))
 		return
 	}
 
 	if jwk == nil {
-		http.Error(w, "No JWK jwk available", http.StatusNotFound)
+		utils.RespondWithJSON(w, http.StatusNotFound, api.ErrorResponseBody(api.ErrServerError))
 		return
 	}
 

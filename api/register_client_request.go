@@ -7,7 +7,6 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/oauth/authmethodtype"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
-	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"strings"
 )
 
@@ -32,7 +31,7 @@ func (r *RegisterClientRequest) Validate() error {
 		return errors.New("at least one grant_type is required")
 	}
 	for _, grantType := range r.GrantTypes {
-		if !utils.IsValidGrantType(grantType) {
+		if !IsValidGrantType(grantType) {
 			return fmt.Errorf("invalid grant_type: %s", grantType)
 		}
 	}
@@ -42,13 +41,13 @@ func (r *RegisterClientRequest) Validate() error {
 		return errors.New("at least one response_type is required")
 	}
 	for _, responseType := range r.ResponseTypes {
-		if !utils.IsValidResponseType(responseType) {
+		if !IsValidResponseType(responseType) {
 			return fmt.Errorf("invalid response_type: %s", responseType)
 		}
 	}
 
 	// Validate TokenEndpointAuthMethod
-	if !utils.IsValidAuthMethod(r.TokenEndpointAuthMethod) {
+	if !IsValidAuthMethod(r.TokenEndpointAuthMethod) {
 		return fmt.Errorf("invalid token_endpoint_auth_method: %s", r.TokenEndpointAuthMethod)
 	}
 

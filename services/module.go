@@ -12,5 +12,8 @@ var Module = fx.Options(
 		NewAuthorizationService,
 		NewWellKnownService,
 		NewScopeService,
+		NewUserinfoService,
+		NewIntrospectionService,
+		NewRevocationService,
 	),
 )

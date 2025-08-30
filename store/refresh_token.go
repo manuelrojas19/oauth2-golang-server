@@ -1,8 +1,9 @@
 package store
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type RefreshToken struct {
@@ -14,6 +15,7 @@ type RefreshToken struct {
 	AccessTokenId string    `gorm:"index;not null;constraint:OnDelete:CASCADE"`
 	ClientId      string    `gorm:"index;not null"`
 	UserId        string    `gorm:"index;not null"`
+	Scope         string    `gorm:"type:varchar(255);not null"`
 
 	AccessToken *AccessToken
 	Client      *OauthClient

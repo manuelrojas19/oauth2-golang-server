@@ -4,11 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/manuelrojas19/go-oauth2-server/configuration"
 	"html/template"
 	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/manuelrojas19/go-oauth2-server/configuration"
+	"go.uber.org/zap"
 )
 
 var loginTmpl *template.Template
@@ -23,10 +25,11 @@ func init() {
 }
 
 type loginHandler struct {
+	log *zap.Logger
 }
 
-func NewLoginHandler() LoginHandler {
-	return &loginHandler{}
+func NewLoginHandler(logger *zap.Logger) LoginHandler {
+	return &loginHandler{log: logger}
 }
 
 type LoginData struct {

@@ -19,7 +19,3 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, responseBody interfa
 		http.Error(w, "Failed to encode response type", http.StatusInternalServerError)
 	}
 }
-
-func ErrorResponseBody(err error) map[string]string {
-	return map[string]string{"error": err.Error()}
-}

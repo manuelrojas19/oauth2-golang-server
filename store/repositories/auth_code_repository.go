@@ -3,6 +3,7 @@ package repositories
 import (
 	"errors"
 	"fmt"
+
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -69,4 +70,33 @@ func (r *authCodeRepository) FindByCode(code string) (*store.AuthCode, error) {
 	)
 
 	return authCode, nil
+}
+
+// Delete deletes an AuthCode from the database using the code string
+func (r *authCodeRepository) Delete(code string) error {
+	r.logger.Info("Deleting AuthCode",
+		zap.String("code", code),
+	)
+
+	result := r.Db.Where("code = ?", code).Delete(&store.AuthCode{})
+	if result.Error != nil {
+		r.logger.Error("Error deleting AuthCode",
+			zap.String("code", code),
+			zap.Error(result.Error),
+			zap.Stack("stacktrace"),
+		)
+		return fmt.Errorf("failed to delete AuthCode: %w", result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		r.logger.Warn("AuthCode not found for deletion",
+			zap.String("code", code),
+		)
+	}
+
+	r.logger.Info("Successfully deleted AuthCode",
+		zap.String("code", code),
+	)
+
+	return nil
 }

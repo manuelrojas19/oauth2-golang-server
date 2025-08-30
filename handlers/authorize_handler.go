@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/errors"
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"go.uber.org/zap"
-	"net/http"
-	"net/url"
 )
 
 type authorizeHandler struct {
@@ -30,7 +31,7 @@ func (a authorizeHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	authRequest, err := api.DecodeAuthorizeRequest(r)
 	if err != nil {
 		a.log.Error("Failed to decode authorization request", zap.Error(err))
-		handleAuthError(w, r, "", "", "invalid_request", err.Error(), a.log)
+		handleAuthError(w, r, "", "", api.ErrorResponseBody(api.ErrInvalidRequest), a.log)
 		return
 	}
 	a.log.Info("Authorization request decoded", zap.Any("authRequest", authRequest))
@@ -38,18 +39,20 @@ func (a authorizeHandler) Authorize(w http.ResponseWriter, r *http.Request) {
 	// Validate the authorization request
 	if err := authRequest.Validate(); err != nil {
 		a.log.Error("Invalid authorization request", zap.Error(err))
-		handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, "invalid_request", err.Error(), a.log)
+		handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, api.ErrorResponseBody(api.ErrInvalidRequest), a.log)
 		return
 	}
 	a.log.Info("Authorization request validated", zap.Any("clientId", authRequest))
 
 	// Create AuthorizeCommand from the request
 	command := &services.AuthorizeCommand{
-		ClientId:     authRequest.ClientId,
-		Scope:        authRequest.Scope,
-		RedirectUri:  authRequest.RedirectUri,
-		ResponseType: authRequest.ResponseType,
-		State:        authRequest.State,
+		ClientId:            authRequest.ClientId,
+		Scope:               authRequest.Scope,
+		RedirectUri:         authRequest.RedirectUri,
+		ResponseType:        authRequest.ResponseType,
+		State:               authRequest.State,
+		CodeChallenge:       authRequest.CodeChallenge,
+		CodeChallengeMethod: authRequest.CodeChallengeMethod,
 	}
 	a.log.Info("AuthorizeCommand created", zap.Any("command", command))
 
@@ -93,10 +96,9 @@ func handleAuthorizationError(err error, w http.ResponseWriter, r *http.Request,
 		log.Warn("User consent required, redirecting to consent", zap.String("consentURL", consentURL))
 		http.Redirect(w, r, consentURL, http.StatusSeeOther)
 	case errors.ErrUnsupportedResponseType:
-		handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, "unsupported_response_type", err.Error(), log)
+		handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, api.ErrorResponseBody(api.ErrUnsupportedResponseType), log)
 	default:
-		handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, "server_error",
-			"the authorization server encountered an unexpected condition that prevented it from fulfilling the request", log)
+		handleAuthError(w, r, authRequest.RedirectUri, authRequest.State, api.ErrorResponseBody(api.ErrServerError), log)
 	}
 }
 
@@ -110,24 +112,24 @@ func getRedirectURL(authRequest *api.AuthorizeRequest, authCode *oauth.AuthCode)
 	return redirectURL
 }
 
-func handleAuthError(w http.ResponseWriter, r *http.Request, redirectURI, state, errorCode, errorDescription string, log *zap.Logger) {
+func handleAuthError(w http.ResponseWriter, r *http.Request, redirectURI, state string, errorResponse api.ErrorResponse, log *zap.Logger) {
 	// Default redirect URI if not provided
 	if redirectURI == "" {
 		redirectURI = "default/error/page" // Replace with your default error page
 	}
 
 	// Construct the error response URL
-	errorResponse := fmt.Sprintf("%s?error=%s", redirectURI, errorCode)
-	if errorDescription != "" {
-		errorResponse += fmt.Sprintf("&error_description=%s", url.QueryEscape(errorDescription))
+	errorResponseURL := fmt.Sprintf("%s?error=%s", redirectURI, errorResponse.Error)
+	if errorResponse.ErrorDescription != "" {
+		errorResponseURL += fmt.Sprintf("&error_description=%s", url.QueryEscape(errorResponse.ErrorDescription))
 	}
 	if state != "" {
-		errorResponse += fmt.Sprintf("&state=%s", url.QueryEscape(state))
+		errorResponseURL += fmt.Sprintf("&state=%s", url.QueryEscape(state))
 	}
 
 	// Log the error for debugging purposes
-	log.Error("Redirecting with error", zap.String("error_response", errorResponse))
+	log.Error("Redirecting with error", zap.String("error_response", errorResponseURL))
 
 	// Redirect the client to the redirect URI with the error
-	http.Redirect(w, r, errorResponse, http.StatusFound)
+	http.Redirect(w, r, errorResponseURL, http.StatusFound)
 }

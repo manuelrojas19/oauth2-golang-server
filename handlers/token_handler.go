@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
-	"log"
-	"net/http"
 )
 
 type tokenHandler struct {
@@ -31,13 +32,13 @@ func (handler *tokenHandler) Token(w http.ResponseWriter, r *http.Request) {
 	var req api.TokenRequest
 	if err := api.DecodeTokenRequest(r, &req); err != nil {
 		log.Printf("Error decoding request body: %v", err)
-		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
+		utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidRequest))
 		return
 	}
 
 	// Validate the request data
 	if err := req.Validate(); err != nil {
-		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
+		utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidRequest))
 		return
 	}
 
@@ -47,19 +48,19 @@ func (handler *tokenHandler) Token(w http.ResponseWriter, r *http.Request) {
 		req.RefreshToken,
 		req.AuthCode,
 		req.RedirectUri,
+		req.CodeVerifier,
 	)
 
 	// Generate an access token
 	token, err := handler.tokenService.GrantAccessToken(grantAccessTokenCommand)
 	if err != nil {
 		log.Printf("Error generating token: %v", err)
-		utils.RespondWithJSON(w, http.StatusInternalServerError, utils.ErrorResponseBody(err))
+		utils.RespondWithJSON(w, http.StatusInternalServerError, api.ErrorResponseBody(api.ErrServerError))
 		return
 	}
 
 	res := api.NewTokenResponse(token.AccessToken,
 		"Bearer",
-		int(token.AccessTokenExpiresAt.Seconds()),
 		token.RefreshToken)
 
 	// Send the response with the token

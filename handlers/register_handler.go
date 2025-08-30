@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
-	"log"
-	"net/http"
 )
 
 type registerHandler struct {
@@ -30,13 +31,14 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 
 	if err := utils.DecodeJSON(r, &req); err != nil {
 		log.Printf("Error decoding request body: %v", err)
-		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
+		utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidRequest))
 		return
 	}
 
 	// Validate the request data
 	if err := req.Validate(); err != nil {
-		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
+		log.Println(err);
+		utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidRequest))
 		return
 	}
 
@@ -52,7 +54,7 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 	client, err := handler.oauthClientService.CreateOauthClient(command)
 	if err != nil {
 		log.Printf("Error creating OAuth client: %v", err)
-		utils.RespondWithJSON(w, http.StatusBadRequest, utils.ErrorResponseBody(err))
+		utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrServerError))
 		return
 	}
 

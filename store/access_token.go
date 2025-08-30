@@ -1,8 +1,9 @@
 package store
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type AccessToken struct {
@@ -11,11 +12,10 @@ type AccessToken struct {
 	TokenType     string    `gorm:"type:varchar(255);not null"`
 	Scope         string    `gorm:"type:varchar(255);not null"`
 	ExpiresAt     time.Time `gorm:"not null"`
+	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	Code          string    `gorm:"type:text"` // Reference to authorization code
 	UserId        string    `gorm:"index;not null"`
 	ClientId      string    `gorm:"index;not null"`
-	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	User          *User
 	Client        *OauthClient
 	RefreshTokens []RefreshToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:CASCADE"`
@@ -105,6 +105,5 @@ func (b *AccessTokenBuilder) Build() *AccessToken {
 		Code:      b.code,
 		User:      b.user,
 		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
 	}
 }

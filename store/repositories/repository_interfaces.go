@@ -9,6 +9,8 @@ type OauthClientRepository interface {
 
 type AccessTokenRepository interface {
 	Save(token *store.AccessToken) (*store.AccessToken, error)
+	FindByAccessToken(accessToken string) (*store.AccessToken, error)
+	DeleteByAccessToken(accessToken string) error
 }
 
 type ScopeRepository interface {
@@ -20,8 +22,9 @@ type ScopeRepository interface {
 
 type RefreshTokenRepository interface {
 	Save(token *store.RefreshToken) (*store.RefreshToken, error)
-	FindByToken(token string) (*store.RefreshToken, error)
+	FindByRefreshToken(token string) (*store.RefreshToken, error)
 	InvalidateRefreshTokensByAccessTokenId(tokenId string) error
+	DeleteByRefreshToken(refreshToken string) error
 }
 
 type AccessConsentRepository interface {
@@ -32,9 +35,11 @@ type AccessConsentRepository interface {
 type AuthorizationRepository interface {
 	Save(authCode *store.AuthCode) (*store.AuthCode, error)
 	FindByCode(code string) (*store.AuthCode, error)
+	Delete(code string) error
 }
 
 type UserRepository interface {
 	Save(authCode *store.User) (*store.User, error)
 	FindByUserId(id string) (*store.User, error)
+	FindById(id string) (*store.User, error)
 }

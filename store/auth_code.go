@@ -1,22 +1,25 @@
 package store
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type AuthCode struct {
-	Id          string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
-	Code        string    `gorm:"type:text;unique;not null"`
-	RedirectURI string    `gorm:"type:varchar(255);not null"`
-	Scope       string    `gorm:"size:255;not null"`
-	Used        bool      `gorm:"not null;default:false"`
-	UserId      string    `gorm:"index;not null"`
-	ClientId    string    `gorm:"index;not null"`
-	ExpiresAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	CreatedAt   time.Time `gorm:"default:CURRENT_TIMESTAMP"`
-	User        *User
-	Client      *OauthClient
+	Id                  string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
+	Code                string    `gorm:"type:text;unique;not null"`
+	RedirectURI         string    `gorm:"type:varchar(255);not null"`
+	Scope               string    `gorm:"size:255;not null"`
+	Used                bool      `gorm:"not null;default:false"`
+	UserId              string    `gorm:"index;not null"`
+	ClientId            string    `gorm:"index;not null"`
+	ExpiresAt           time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	CreatedAt           time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	CodeChallenge       string    `gorm:"type:varchar(255)"`
+	CodeChallengeMethod string    `gorm:"type:varchar(255)"`
+	User                *User
+	Client              *OauthClient
 }
 
 // AuthCodeBuilder helps in constructing AuthCode instances
@@ -75,6 +78,16 @@ func (b *AuthCodeBuilder) WithExpiresAt(expiresAt time.Time) *AuthCodeBuilder {
 
 func (b *AuthCodeBuilder) WithCreatedAt(createdAt time.Time) *AuthCodeBuilder {
 	b.authorizationCode.CreatedAt = createdAt
+	return b
+}
+
+func (b *AuthCodeBuilder) WithCodeChallenge(codeChallenge string) *AuthCodeBuilder {
+	b.authorizationCode.CodeChallenge = codeChallenge
+	return b
+}
+
+func (b *AuthCodeBuilder) WithCodeChallengeMethod(codeChallengeMethod string) *AuthCodeBuilder {
+	b.authorizationCode.CodeChallengeMethod = codeChallengeMethod
 	return b
 }
 

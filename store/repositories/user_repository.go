@@ -3,6 +3,7 @@ package repositories
 import (
 	"errors"
 	"fmt"
+
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -66,4 +67,22 @@ func (r *userRepository) FindByUserId(id string) (*store.User, error) {
 
 	r.logger.Info("Successfully found user", zap.String("userID", id))
 	return user, nil
+}
+
+// FindById retrieves a user by their ID.
+func (r *userRepository) FindById(id string) (*store.User, error) {
+	r.logger.Info("Finding user by ID", zap.String("userID", id))
+
+	var user store.User
+	if err := r.db.Where("id = ?", id).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.logger.Warn("User not found for ID", zap.String("userID", id))
+			return nil, fmt.Errorf("user not found")
+		}
+		r.logger.Error("Error finding user by ID", zap.String("userID", id), zap.Error(err))
+		return nil, fmt.Errorf("failed to find user by ID: %w", err)
+	}
+
+	r.logger.Info("User found successfully by ID", zap.String("userID", id))
+	return &user, nil
 }

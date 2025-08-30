@@ -4,12 +4,19 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/manuelrojas19/go-oauth2-server/api"
+	"go.uber.org/zap"
 )
 
-type acceptConsentHandler struct{}
+type acceptConsentHandler struct {
+	log *zap.Logger
+}
 
-func NewAcceptConsentHandler() AcceptConsentHandler {
-	return &acceptConsentHandler{}
+func NewAcceptConsentHandler(log *zap.Logger) AcceptConsentHandler {
+	return &acceptConsentHandler{
+		log: log,
+	}
 }
 
 func (h *acceptConsentHandler) AcceptConsent(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +43,12 @@ func (h *acceptConsentHandler) AcceptConsent(w http.ResponseWriter, r *http.Requ
 			encodedClientId, encodedScope, encodedRedirectUri, encodedResponseType)
 		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 	} else {
-		// Handle consent denial (e.g., show an error message)
-		http.Error(w, "Consent denied", http.StatusForbidden)
+		// Handle consent denial (e.g., redirect with an access_denied error)
+		errorResponse := api.ErrorResponse{
+			Error:            api.ErrAccessDenied.Error(),
+			ErrorDescription: "Resource owner denied the request",
+		}
+		h.log.Error("Consent denied, redirecting with error", zap.Any("error_response", errorResponse))
+		handleAuthError(w, r, redirectUri, "", api.ErrorResponseBody(api.ErrAccessDenied), h.log)
 	}
 }

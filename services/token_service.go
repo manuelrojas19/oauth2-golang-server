@@ -2,13 +2,14 @@ package services
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
-	"log"
-	"time"
 )
 
 const AccessTokenDuration = 1*time.Hour + 1*time.Second
@@ -21,9 +22,10 @@ type GrantAccessTokenCommand struct {
 	GrantType    granttype.GrantType
 	Code         string
 	RedirectUri  string
+	CodeVerifier string
 }
 
-func NewGrantAccessTokenCommand(clientId string, clientSecret string, grantType granttype.GrantType, refreshToken string, code string, redirectUri string) *GrantAccessTokenCommand {
+func NewGrantAccessTokenCommand(clientId string, clientSecret string, grantType granttype.GrantType, refreshToken string, code string, redirectUri string, codeVerifier string) *GrantAccessTokenCommand {
 	return &GrantAccessTokenCommand{
 		ClientId:     clientId,
 		ClientSecret: clientSecret,
@@ -31,6 +33,7 @@ func NewGrantAccessTokenCommand(clientId string, clientSecret string, grantType 
 		RefreshToken: refreshToken,
 		Code:         code,
 		RedirectUri:  redirectUri,
+		CodeVerifier: codeVerifier,
 	}
 }
 
@@ -60,7 +63,7 @@ func (t *tokenService) GrantAccessToken(command *GrantAccessTokenCommand) (*oaut
 	case granttype.RefreshToken:
 		return t.handleRefreshTokenFlow(command.ClientId, command.ClientSecret, command.RefreshToken)
 	case granttype.AuthorizationCode:
-		return t.handleAuthorizationCodeFlow(command.ClientId, command.ClientSecret, command.Code, command.RedirectUri)
+		return t.handleAuthorizationCodeFlow(command.ClientId, command.ClientSecret, command.Code, command.RedirectUri, command.CodeVerifier)
 	default:
 		return nil, fmt.Errorf("unsupported grant type: %s", command.GrantType)
 	}
@@ -103,39 +106,13 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 		return nil, fmt.Errorf("failed to save access token: %w", err)
 	}
 
-	// Step 3: Generate a new refresh token
-	refreshTokenJwt, err := utils.GenerateJWT(clientId, "user", []byte("secret"), "refresh")
-	if err != nil {
-		log.Printf("Error generating JWT for refresh token: %v", err)
-		return nil, fmt.Errorf("failed to generate refresh token JWT: %w", err)
-	}
-
-	refreshToken := store.NewRefreshTokenBuilder().
-		WithAccessToken(savedAccessToken).
-		WithAccessTokenId(savedAccessToken.Id).
-		WithClient(client).
-		WithClientId(clientId).
-		WithToken(refreshTokenJwt).
-		WithTokenType("JWT").
-		WithExpiresAt(time.Now().Add(RefreshTokenDuration)).
-		Build()
-
-	savedRefreshToken, err := t.refreshTokenRepository.Save(refreshToken)
-	if err != nil {
-		log.Printf("Error saving new refresh token for access token ScopeId '%s': %v", savedAccessToken.Id, err)
-		return nil, fmt.Errorf("failed to save refresh token: %w", err)
-	}
-
-	// Step 4: Build and return the token response
+	// Step 3: Build and return the token response
 	token := oauth.NewTokenBuilder().
 		WithClientId(savedAccessToken.ClientId).
 		WithUserId("user").
 		WithAccessToken(savedAccessToken.Token).
 		WithAccessTokenCreatedAt(savedAccessToken.CreatedAt).
-		WithAccessTokenExpiresAt(savedAccessToken.ExpiresAt.Sub(time.Now())).
-		WithRefreshToken(savedRefreshToken.Token).
-		WithRefreshTokenCreatedAt(savedRefreshToken.CreatedAt).
-		WithRefreshTokenExpiresAt(savedRefreshToken.ExpiresAt.Sub(time.Now())).
+		WithAccessTokenExpiresAt(time.Until(savedAccessToken.ExpiresAt)).
 		WithExtension(nil).
 		Build()
 
@@ -148,7 +125,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	log.Println("Processing refresh token request")
 
 	// Step 1: Retrieve and validate the refresh token
-	refreshToken, err := t.refreshTokenRepository.FindByToken(token)
+	refreshToken, err := t.refreshTokenRepository.FindByRefreshToken(token)
 	if err != nil {
 		log.Printf("Error finding refresh token with token '%s': %v", token, err)
 		return nil, fmt.Errorf("failed to find refresh token: %w", err)
@@ -238,10 +215,10 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		WithUserId("user").
 		WithAccessToken(savedAccessToken.Token).
 		WithAccessTokenCreatedAt(savedAccessToken.CreatedAt).
-		WithAccessTokenExpiresAt(savedAccessToken.ExpiresAt.Sub(time.Now())).
+		WithAccessTokenExpiresAt(time.Until(savedAccessToken.ExpiresAt)).
 		WithRefreshToken(savedRefreshToken.Token).
 		WithRefreshTokenCreatedAt(savedRefreshToken.CreatedAt).
-		WithRefreshTokenExpiresAt(savedRefreshToken.ExpiresAt.Sub(time.Now())).
+		WithRefreshTokenExpiresAt(time.Until(savedRefreshToken.ExpiresAt)).
 		WithExtension(nil).
 		Build()
 
@@ -265,7 +242,7 @@ func authenticateClient(clientId, clientSecret string, client *store.OauthClient
 
 // handleAuthorizationCodeFlow processes the authorization code grant type by validating the authorization code,
 // generating an access token, and issuing a refresh token.
-func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code, redirectUri string) (*oauth.Token, error) {
+func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code, redirectUri, codeVerifier string) (*oauth.Token, error) {
 	// Step 1: Retrieve and validate the authorization code
 	authCode, err := t.authRepository.FindByCode(code)
 	if err != nil {
@@ -288,6 +265,23 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 		return nil, fmt.Errorf("authorization code has expired")
 	}
 
+	// PKCE validation
+	if authCode.CodeChallenge != "" && authCode.CodeChallengeMethod == "S256" {
+		if codeVerifier == "" {
+			log.Printf("Code verifier is missing for PKCE enabled authorization code '%s'", code)
+			return nil, fmt.Errorf("code verifier required for PKCE")
+		}
+		// Calculate the S256 code_challenge from the code_verifier
+		calculatedCodeChallenge := utils.S256Challenge(codeVerifier)
+		if calculatedCodeChallenge != authCode.CodeChallenge {
+			log.Printf("Code challenge mismatch for code '%s': expected '%s', got '%s'", code, authCode.CodeChallenge, calculatedCodeChallenge)
+			return nil, fmt.Errorf("code challenge mismatch")
+		}
+	} else if authCode.CodeChallenge != "" && authCode.CodeChallengeMethod == "" {
+		log.Printf("Code challenge method is missing for PKCE enabled authorization code '%s'", code)
+		return nil, fmt.Errorf("code challenge method required for PKCE")
+	}
+
 	// Step 2: Retrieve and validate the client
 	client, err := t.client.FindOauthClient(clientId)
 	if err != nil {
@@ -298,6 +292,13 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	if err := authenticateClient(clientId, clientSecret, client); err != nil {
 		log.Printf("Client authentication failed for Id '%s': %v", clientId, err)
 		return nil, fmt.Errorf("client authentication failed: %w", err)
+	}
+
+	// Step 2.5: Invalidate the authorization code to prevent replay attacks
+	err = t.authRepository.Delete(authCode.Code)
+	if err != nil {
+		log.Printf("Error deleting authorization code '%s': %v", authCode.Code, err)
+		return nil, fmt.Errorf("failed to invalidate authorization code: %w", err)
 	}
 
 	// Step 3: Generate a new access token
@@ -350,10 +351,10 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 		WithUserId("user").
 		WithAccessToken(savedAccessToken.Token).
 		WithAccessTokenCreatedAt(savedAccessToken.CreatedAt).
-		WithAccessTokenExpiresAt(savedAccessToken.ExpiresAt.Sub(time.Now())).
+		WithAccessTokenExpiresAt(time.Until(savedAccessToken.ExpiresAt)).
 		WithRefreshToken(savedRefreshToken.Token).
 		WithRefreshTokenCreatedAt(savedRefreshToken.CreatedAt).
-		WithRefreshTokenExpiresAt(savedRefreshToken.ExpiresAt.Sub(time.Now())).
+		WithRefreshTokenExpiresAt(time.Until(savedRefreshToken.ExpiresAt)).
 		WithExtension(nil).
 		Build()
 

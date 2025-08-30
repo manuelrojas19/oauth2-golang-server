@@ -3,11 +3,12 @@ package session
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"time"
 )
 
 type sessionService struct {
@@ -151,4 +152,31 @@ func (u *sessionService) GetUserIdFromSession(sessionID string) (string, error) 
 	)
 
 	return userID, nil
+}
+
+func (u *sessionService) DeleteSession(sessionID string) error {
+	start := time.Now()
+
+	if sessionID == "" {
+		u.logger.Warn("Session ID should not be empty for deletion")
+		return fmt.Errorf("session ID cannot be empty")
+	}
+
+	err := u.redisClient.Del(u.ctx, sessionID).Err()
+	if err != nil {
+		u.logger.Error("Error deleting session from Redis",
+			zap.String("sessionId", sessionID),
+			zap.Error(err),
+			zap.Duration("duration", time.Since(start)),
+			zap.Stack("stacktrace"),
+		)
+		return fmt.Errorf("failed to delete session: %w", err)
+	}
+
+	u.logger.Info("Session deleted successfully",
+		zap.String("sessionId", sessionID),
+		zap.Duration("duration", time.Since(start)),
+	)
+
+	return nil
 }

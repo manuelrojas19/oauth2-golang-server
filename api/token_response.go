@@ -3,10 +3,13 @@ package api
 type TokenResponse struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token,omitempty"`
 }
 
-func NewTokenResponse(accessToken string, tokenType string, expiresIn int, refreshToken string) *TokenResponse {
-	return &TokenResponse{AccessToken: accessToken, TokenType: tokenType, ExpiresIn: expiresIn, RefreshToken: refreshToken}
+func NewTokenResponse(accessToken string, tokenType string, refreshToken string) *TokenResponse {
+	return &TokenResponse{
+		AccessToken:  accessToken,
+		TokenType:    tokenType,
+		RefreshToken: refreshToken,
+	}
 }

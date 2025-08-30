@@ -4,10 +4,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
-	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"net/http"
 	"strings"
+
+	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
 )
 
 // TokenRequest represents the request to obtain an access token.
@@ -18,6 +18,7 @@ type TokenRequest struct {
 	GrantType    granttype.GrantType
 	AuthCode     string
 	RedirectUri  string
+	CodeVerifier string
 }
 
 // DecodeTokenRequest function to handle URL encoded data and Authorization header.
@@ -39,6 +40,7 @@ func DecodeTokenRequest(r *http.Request, request *TokenRequest) error {
 		request.ClientSecret = r.FormValue("client_secret")
 		request.AuthCode = r.FormValue("code")
 		request.RedirectUri = r.FormValue("redirect_uri")
+		request.CodeVerifier = r.FormValue("code_verifier")
 	case granttype.Implicit, granttype.Password, granttype.ClientCredentials:
 		// For these grant types, client credentials are required
 		request.ClientId = r.FormValue("client_id")
@@ -86,7 +88,7 @@ func parseBasicAuth(authHeader string, request *TokenRequest) error {
 // Validate checks the required fields for the TokenRequest based on the GrantType.
 func (r *TokenRequest) Validate() error {
 	// Validate GrantType
-	if !utils.IsValidGrantType(r.GrantType) {
+	if !IsValidGrantType(r.GrantType) {
 		return fmt.Errorf("invalid grant_type: %s", r.GrantType)
 	}
 
@@ -105,6 +107,11 @@ func (r *TokenRequest) Validate() error {
 		}
 		if strings.TrimSpace(r.RedirectUri) == "" {
 			return errors.New("redirect_uri is required for authorization_code grant type")
+		}
+		// PKCE validation: code_verifier is required for public clients or when code_challenge was used.
+		// For simplicity, we'll enforce it if code_challenge was sent during authorization.
+		if strings.TrimSpace(r.CodeVerifier) == "" {
+			return errors.New("code_verifier is required for authorization_code grant type when PKCE is used")
 		}
 	case granttype.Implicit, granttype.Password, granttype.ClientCredentials:
 		// Ensure ClientId and ClientSecret are not empty

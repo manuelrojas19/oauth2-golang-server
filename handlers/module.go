@@ -6,7 +6,6 @@ import (
 
 var Module = fx.Options(
 	fx.Provide(
-		NewAcceptConsentHandler,
 		NewRegisterHandler,
 		NewTokenHandler,
 		NewJwksHandler,
@@ -16,5 +15,10 @@ var Module = fx.Options(
 		NewLoginHandler,
 		NewHealthHandler,
 		NewScopeHandler,
+		NewUserinfoHandler,
+		NewLogoutHandler,
+		NewIntrospectionHandler,
+		NewRevocationHandler,
+		NewAcceptConsentHandler,
 	),
 )

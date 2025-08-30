@@ -37,3 +37,19 @@ type TokenHandler interface {
 type ScopeHandler interface {
 	CreateScope(http.ResponseWriter, *http.Request)
 }
+
+type UserinfoHandler interface {
+	Userinfo(http.ResponseWriter, *http.Request)
+}
+
+type LogoutHandler interface {
+	Logout(http.ResponseWriter, *http.Request)
+}
+
+type IntrospectionHandler interface {
+	Introspect(http.ResponseWriter, *http.Request)
+}
+
+type RevocationHandler interface {
+	Revoke(http.ResponseWriter, *http.Request)
+}

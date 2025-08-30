@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/services"
+	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"go.uber.org/zap"
 )
 
@@ -37,7 +39,7 @@ func (h *scopeHandler) CreateScope(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		h.logger.Error("Failed to decode request body", zap.Error(err))
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidRequest))
 		return
 	}
 
@@ -46,7 +48,7 @@ func (h *scopeHandler) CreateScope(w http.ResponseWriter, r *http.Request) {
 	scope, err := h.scopeService.Save(req.Name, req.Description)
 	if err != nil {
 		h.logger.Error("Failed to create scope", zap.Error(err))
-		http.Error(w, "Failed to create scope", http.StatusInternalServerError)
+		utils.RespondWithJSON(w, http.StatusInternalServerError, api.ErrorResponseBody(api.ErrServerError))
 		return
 	}
 
@@ -59,7 +61,7 @@ func (h *scopeHandler) CreateScope(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		h.logger.Error("Failed to encode response", zap.Error(err))
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		utils.RespondWithJSON(w, http.StatusInternalServerError, api.ErrorResponseBody(api.ErrServerError))
 		return
 	}
 

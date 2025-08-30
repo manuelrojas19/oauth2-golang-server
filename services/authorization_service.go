@@ -2,6 +2,9 @@ package services
 
 import (
 	"fmt"
+	"slices"
+	"time"
+
 	"github.com/manuelrojas19/go-oauth2-server/configuration"
 	"github.com/manuelrojas19/go-oauth2-server/errors"
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
@@ -10,16 +13,17 @@ import (
 	"github.com/manuelrojas19/go-oauth2-server/store/repositories"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"go.uber.org/zap"
-	"time"
 )
 
 type AuthorizeCommand struct {
-	ClientId     string
-	Scope        string
-	RedirectUri  string
-	ResponseType responsetype.ResponseType
-	SessionId    string
-	State        string
+	ClientId            string
+	Scope               string
+	RedirectUri         string
+	ResponseType        responsetype.ResponseType
+	SessionId           string
+	State               string
+	CodeChallenge       string
+	CodeChallengeMethod string
 }
 
 type authorizationService struct {
@@ -51,6 +55,7 @@ func NewAuthorizationService(oauthClientService OauthClientService,
 
 func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.AuthCode, error) {
 	clientId := command.ClientId
+
 	a.logger.Info("Authorize request will be processed",
 		zap.String("clientId", clientId),
 		zap.String("responseType", string(command.ResponseType)),
@@ -164,6 +169,8 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		WithUserId(user.Id).
 		WithScope(command.Scope).
 		WithRedirectURI(command.RedirectUri).
+		WithCodeChallenge(command.CodeChallenge).
+		WithCodeChallengeMethod(command.CodeChallengeMethod).
 		WithExpiresAt(time.Now().Add(configuration.AuthCodeExpireTime)).
 		Build()
 
@@ -198,10 +205,5 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 }
 
 func isRegisteredRedirectUri(command *AuthorizeCommand, client *store.OauthClient) bool {
-	for _, uri := range client.RedirectURIs {
-		if command.RedirectUri == uri {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(client.RedirectURIs, command.RedirectUri)
 }

@@ -1,9 +1,12 @@
 package repositories
 
 import (
-	"github.com/manuelrojas19/go-oauth2-server/store"
+	"errors"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/manuelrojas19/go-oauth2-server/store"
 
 	"gorm.io/gorm"
 )
@@ -45,4 +48,30 @@ func (ot *accessTokenRepository) Save(token *store.AccessToken) (*store.AccessTo
 
 	log.Printf("Successfully saved token for client_key %s", token.ClientId)
 	return token, nil
+}
+
+func (ot *accessTokenRepository) FindByAccessToken(accessToken string) (*store.AccessToken, error) {
+	var token store.AccessToken
+
+	if err := ot.Db.Where("access_token = ?", accessToken).First(&token).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("access token not found")
+		}
+		return nil, fmt.Errorf("failed to find access token: %w", err)
+	}
+
+	if token.ExpiresAt.Before(time.Now()) {
+		return nil, fmt.Errorf("access token expired")
+	}
+
+	return &token, nil
+}
+
+func (ot *accessTokenRepository) DeleteByAccessToken(accessToken string) error {
+	result := ot.Db.Where("access_token = ?", accessToken).Delete(&store.AccessToken{})
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete access token: %w", result.Error)
+	}
+	// If no rows were affected, it means the token was not found, but we don't return an error as per RFC 7009
+	return nil
 }

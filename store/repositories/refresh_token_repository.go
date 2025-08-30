@@ -3,9 +3,11 @@ package repositories
 import (
 	"errors"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"gorm.io/gorm"
-	"log"
 )
 
 type refreshTokenRepository struct {
@@ -100,4 +102,31 @@ func (ot *refreshTokenRepository) FindByToken(token string) (*store.RefreshToken
 
 	log.Printf("Successfully found refresh token with token string %s", token)
 	return refreshToken, nil
+}
+
+// FindByRefreshToken retrieves a refresh token from the database using the token string.
+func (ot *refreshTokenRepository) FindByRefreshToken(refreshToken string) (*store.RefreshToken, error) {
+	var token store.RefreshToken
+
+	if err := ot.Db.Where("refresh_token = ?", refreshToken).First(&token).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("refresh token not found")
+		}
+		return nil, fmt.Errorf("failed to find refresh token: %w", err)
+	}
+
+	if token.ExpiresAt.Before(time.Now()) {
+		return nil, fmt.Errorf("refresh token expired")
+	}
+
+	return &token, nil
+}
+
+func (ot *refreshTokenRepository) DeleteByRefreshToken(refreshToken string) error {
+	result := ot.Db.Where("refresh_token = ?", refreshToken).Delete(&store.RefreshToken{})
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete refresh token: %w", result.Error)
+	}
+	// If no rows were affected, it means the token was not found, but we don't return an error as per RFC 7009
+	return nil
 }

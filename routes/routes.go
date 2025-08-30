@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"github.com/manuelrojas19/go-oauth2-server/handlers"
 	"net/http"
+
+	"github.com/manuelrojas19/go-oauth2-server/handlers"
 )
 
 func Routes(registerHandler handlers.RegisterHandler,
@@ -14,6 +15,10 @@ func Routes(registerHandler handlers.RegisterHandler,
 	loginHandler handlers.LoginHandler,
 	healthHandler handlers.HealthHandler,
 	scopesHandler handlers.ScopeHandler,
+	userinfoHandler handlers.UserinfoHandler,
+	logoutHandler handlers.LogoutHandler,
+	introspectionHandler handlers.IntrospectionHandler,
+	revocationHandler handlers.RevocationHandler,
 ) map[string]http.HandlerFunc {
 	return map[string]http.HandlerFunc{
 		"/oauth/scope":               scopesHandler.CreateScope,
@@ -23,6 +28,10 @@ func Routes(registerHandler handlers.RegisterHandler,
 		"/oauth/consent":             requestConsentHandler.RequestConsent,
 		"/oauth/login":               loginHandler.Login,
 		"/.well-known/jwks.json":     jwksHandler.Jwks,
+		"/oauth/userinfo":            userinfoHandler.Userinfo,
+		"/oauth/logout":              logoutHandler.Logout,
+		"/oauth/introspect":          introspectionHandler.Introspect,
+		"/oauth/revoke":              revocationHandler.Revoke,
 		"/google/authorize/callback": authorizeCallbackHandler.ProcessCallback,
 		"/health":                    healthHandler.Health,
 	}
