@@ -3,9 +3,10 @@ package handlers
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
+
+	"go.uber.org/zap"
 )
 
 var requestTmpl *template.Template
@@ -14,15 +15,16 @@ func init() {
 	var err error
 	requestTmpl, err = template.ParseFiles("templates/authorize.html")
 	if err != nil {
-		log.Fatalf("Error parsing template: %v", err)
+		panic(fmt.Sprintf("Error parsing template: %v", err))
 	}
 }
 
 type requestConsentHandler struct {
+	logger *zap.Logger
 }
 
-func NewRequestConsentHandler() RequestConsentHandler {
-	return &requestConsentHandler{}
+func NewRequestConsentHandler(logger *zap.Logger) RequestConsentHandler {
+	return &requestConsentHandler{logger: logger}
 }
 
 type ConsentPageData struct {
@@ -34,6 +36,10 @@ type ConsentPageData struct {
 }
 
 func (h *requestConsentHandler) RequestConsent(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Received request for consent page",
+		zap.String("client_id", r.URL.Query().Get("client_id")),
+		zap.String("scope", r.URL.Query().Get("scope")))
+
 	clientId := r.URL.Query().Get("client_id")
 	scope := r.URL.Query().Get("scope")
 	redirectUri := r.URL.Query().Get("redirect_uri")
@@ -59,6 +65,7 @@ func (h *requestConsentHandler) RequestConsent(w http.ResponseWriter, r *http.Re
 
 	// Redirect the user to the consent page
 	if err := requestTmpl.Execute(w, data); err != nil {
+		h.logger.Error("Error rendering consent template", zap.Error(err))
 		http.Error(w, "Error rendering template", http.StatusInternalServerError)
 	}
 }

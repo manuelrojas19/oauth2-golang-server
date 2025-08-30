@@ -39,14 +39,16 @@ func (h *userinfoHandler) Userinfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	accessToken := strings.TrimPrefix(authHeader, "Bearer ")
+	h.log.Debug("Extracted access token from header", zap.String("accessToken", accessToken))
 
 	command := &services.GetUserinfoCommand{
 		AccessToken: accessToken,
 	}
+	h.log.Debug("Created GetUserinfoCommand", zap.Any("command", command))
 
 	userinfo, err := h.userinfoService.GetUserinfo(command)
 	if err != nil {
-		h.log.Error("Error retrieving user info", zap.Error(err))
+		h.log.Error("Error retrieving user info", zap.Error(err), zap.String("accessToken", accessToken))
 		utils.RespondWithJSON(w, http.StatusUnauthorized, api.ErrorResponseBody(api.ErrInvalidToken))
 		return
 	}

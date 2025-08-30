@@ -38,7 +38,7 @@ func (h *logoutHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	sessionId := cookie.Value
 	err = h.sessionService.DeleteSession(sessionId)
 	if err != nil {
-		h.log.Error("Error deleting session", zap.Error(err))
+		h.log.Error("Error deleting session", zap.Error(err), zap.String("sessionId", sessionId))
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}

@@ -22,28 +22,32 @@ func NewUserRepository(db *gorm.DB, logger *zap.Logger) UserRepository {
 
 // Save creates or updates a user in the database
 func (r *userRepository) Save(user *store.User) (*store.User, error) {
-	r.logger.Info("Saving user", zap.String("userID", user.Id))
+	r.logger.Info("Attempting to save user", zap.String("userID", user.Id), zap.String("email", user.Email))
+	r.logger.Debug("User entity to save", zap.Any("user", user))
 
 	// Perform the save operation
 	result := r.db.Save(user)
 
 	// Handle errors during the save operation
 	if result.Error != nil {
-		r.logger.Error("Error saving user",
+		r.logger.Error("Error saving user to database",
 			zap.String("userID", user.Id),
+			zap.String("email", user.Email),
 			zap.Error(result.Error),
 			zap.Stack("stacktrace"),
 		)
 		return nil, fmt.Errorf("error saving user: %w", result.Error)
 	}
 
-	r.logger.Info("Successfully saved user", zap.String("userID", user.Id))
+	r.logger.Info("Successfully saved user", zap.String("userID", user.Id), zap.String("email", user.Email))
+	r.logger.Debug("Saved user details", zap.Any("user", user))
 	return user, nil
 }
 
 // FindByUserId retrieves a user by Id from the database.
 func (r *userRepository) FindByUserId(id string) (*store.User, error) {
-	r.logger.Info("Searching for user", zap.String("userID", id))
+	r.logger.Info("Searching for user by user ID", zap.String("userID", id))
+	r.logger.Debug("Executing database query to find user by ID")
 
 	// Initialize a new User entity
 	user := new(store.User)
@@ -54,10 +58,10 @@ func (r *userRepository) FindByUserId(id string) (*store.User, error) {
 	// Handle errors during the query
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			r.logger.Warn("User not found", zap.String("userID", id))
+			r.logger.Debug("User not found for user ID", zap.String("userID", id))
 			return nil, fmt.Errorf("user not found")
 		}
-		r.logger.Error("Error finding user",
+		r.logger.Error("Error finding user by user ID in database",
 			zap.String("userID", id),
 			zap.Error(result.Error),
 			zap.Stack("stacktrace"),
@@ -65,24 +69,27 @@ func (r *userRepository) FindByUserId(id string) (*store.User, error) {
 		return nil, fmt.Errorf("error finding user: %w", result.Error)
 	}
 
-	r.logger.Info("Successfully found user", zap.String("userID", id))
+	r.logger.Info("Successfully found user by user ID", zap.String("userID", id), zap.String("email", user.Email))
+	r.logger.Debug("Found user details by ID", zap.Any("user", user))
 	return user, nil
 }
 
 // FindById retrieves a user by their ID.
 func (r *userRepository) FindById(id string) (*store.User, error) {
 	r.logger.Info("Finding user by ID", zap.String("userID", id))
+	r.logger.Debug("Executing database query to find user by ID")
 
 	var user store.User
 	if err := r.db.Where("id = ?", id).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			r.logger.Warn("User not found for ID", zap.String("userID", id))
+			r.logger.Debug("User not found for ID", zap.String("userID", id))
 			return nil, fmt.Errorf("user not found")
 		}
-		r.logger.Error("Error finding user by ID", zap.String("userID", id), zap.Error(err))
+		r.logger.Error("Error finding user by ID in database", zap.String("userID", id), zap.Error(err))
 		return nil, fmt.Errorf("failed to find user by ID: %w", err)
 	}
 
-	r.logger.Info("User found successfully by ID", zap.String("userID", id))
+	r.logger.Info("User found successfully by ID", zap.String("userID", id), zap.String("email", user.Email))
+	r.logger.Debug("Found user details by ID", zap.Any("user", user))
 	return &user, nil
 }

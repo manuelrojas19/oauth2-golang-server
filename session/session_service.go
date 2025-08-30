@@ -32,6 +32,7 @@ func (u *sessionService) CreateSession(userId, email string) (string, error) {
 		"user_id": userId,
 		"email":   email,
 	}
+	u.logger.Info("Attempting to create session", zap.String("userId", userId), zap.String("email", email))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -39,17 +40,19 @@ func (u *sessionService) CreateSession(userId, email string) (string, error) {
 	pipe := u.redisClient.TxPipeline()
 	pipe.HMSet(ctx, sessionID, sessionData)
 	pipe.Expire(ctx, sessionID, 1*time.Hour)
+	u.logger.Debug("Executing Redis pipeline to set session data and expiry", zap.String("sessionId", sessionID))
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		u.logger.Error("Error creating session",
+		u.logger.Error("Error executing Redis pipeline for session creation",
+			zap.String("sessionId", sessionID),
 			zap.String("userId", userId),
 			zap.String("email", email),
 			zap.Error(err),
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
 		)
-		return "", err
+		return "", fmt.Errorf("failed to create session: %w", err)
 	}
 
 	u.logger.Info("Successfully created session",
@@ -58,14 +61,16 @@ func (u *sessionService) CreateSession(userId, email string) (string, error) {
 		zap.String("email", email),
 		zap.Duration("duration", time.Since(start)),
 	)
+	u.logger.Debug("Session creation complete", zap.String("sessionId", sessionID))
 
 	return sessionID, nil
 }
 
 func (u *sessionService) SessionExists(sessionID string) bool {
 	start := time.Now()
+	u.logger.Info("Checking if session exists", zap.String("sessionId", sessionID))
 	if sessionID == "" {
-		u.logger.Warn("Session Id should not be empty")
+		u.logger.Warn("Session ID is empty during existence check")
 		return false
 	}
 
@@ -74,12 +79,12 @@ func (u *sessionService) SessionExists(sessionID string) bool {
 	result, err := existsCmd.Result()
 	if err != nil {
 		if err == redis.Nil {
-			u.logger.Info("Session does not exist",
+			u.logger.Info("Session does not exist for ID",
 				zap.String("sessionId", sessionID),
 				zap.Duration("duration", time.Since(start)),
 			)
 		} else {
-			u.logger.Error("Failed to check session existence",
+			u.logger.Error("Error checking session existence in Redis",
 				zap.String("sessionId", sessionID),
 				zap.Error(err),
 				zap.Duration("duration", time.Since(start)),
@@ -90,7 +95,7 @@ func (u *sessionService) SessionExists(sessionID string) bool {
 	}
 
 	if result == 0 {
-		u.logger.Info("Session does not exist",
+		u.logger.Info("Session does not exist for ID",
 			zap.String("sessionId", sessionID),
 			zap.Duration("duration", time.Since(start)),
 		)
@@ -100,7 +105,7 @@ func (u *sessionService) SessionExists(sessionID string) bool {
 	ttlCmd := u.redisClient.TTL(u.ctx, sessionKey)
 	ttl, err := ttlCmd.Result()
 	if err != nil {
-		u.logger.Error("Failed to check session TTL",
+		u.logger.Error("Error checking session TTL in Redis",
 			zap.String("sessionId", sessionID),
 			zap.Error(err),
 			zap.Duration("duration", time.Since(start)),
@@ -121,12 +126,12 @@ func (u *sessionService) SessionExists(sessionID string) bool {
 		zap.String("sessionId", sessionID),
 		zap.Duration("duration", time.Since(start)),
 	)
-
 	return true
 }
 
 func (u *sessionService) GetUserIdFromSession(sessionID string) (string, error) {
 	start := time.Now()
+	u.logger.Info("Attempting to retrieve user ID from session", zap.String("sessionId", sessionID))
 	userID, err := u.redisClient.HGet(context.Background(), sessionID, "user_id").Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -142,7 +147,7 @@ func (u *sessionService) GetUserIdFromSession(sessionID string) (string, error) 
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
 		)
-		return "", err
+		return "", fmt.Errorf("failed to retrieve user ID from session: %w", err)
 	}
 
 	u.logger.Info("Successfully retrieved user_id from session",
@@ -150,15 +155,17 @@ func (u *sessionService) GetUserIdFromSession(sessionID string) (string, error) 
 		zap.String("userId", userID),
 		zap.Duration("duration", time.Since(start)),
 	)
+	u.logger.Debug("User ID retrieved from session", zap.String("userId", userID))
 
 	return userID, nil
 }
 
 func (u *sessionService) DeleteSession(sessionID string) error {
 	start := time.Now()
+	u.logger.Info("Attempting to delete session", zap.String("sessionId", sessionID))
 
 	if sessionID == "" {
-		u.logger.Warn("Session ID should not be empty for deletion")
+		u.logger.Warn("Session ID is empty for deletion attempt")
 		return fmt.Errorf("session ID cannot be empty")
 	}
 
@@ -177,6 +184,5 @@ func (u *sessionService) DeleteSession(sessionID string) error {
 		zap.String("sessionId", sessionID),
 		zap.Duration("duration", time.Since(start)),
 	)
-
 	return nil
 }

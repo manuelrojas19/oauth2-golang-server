@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -19,7 +18,9 @@ func init() {
 	var err error
 	loginTmpl, err = template.ParseFiles("templates/login.html")
 	if err != nil {
-		log.Fatalf("Error parsing template: %v", err)
+		// Log the error using Zap directly if possible, or defer to a global logger if init can't take logger
+		// For simplicity in init, we'll use a panic as it's a critical startup failure.
+		panic(fmt.Sprintf("Error parsing template: %v", err))
 	}
 
 }

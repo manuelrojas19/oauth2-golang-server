@@ -19,6 +19,7 @@ func NewUserConsentService(consentRepo repositories.AccessConsentRepository, log
 
 func (c *userConsentService) Save(userId, clientId, scopeId string) error {
 	c.logger.Info("Attempting to save user consent", zap.String("userId", userId), zap.String("clientId", clientId), zap.String("scopeId", scopeId))
+	c.logger.Debug("Calling consent repository to save consent", zap.String("userId", userId), zap.String("clientId", clientId), zap.String("scopeId", scopeId))
 	_, err := c.consentRepo.Save(userId, clientId, scopeId)
 	if err != nil {
 		c.logger.Error("Failed to save user consent", zap.String("userId", userId), zap.String("clientId", clientId), zap.String("scopeId", scopeId), zap.Error(err))
@@ -30,6 +31,7 @@ func (c *userConsentService) Save(userId, clientId, scopeId string) error {
 
 func (c *userConsentService) HasUserConsented(userId, clientId, scopeId string) bool {
 	c.logger.Info("Checking if user has consented", zap.String("userId", userId), zap.String("clientId", clientId), zap.String("scopeId", scopeId))
+	c.logger.Debug("Calling consent repository to check user consent", zap.String("userId", userId), zap.String("clientId", clientId), zap.String("scopeId", scopeId))
 
 	consented, err := c.consentRepo.HasUserConsented(userId, clientId, scopeId)
 	if err != nil {

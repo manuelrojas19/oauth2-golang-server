@@ -63,6 +63,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		zap.String("sessionId", command.SessionId),
 		zap.String("scope", command.Scope),
 	)
+	a.logger.Debug("Authorization command details", zap.Any("command", command))
 
 	start := time.Now()
 
@@ -76,6 +77,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		)
 		return nil, fmt.Errorf(errors.ErrUnsupportedResponseType)
 	}
+	a.logger.Debug("Response type validated", zap.String("responseType", string(command.ResponseType)))
 
 	// Retrieve the OAuth client
 	client, err := a.oauthClientService.FindOauthClient(clientId)
@@ -92,6 +94,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		zap.String("clientId", clientId),
 		zap.Duration("duration", time.Since(start)),
 	)
+	a.logger.Debug("Retrieved OAuth client details", zap.Any("client", client))
 
 	// Validate redirect URI
 	if !isRegisteredRedirectUri(command, client) {
@@ -101,23 +104,24 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
 		)
-		return nil, fmt.Errorf(errors.ErrInvalidRedirectUri)
+		return nil, fmt.Errorf("%s: %s", errors.ErrInvalidRedirectUri, command.RedirectUri)
 	}
+	a.logger.Debug("Redirect URI validated", zap.String("redirectUri", command.RedirectUri))
 
 	// Check if user is authenticated
 	if !a.sessionService.SessionExists(command.SessionId) {
-		a.logger.Error("User not authenticated",
+		a.logger.Warn("User not authenticated",
 			zap.String("sessionId", command.SessionId),
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
 		)
 		return nil, fmt.Errorf(errors.ErrUserNotAuthenticated)
 	}
-
 	a.logger.Info("Session exists",
 		zap.String("sessionId", command.SessionId),
 		zap.Duration("duration", time.Since(start)),
 	)
+	a.logger.Debug("User session exists and is valid", zap.String("sessionId", command.SessionId))
 
 	// Retrieve user Id from session
 	userId, err := a.sessionService.GetUserIdFromSession(command.SessionId)
@@ -130,6 +134,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		)
 		return nil, fmt.Errorf("failed to retrieve user from session: %w", err)
 	}
+	a.logger.Debug("Retrieved userId from session", zap.String("userId", userId))
 
 	// Validate user in the database
 	user, err := a.userRepository.FindByUserId(userId)
@@ -142,11 +147,20 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		)
 		return nil, fmt.Errorf("failed to retrieve user from user Id: %w", err)
 	}
+	a.logger.Debug("User found in database", zap.String("userId", user.Id))
 
 	// Validate access consent
 	if !a.consentService.HasUserConsented(user.Id, client.ClientId, command.Scope) {
+		a.logger.Warn("User consent required",
+			zap.String("userId", user.Id),
+			zap.String("clientId", client.ClientId),
+			zap.String("scope", command.Scope),
+			zap.Duration("duration", time.Since(start)),
+			zap.Stack("stacktrace"),
+		)
 		return nil, fmt.Errorf(errors.ErrConsentRequired)
 	}
+	a.logger.Debug("User consent confirmed")
 
 	// Generate authorization code
 	code, err := utils.GenerateAuthCode(client.ClientId, userId)
@@ -160,6 +174,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		)
 		return nil, fmt.Errorf(errors.ErrConsentRequired)
 	}
+	a.logger.Debug("Authorization code generated", zap.String("code", code))
 
 	// Build authorization code entity
 	authCodeEntity := store.NewAuthorizationCodeBuilder().
@@ -173,6 +188,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 		WithCodeChallengeMethod(command.CodeChallengeMethod).
 		WithExpiresAt(time.Now().Add(configuration.AuthCodeExpireTime)).
 		Build()
+	a.logger.Debug("Authorization code entity built", zap.Any("authCodeEntity", authCodeEntity))
 
 	// Save authorization code entity to repository
 	authCodeEntity, err = a.authRepository.Save(authCodeEntity)
@@ -181,9 +197,11 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 			zap.Error(err),
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
+			zap.String("authCode", authCodeEntity.Code),
 		)
 		return nil, fmt.Errorf("failed to save authorization code entity: %w", err)
 	}
+	a.logger.Info("Authorization code entity saved successfully", zap.String("authCode", authCodeEntity.Code))
 
 	// Build the OAuth authorization code response
 	oauthCode := oauth.NewAuthCodeBuilder().

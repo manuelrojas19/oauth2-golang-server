@@ -35,6 +35,7 @@ type CreateScopeResponse struct {
 
 // CreateScope handles the creation of a new scope
 func (h *scopeHandler) CreateScope(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("Received request to create a new scope", zap.String("method", r.Method))
 	var req CreateScopeRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -43,11 +44,12 @@ func (h *scopeHandler) CreateScope(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.logger.Debug("Decoded create scope request", zap.Any("request", req))
 	h.logger.Info("Creating new scope", zap.String("name", req.Name), zap.String("description", req.Description))
 
 	scope, err := h.scopeService.Save(req.Name, req.Description)
 	if err != nil {
-		h.logger.Error("Failed to create scope", zap.Error(err))
+		h.logger.Error("Failed to create scope", zap.Error(err), zap.String("scopeName", req.Name))
 		utils.RespondWithJSON(w, http.StatusInternalServerError, api.ErrorResponseBody(api.ErrServerError))
 		return
 	}

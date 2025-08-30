@@ -20,6 +20,7 @@ func NewAcceptConsentHandler(log *zap.Logger) AcceptConsentHandler {
 }
 
 func (h *acceptConsentHandler) AcceptConsent(w http.ResponseWriter, r *http.Request) {
+	h.log.Info("Received accept consent request")
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
