@@ -2,14 +2,15 @@ package store
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/authmethodtype"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
 	"golang.org/x/crypto/bcrypt"
-	"log"
-	"time"
 )
 
 type OauthClient struct {
@@ -23,6 +24,7 @@ type OauthClient struct {
 	Confidential            bool
 	CreatedAt               time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	UpdatedAt               time.Time `gorm:"default:CURRENT_TIMESTAMP"`
+	ClientSecretExpiresAt   int64     `gorm:"type:bigint"`
 
 	Scopes []Scope `gorm:"many2many:oauth_client_scopes;foreignKey:ClientId;joinForeignKey:ClientId;References:Id;JoinReferences:ScopeId"`
 }
@@ -49,6 +51,7 @@ type OauthClientBuilder struct {
 	tokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod
 	redirectURI             []string
 	confidential            bool
+	clientSecretExpiresAt   int64
 	scopes                  []Scope
 }
 
@@ -105,6 +108,12 @@ func (b *OauthClientBuilder) WithConfidential(confidential bool) *OauthClientBui
 	return b
 }
 
+// WithClientSecretExpiresAt sets the client secret expiration time.
+func (b *OauthClientBuilder) WithClientSecretExpiresAt(expiresAt int64) *OauthClientBuilder {
+	b.clientSecretExpiresAt = expiresAt
+	return b
+}
+
 // WithScopes sets the client scopes.
 func (b *OauthClientBuilder) WithScopes(scopes []Scope) *OauthClientBuilder {
 	b.scopes = scopes
@@ -117,17 +126,25 @@ func (b *OauthClientBuilder) Build() *OauthClient {
 		b.clientID = uuid.New().String()
 	}
 
+	createdAt := time.Now().UTC()
+
+	// If ClientSecretExpiresAt is not explicitly set, default to 1 year from now.
+	if b.clientSecretExpiresAt == 0 {
+		b.clientSecretExpiresAt = createdAt.AddDate(1, 0, 0).Unix()
+	}
+
 	return &OauthClient{
 		ClientId:                b.clientID,
-		ClientSecret:            b.clientSecret,
 		ClientName:              b.clientName,
+		ClientSecret:            b.clientSecret,
 		ResponseTypes:           responsetype.EnumListToStringList(b.responseTypes),
 		GrantTypes:              granttype.EnumListToStringList(b.grantTypes),
 		TokenEndpointAuthMethod: string(b.tokenEndpointAuthMethod),
 		RedirectURIs:            b.redirectURI,
-		CreatedAt:               time.Now().UTC(),
-		UpdatedAt:               time.Now().UTC(),
+		CreatedAt:               createdAt,
+		UpdatedAt:               createdAt,
 		Confidential:            b.confidential,
+		ClientSecretExpiresAt:   b.clientSecretExpiresAt,
 		Scopes:                  b.scopes,
 	}
 }

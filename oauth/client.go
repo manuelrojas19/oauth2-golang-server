@@ -10,6 +10,8 @@ type Client struct {
 	ClientId                string
 	ClientSecret            string
 	ClientName              string
+	ClientIdIssuedAt        int64
+	ClientSecretExpiresAt   int64
 	GrantTypes              []granttype.GrantType
 	ResponseTypes           []responsetype.ResponseType
 	TokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod
@@ -41,6 +43,18 @@ func (b *ClientBuilder) WithClientSecret(clientSecret string) *ClientBuilder {
 // WithClientName sets the ClientName for the builder.
 func (b *ClientBuilder) WithClientName(clientName string) *ClientBuilder {
 	b.client.ClientName = clientName
+	return b
+}
+
+// WithClientIdIssuedAt sets the ClientIdIssuedAt for the builder.
+func (b *ClientBuilder) WithClientIdIssuedAt(issuedAt int64) *ClientBuilder {
+	b.client.ClientIdIssuedAt = issuedAt
+	return b
+}
+
+// WithClientSecretExpiresAt sets the ClientSecretExpiresAt for the builder.
+func (b *ClientBuilder) WithClientSecretExpiresAt(expiresAt int64) *ClientBuilder {
+	b.client.ClientSecretExpiresAt = expiresAt
 	return b
 }
 

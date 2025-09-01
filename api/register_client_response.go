@@ -10,6 +10,8 @@ import (
 type RegisterClientResponse struct {
 	ClientId                string                                 `json:"client_id"`
 	ClientSecret            string                                 `json:"client_secret,omitempty"`
+	ClientIdIssuedAt        string                                 `json:"client_id_issued_at,omitempty"`
+	ClientSecretExpiresAt   string                                 `json:"client_secret_expires_at,omitempty"`
 	ClientName              string                                 `json:"client_name"`
 	GrantTypes              []granttype.GrantType                  `json:"grant_type"`
 	ResponseTypes           []responsetype.ResponseType            `json:"response_type"`

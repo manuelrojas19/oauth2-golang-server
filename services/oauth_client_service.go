@@ -103,6 +103,8 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		WithClientId(savedClient.ClientId).
 		WithClientSecret(clientSecret).
 		WithClientName(savedClient.ClientName).
+		WithClientIdIssuedAt(savedClient.CreatedAt.Unix()).
+		WithClientSecretExpiresAt(savedClient.ClientSecretExpiresAt).
 		WithResponseTypes(responsetype.StringListToEnumList(savedClient.ResponseTypes)).
 		WithGrantTypes(granttype.StringListToEnumList(savedClient.GrantTypes)).
 		WithTokenEndpointAuthMethod(authmethodtype.TokenEndpointAuthMethod(savedClient.TokenEndpointAuthMethod)).

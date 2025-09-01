@@ -72,6 +72,8 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 	res := &api.RegisterClientResponse{
 		ClientId:                client.ClientId,
 		ClientSecret:            client.ClientSecret,
+		ClientIdIssuedAt:        fmt.Sprintf("%d", client.ClientIdIssuedAt),
+		ClientSecretExpiresAt:   fmt.Sprintf("%d", client.ClientSecretExpiresAt),
 		ClientName:              client.ClientName,
 		GrantTypes:              client.GrantTypes,
 		ResponseTypes:           client.ResponseTypes,
