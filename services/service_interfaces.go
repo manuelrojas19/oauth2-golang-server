@@ -43,6 +43,7 @@ type ScopeService interface {
 	Save(scopeName, scopeDescription string) (*oauth2.Scope, error)
 	FindById(scopeId string) (*oauth2.Scope, bool)
 	FindByIdList(scopeIds []string) ([]oauth2.Scope, error)
+	FindByName(name string) (*oauth2.Scope, error)
 }
 
 type UserinfoService interface {

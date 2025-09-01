@@ -16,6 +16,7 @@ var (
 	ErrInvalidClient           = errors.New("invalid_client")
 	ErrInvalidGrant            = errors.New("invalid_grant")
 	ErrInvalidToken            = errors.New("invalid_token")
+	ErrClientAlreadyExists     = errors.New("client_already_exists")
 )
 
 // ErrorResponse represents a standard OAuth2 error response.

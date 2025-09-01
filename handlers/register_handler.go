@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/services"
@@ -43,7 +45,7 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	command := &services.RegisterOauthClientCommand{
+	command := services.RegisterOauthClientCommand{
 		ClientName:              req.ClientName,
 		GrantTypes:              req.GrantTypes,
 		ResponseTypes:           req.ResponseTypes,
@@ -52,10 +54,17 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 		Scopes:                  req.Scopes,
 	}
 
-	client, err := handler.oauthClientService.CreateOauthClient(command)
+	client, err := handler.oauthClientService.CreateOauthClient(&command)
 	if err != nil {
 		handler.logger.Error("Error creating OAuth client", zap.Error(err))
-		utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrServerError))
+
+		if strings.Contains(err.Error(), "client with name") && strings.Contains(err.Error(), "already exists") {
+			utils.RespondWithJSON(w, http.StatusConflict, api.ErrorResponseBody(api.ErrClientAlreadyExists, fmt.Sprintf("Client with name '%s' already exists", command.ClientName)))
+		} else if strings.Contains(err.Error(), "invalid_scope") {
+			utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidScope, err.Error()))
+		} else {
+			utils.RespondWithJSON(w, http.StatusInternalServerError, api.ErrorResponseBody(api.ErrServerError, "An unexpected error occurred during client registration."))
+		}
 		return
 	}
 

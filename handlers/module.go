@@ -14,7 +14,6 @@ var Module = fx.Options(
 		NewAuthorizeCallbackHandler,
 		NewLoginHandler,
 		NewHealthHandler,
-		NewScopeHandler,
 		NewUserinfoHandler,
 		NewLogoutHandler,
 		NewIntrospectionHandler,

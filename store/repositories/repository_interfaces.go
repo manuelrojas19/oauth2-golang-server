@@ -5,6 +5,7 @@ import "github.com/manuelrojas19/go-oauth2-server/store"
 type OauthClientRepository interface {
 	Save(client *store.OauthClient) (*store.OauthClient, error)
 	FindByClientId(clientKey string) (*store.OauthClient, error)
+	ExistsByName(clientName string) bool
 }
 
 type AccessTokenRepository interface {
@@ -18,6 +19,7 @@ type ScopeRepository interface {
 	Create(name, description string) (*store.Scope, error)
 	FindById(id string) (*store.Scope, error)
 	Exists(id string) (bool, error)
+	FindByName(name string) (*store.Scope, error)
 }
 
 type RefreshTokenRepository interface {

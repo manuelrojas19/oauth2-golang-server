@@ -3,11 +3,11 @@ package api
 import (
 	"errors"
 	"fmt"
-	"github.com/manuelrojas19/go-oauth2-server/oauth"
+	"strings"
+
 	"github.com/manuelrojas19/go-oauth2-server/oauth/authmethodtype"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/responsetype"
-	"strings"
 )
 
 type RegisterClientRequest struct {
@@ -16,10 +16,10 @@ type RegisterClientRequest struct {
 	ResponseTypes           []responsetype.ResponseType            `json:"response_types"`
 	TokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod `json:"token_endpoint_auth_method"`
 	RedirectUris            []string                               `json:"redirect_uris"`
-	Scopes                  []oauth.Scope                          `json:"scopes"`
+	Scopes                  string                                 `json:"scope"`
 }
 
-// Validate checks if the values of enum fields are valid
+// Validate checks if the RegisterClientRequest is valid.
 func (r *RegisterClientRequest) Validate() error {
 	// Check ClientName
 	if strings.TrimSpace(r.ClientName) == "" {

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,17 +22,18 @@ type RegisterOauthClientCommand struct {
 	ResponseTypes           []responsetype.ResponseType
 	TokenEndpointAuthMethod authmethodtype.TokenEndpointAuthMethod
 	RedirectUris            []string
-	Scopes                  []oauth.Scope
+	Scopes                  string
 }
 
 type oauthClientService struct {
 	oauthClientRepository repositories.OauthClientRepository
 	logger                *zap.Logger
+	scopeRepository       repositories.ScopeRepository
 }
 
 // NewOauthClientService initializes a new OauthClientService.
-func NewOauthClientService(oauthClientRepository repositories.OauthClientRepository, logger *zap.Logger) OauthClientService {
-	return &oauthClientService{oauthClientRepository: oauthClientRepository, logger: logger}
+func NewOauthClientService(oauthClientRepository repositories.OauthClientRepository, scopeRepository repositories.ScopeRepository, logger *zap.Logger) OauthClientService {
+	return &oauthClientService{oauthClientRepository: oauthClientRepository, scopeRepository: scopeRepository, logger: logger}
 }
 
 // CreateOauthClient creates a new OAuth client and returns it.
@@ -50,13 +53,26 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		return nil, err
 	}
 
-	// Adding scopes
-	scopes := make([]store.Scope, len(command.Scopes))
-	for i, scopeData := range command.Scopes {
-		scope := *store.NewScopeBuilder().WithName(scopeData.Name).WithDescription(scopeData.Description).Build()
-		scopes[i] = scope
+	// Validate and fetch scopes
+	var clientScopes []store.Scope
+	scopeNames := splitAndTrim(command.Scopes)
+
+	for _, scopeName := range scopeNames {
+		scope, err := s.scopeRepository.FindByName(scopeName)
+		if err != nil {
+			s.logger.Warn("Scope validation failed",
+				zap.String("scope", scopeName),
+				zap.Error(err),
+			)
+			return nil, fmt.Errorf("invalid_scope: %q not found", scopeName)
+		}
+		clientScopes = append(clientScopes, *scope)
 	}
 
+	s.logger.Debug("Scopes successfully validated",
+		zap.Int("count", len(clientScopes)),
+		zap.Any("scopes", clientScopes),
+	)
 	// Build the client entity
 	clientEntity := store.NewOauthClientBuilder().
 		WithClientName(command.ClientName).
@@ -65,7 +81,7 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		WithGrantTypes(command.GrantTypes).
 		WithTokenEndpointAuthMethod(command.TokenEndpointAuthMethod).
 		WithRedirectURIs(command.RedirectUris).
-		WithScopes(scopes).
+		WithScopes(clientScopes).
 		Build()
 
 	s.logger.Info("Client to be created", zap.Any("client", clientEntity))
@@ -91,7 +107,7 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		WithGrantTypes(granttype.StringListToEnumList(savedClient.GrantTypes)).
 		WithTokenEndpointAuthMethod(authmethodtype.TokenEndpointAuthMethod(savedClient.TokenEndpointAuthMethod)).
 		WithRedirectUris(savedClient.RedirectURIs).
-		WithScopes(command.Scopes).
+		WithScopes(oauthScopesFromStoreScopes(savedClient.Scopes)).
 		Build()
 
 	s.logger.Info("Successfully created OAuth client",
@@ -123,4 +139,30 @@ func (s *oauthClientService) FindOauthClient(clientId string) (*store.OauthClien
 	)
 
 	return client, nil
+}
+
+func oauthScopesFromStoreScopes(storeScopes []store.Scope) []oauth.Scope {
+	oauthScopes := make([]oauth.Scope, 0, len(storeScopes))
+	for _, storeScope := range storeScopes {
+		oauthScopes = append(oauthScopes, oauth.Scope{
+			Name:        storeScope.Name,
+			Description: storeScope.Description,
+		})
+	}
+	return oauthScopes
+}
+
+func splitAndTrim(scopes string) []string {
+	if scopes == "" {
+		return []string{}
+	}
+	rawScopes := strings.Fields(scopes)
+	trimmedScopes := make([]string, 0, len(rawScopes))
+	for _, s := range rawScopes {
+		t := strings.TrimSpace(s)
+		if t != "" {
+			trimmedScopes = append(trimmedScopes, t)
+		}
+	}
+	return trimmedScopes
 }

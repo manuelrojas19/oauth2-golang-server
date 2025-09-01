@@ -13,6 +13,11 @@ type scopeService struct {
 	logger *zap.Logger
 }
 
+// FindByName implements ScopeService.
+func (s *scopeService) FindByName(name string) (*oauth.Scope, error) {
+	panic("unimplemented")
+}
+
 func NewScopeService(repo repositories.ScopeRepository, logger *zap.Logger) ScopeService {
 	return &scopeService{repo: repo, logger: logger}
 }
@@ -31,7 +36,6 @@ func (s *scopeService) Save(scopeName, scopeDescription string) (*oauth.Scope, e
 	s.logger.Debug("Created scope details", zap.Any("scope", scope))
 
 	createdScope := &oauth.Scope{
-		Id:          scope.Id,
 		Name:        scope.Name,
 		Description: scope.Description,
 	}
@@ -58,7 +62,6 @@ func (s *scopeService) FindById(scopeId string) (*oauth.Scope, bool) {
 	s.logger.Debug("Found scope details", zap.Any("scopeEntity", scopeEntity))
 
 	scope := &oauth.Scope{
-		Id:          scopeEntity.Id,
 		Name:        scopeEntity.Name,
 		Description: scopeEntity.Description,
 	}
@@ -84,7 +87,6 @@ func (s *scopeService) FindByIdList(scopeIds []string) ([]oauth.Scope, error) {
 	var oauthScopes []oauth.Scope
 	for _, scopeEntity := range scopeEntities {
 		oauthScopes = append(oauthScopes, oauth.Scope{
-			Id:          scopeEntity.Id,
 			Name:        scopeEntity.Name,
 			Description: scopeEntity.Description,
 		})

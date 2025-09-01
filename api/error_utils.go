@@ -1,8 +1,12 @@
 package api
 
 // ErrorResponseBody creates a standardized error response body.
-func ErrorResponseBody(err error) ErrorResponse {
-	return ErrorResponse{
+func ErrorResponseBody(err error, description ...string) ErrorResponse {
+	response := ErrorResponse{
 		Error: err.Error(),
 	}
+	if len(description) > 0 && description[0] != "" {
+		response.ErrorDescription = description[0]
+	}
+	return response
 }

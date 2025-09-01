@@ -65,6 +65,23 @@ func (s *scopeRepository) FindByIdList(ids []string) ([]*store.Scope, error) {
 	return scopes, nil
 }
 
+func (s *scopeRepository) FindByName(name string) (*store.Scope, error) {
+	s.logger.Info("Finding scope by name", zap.String("name", name))
+	var scope *store.Scope
+
+	if err := s.db.Where("name = ?", name).First(&scope).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			s.logger.Debug("Scope not found for name", zap.String("name", name))
+			return nil, fmt.Errorf("scope with name '%s' not found", name)
+		}
+		s.logger.Error("Failed to find scope by name in database", zap.String("name", name), zap.Error(err))
+		return nil, fmt.Errorf("failed to find scope by name: %w", err)
+	}
+	s.logger.Info("Scope found successfully by name", zap.String("id", scope.Id), zap.String("name", scope.Name))
+	s.logger.Debug("Found scope details by name", zap.Any("scope", scope))
+	return scope, nil
+}
+
 func (s *scopeRepository) Exists(id string) (bool, error) {
 	s.logger.Info("Checking if scope exists", zap.String("id", id))
 	var exists bool

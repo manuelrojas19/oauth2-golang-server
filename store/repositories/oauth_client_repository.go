@@ -37,11 +37,11 @@ func (ocd *oauthClientRepository) Save(client *store.OauthClient) (*store.OauthC
 	}()
 
 	// Check if client already exists
-	ocd.logger.Debug("Checking if OAuth client already exists", zap.String("clientId", client.ClientId))
-	if ocd.clientExists(client.ClientId) {
-		ocd.logger.Warn("OAuth client with client ID already exists", zap.String("clientId", client.ClientId))
+	ocd.logger.Debug("Checking if OAuth client already exists", zap.String("clientName", client.ClientName))
+	if ocd.ExistsByName(client.ClientName) {
+		ocd.logger.Warn("OAuth client with client name already exists", zap.String("clientName", client.ClientName))
 		tx.Rollback()
-		return nil, fmt.Errorf("client with ID '%s' already exists", client.ClientId)
+		return nil, fmt.Errorf("client with name '%s' already exists", client.ClientName)
 	}
 	ocd.logger.Debug("OAuth client does not exist, proceeding with creation")
 
@@ -84,14 +84,14 @@ func (ocd *oauthClientRepository) FindByClientId(clientId string) (*store.OauthC
 	return oauthClient, nil
 }
 
-func (ocd *oauthClientRepository) clientExists(clientKey string) bool {
-	ocd.logger.Debug("Checking existence of client by key", zap.String("clientKey", clientKey))
+func (ocd *oauthClientRepository) ExistsByName(clientName string) bool {
+	ocd.logger.Debug("Checking existence of client by name", zap.String("clientName", clientName))
 	var exists bool
-	result := ocd.Db.Raw("SELECT EXISTS (SELECT 1 FROM oauth_clients WHERE LOWER(client_id) = ?)", strings.ToLower(clientKey)).Scan(&exists)
+	result := ocd.Db.Raw("SELECT EXISTS (SELECT 1 FROM oauth_clients WHERE LOWER(client_name) = ?)", strings.ToLower(clientName)).Scan(&exists)
 	if result.Error != nil {
-		ocd.logger.Error("Error checking existence of client in database", zap.String("clientKey", clientKey), zap.Error(result.Error))
+		ocd.logger.Error("Error checking existence of client by name in database", zap.String("clientName", clientName), zap.Error(result.Error))
 		return false
 	}
-	ocd.logger.Debug("Client existence check result", zap.String("clientKey", clientKey), zap.Bool("exists", exists))
+	ocd.logger.Debug("Client existence check result by name", zap.String("clientName", clientName), zap.Bool("exists", exists))
 	return exists
 }
