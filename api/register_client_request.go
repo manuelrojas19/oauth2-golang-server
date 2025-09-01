@@ -19,6 +19,14 @@ type RegisterClientRequest struct {
 	Scopes                  string                                 `json:"scope"`
 }
 
+func (r *RegisterClientRequest) Sanitize() {
+	r.ClientName = strings.TrimSpace(r.ClientName)
+	r.Scopes = strings.TrimSpace(r.Scopes)
+	for i, uri := range r.RedirectUris {
+		r.RedirectUris[i] = strings.TrimSpace(uri)
+	}
+}
+
 // Validate checks if the RegisterClientRequest is valid.
 func (r *RegisterClientRequest) Validate() error {
 	// Check ClientName

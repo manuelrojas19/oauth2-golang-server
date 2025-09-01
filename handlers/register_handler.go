@@ -38,6 +38,8 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	req.Sanitize()
+
 	// Validate the request data
 	if err := req.Validate(); err != nil {
 		handler.logger.Error("Invalid registration request data", zap.Error(err))
