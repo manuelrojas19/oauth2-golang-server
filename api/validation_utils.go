@@ -81,3 +81,13 @@ func IsValidState(state string) bool {
 	}
 	return false
 }
+
+// isValidRedirectURI checks if a redirect URI is a valid absolute URI with http/https scheme.
+func IsValidRedirectURI(uri string) bool {
+	u, err := url.ParseRequestURI(uri)
+	if err != nil {
+		return false
+	}
+	// Ensure scheme is http or https and it's an absolute URI
+	return (u.Scheme == "http" || u.Scheme == "https") && u.IsAbs()
+}

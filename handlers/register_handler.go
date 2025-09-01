@@ -41,7 +41,12 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 	// Validate the request data
 	if err := req.Validate(); err != nil {
 		handler.logger.Error("Invalid registration request data", zap.Error(err))
-		utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidRequest))
+
+		if strings.Contains(err.Error(), "malformed redirect_uri") {
+			utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidRedirectUri, "One or more redirect URIs are invalid or missing"))
+		} else {
+			utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidRequest))
+		}
 		return
 	}
 

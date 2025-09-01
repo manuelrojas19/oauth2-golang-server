@@ -52,8 +52,18 @@ func (r *RegisterClientRequest) Validate() error {
 	}
 
 	// Validate RedirectUris (if specified)
-	if r.RedirectUris != nil && len(r.RedirectUris) == 0 {
-		return errors.New("redirect_uris must be a non-empty array if specified")
+	if r.RedirectUris != nil {
+		if len(r.RedirectUris) == 0 {
+			return errors.New("redirect_uris must be a non-empty array if specified")
+		}
+		for _, uri := range r.RedirectUris {
+			if uri == "" {
+				return errors.New("redirect_uri cannot be empty")
+			}
+			if !IsValidRedirectURI(uri) {
+				return fmt.Errorf("malformed redirect_uri: %s", uri)
+			}
+		}
 	}
 
 	return nil

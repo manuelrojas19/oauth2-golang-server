@@ -5,6 +5,7 @@ import "errors"
 // Pre-defined error messages for API responses
 var (
 	ErrInvalidRequest          = errors.New("invalid_request")
+	ErrInvalidRedirectUri      = errors.New("invalid_redirect_uri")
 	ErrUnauthorizedClient      = errors.New("unauthorized_client")
 	ErrAccessDenied            = errors.New("access_denied")
 	ErrUnsupportedResponseType = errors.New("unsupported_response_type")
