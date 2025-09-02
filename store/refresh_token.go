@@ -13,8 +13,8 @@ type RefreshToken struct {
 	ExpiresAt     time.Time `gorm:"not null"`
 	CreatedAt     time.Time `gorm:"default:now()"`
 	AccessTokenId string    `gorm:"index;not null;constraint:OnDelete:CASCADE"`
-	ClientId      string    `gorm:"index;not null"`
-	UserId        string    `gorm:"index;not null"`
+	ClientId      *string   `gorm:"index"`
+	UserId        *string   `gorm:"index"`
 	Scope         string    `gorm:"type:varchar(255);not null"`
 
 	AccessToken *AccessToken
@@ -34,11 +34,11 @@ type RefreshTokenBuilder struct {
 	expiresAt     time.Time
 	createdAt     time.Time
 	client        *OauthClient
-	clientId      string
+	clientId      *string
 	accessToken   *AccessToken
 	accessTokenId string
 	user          *User
-	userId        string
+	userId        *string
 }
 
 func NewRefreshTokenBuilder() *RefreshTokenBuilder {
@@ -68,12 +68,12 @@ func (b *RefreshTokenBuilder) WithCreatedAt(createdAt time.Time) *RefreshTokenBu
 func (b *RefreshTokenBuilder) WithClient(client *OauthClient) *RefreshTokenBuilder {
 	b.client = client
 	if client != nil {
-		b.clientId = client.ClientId
+		b.clientId = &client.ClientId
 	}
 	return b
 }
 
-func (b *RefreshTokenBuilder) WithClientId(clientId string) *RefreshTokenBuilder {
+func (b *RefreshTokenBuilder) WithClientId(clientId *string) *RefreshTokenBuilder {
 	b.clientId = clientId
 	return b
 }
@@ -92,7 +92,7 @@ func (b *RefreshTokenBuilder) WithAccessTokenId(accessTokenId string) *RefreshTo
 }
 
 // WithUserId sets the userId reference.
-func (b *RefreshTokenBuilder) WithUserId(userId string) *RefreshTokenBuilder {
+func (b *RefreshTokenBuilder) WithUserId(userId *string) *RefreshTokenBuilder {
 	b.userId = userId
 	return b
 }
@@ -101,7 +101,7 @@ func (b *RefreshTokenBuilder) WithUserId(userId string) *RefreshTokenBuilder {
 func (b *RefreshTokenBuilder) WithUser(user *User) *RefreshTokenBuilder {
 	b.user = user
 	if user != nil {
-		b.accessTokenId = user.Id
+		b.userId = &user.Id
 	}
 	return b
 }

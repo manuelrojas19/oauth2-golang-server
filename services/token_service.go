@@ -78,7 +78,9 @@ func (t *tokenService) GrantAccessToken(command *GrantAccessTokenCommand) (*oaut
 // handleClientCredentialsFlow processes the client credentials grant type by validating the client credentials,
 // generating an access token, and issuing a refresh token.
 func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string) (*oauth.Token, error) {
+
 	t.logger.Info("Handling Client Credentials Flow", zap.String("clientId", clientId))
+
 	// Step 1: Retrieve and validate the client
 	client, err := t.client.FindOauthClient(clientId)
 	if err != nil {
@@ -93,7 +95,7 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 	t.logger.Debug("Client authenticated successfully for Client Credentials Flow", zap.String("clientId", clientId))
 
 	// Step 2: Generate a new access token
-	accessTokenJwt, err := utils.GenerateJWT(clientId, "user", []byte("secret"), "access")
+	accessTokenJwt, err := utils.GenerateJWT(&clientId, nil, []byte("secret"), "access")
 	if err != nil {
 		t.logger.Error("Error generating JWT for access token in Client Credentials Flow", zap.String("clientId", clientId), zap.Error(err))
 		return nil, fmt.Errorf("failed to generate access token JWT: %w", err)
@@ -103,15 +105,15 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 	// Create and save the new access token
 	accessToken := store.NewAccessTokenBuilder().
 		WithClient(client).
-		WithClientId(clientId).
+		WithClientId(&clientId).
 		WithToken(accessTokenJwt).
-		WithTokenType("JWT").
+		WithTokenType("Bearer").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)).
 		Build()
 
 	savedAccessToken, err := t.accessTokenRepository.Save(accessToken)
 	if err != nil {
-		t.logger.Error("Error saving new access token for Client Credentials Flow", zap.String("clientId", clientId), zap.Error(err))
+		t.logger.Error("Error saving new access token for Client Credentials Flow", zap.String("clientId", utils.StringDeref(accessToken.ClientId)), zap.Error(err))
 		return nil, fmt.Errorf("failed to save access token: %w", err)
 	}
 	t.logger.Info("New access token saved successfully for Client Credentials Flow", zap.String("accessTokenId", savedAccessToken.Id))
@@ -119,13 +121,14 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 	// Step 3: Build and return the token response
 	token := oauth.NewTokenBuilder().
 		WithClientId(savedAccessToken.ClientId).
-		WithUserId("user").
 		WithAccessToken(savedAccessToken.Token).
+		WithTokenType(savedAccessToken.TokenType).
 		WithAccessTokenCreatedAt(savedAccessToken.CreatedAt).
-		WithAccessTokenExpiresAt(time.Until(savedAccessToken.ExpiresAt)).
+		WithAccessTokenExpiresIn(int(AccessTokenDuration.Seconds())).
+		WithAccessTokenExpiresAt(savedAccessToken.ExpiresAt).
 		WithExtension(nil).
 		Build()
-	t.logger.Info("Token response built for Client Credentials Flow", zap.String("clientId", savedAccessToken.ClientId))
+	t.logger.Info("Token response built for Client Credentials Flow", zap.String("clientId", utils.StringDeref(savedAccessToken.ClientId)))
 
 	return token, nil
 }
@@ -144,8 +147,15 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	t.logger.Debug("Refresh token retrieved", zap.String("refreshTokenId", refreshToken.Id))
 
 	if clientId == "" {
-		t.logger.Debug("Client ID not provided; using Client ID from refresh token", zap.String("refreshTokenClientId", refreshToken.ClientId))
-		clientId = refreshToken.ClientId
+		if refreshToken.ClientId != nil {
+			t.logger.Debug("Client ID not provided; using Client ID from refresh token", zap.String("refreshTokenClientId", *refreshToken.ClientId))
+			clientId = *refreshToken.ClientId
+		}
+	} else {
+		// If clientId is provided in the request, it must match the one in the refresh token (if present)
+		if refreshToken.ClientId != nil && clientId != *refreshToken.ClientId {
+			return nil, fmt.Errorf("client ID mismatch: provided client ID does not match refresh token's client ID")
+		}
 	}
 
 	// Step 2: Retrieve and validate the client
@@ -173,9 +183,9 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	t.logger.Debug("Successfully validated refresh token", zap.Any("claims", claims))
 
 	// Step 4: Generate a new access token
-	accessTokenJwt, err := utils.GenerateJWT(refreshToken.ClientId, "user", []byte("secret"), "access")
+	accessTokenJwt, err := utils.GenerateJWT(refreshToken.ClientId, refreshToken.UserId, []byte("secret"), "access")
 	if err != nil {
-		t.logger.Error("Error generating JWT for new access token in Refresh Token Flow", zap.String("clientId", refreshToken.ClientId), zap.Error(err))
+		t.logger.Error("Error generating JWT for new access token in Refresh Token Flow", zap.String("clientId", utils.StringDeref(refreshToken.ClientId)), zap.Error(err))
 		return nil, fmt.Errorf("failed to generate new access token JWT: %w", err)
 	}
 	t.logger.Debug("New access token JWT generated for Refresh Token Flow")
@@ -183,13 +193,14 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	newAccessToken := store.NewAccessTokenBuilder().
 		WithClientId(refreshToken.ClientId).
 		WithToken(accessTokenJwt).
-		WithTokenType("JWT").
+		WithTokenType("Bearer").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)).
+		WithUserId(refreshToken.UserId).
 		Build()
 
 	savedAccessToken, err := t.accessTokenRepository.Save(newAccessToken)
 	if err != nil {
-		t.logger.Error("Error saving new access token for Refresh Token Flow", zap.String("clientId", refreshToken.ClientId), zap.Error(err))
+		t.logger.Error("Error saving new access token for Refresh Token Flow", zap.String("clientId", utils.StringDeref(refreshToken.ClientId)), zap.Error(err))
 		return nil, fmt.Errorf("failed to save new access token: %w", err)
 	}
 	t.logger.Info("New access token created and saved successfully for Refresh Token Flow", zap.String("accessTokenId", savedAccessToken.Id))
@@ -203,7 +214,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	t.logger.Debug("Old refresh token invalidated successfully")
 
 	// Step 6: Generate a new refresh token
-	refreshTokenJwt, err := utils.GenerateJWT(savedAccessToken.Id, "user", []byte("secret"), "refresh")
+	refreshTokenJwt, err := utils.GenerateJWT(savedAccessToken.ClientId, savedAccessToken.UserId, []byte("secret"), "refresh")
 	if err != nil {
 		t.logger.Error("Error generating JWT for new refresh token in Refresh Token Flow", zap.String("accessTokenId", savedAccessToken.Id), zap.Error(err))
 		return nil, fmt.Errorf("failed to generate new refresh token JWT: %w", err)
@@ -216,8 +227,9 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		WithClient(savedAccessToken.Client).
 		WithClientId(savedAccessToken.ClientId).
 		WithToken(refreshTokenJwt).
-		WithTokenType("JWT").
+		WithTokenType("Bearer").
 		WithExpiresAt(time.Now().Add(RefreshTokenDuration)).
+		WithUserId(savedAccessToken.UserId).
 		Build()
 
 	savedRefreshToken, err := t.refreshTokenRepository.Save(newRefreshToken)
@@ -230,17 +242,19 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	// Step 6: Build and return the token response
 	newToken := oauth.NewTokenBuilder().
 		WithClientId(savedAccessToken.ClientId).
-		WithUserId("user").
+		WithUserId(savedAccessToken.UserId).
 		WithAccessToken(savedAccessToken.Token).
+		WithTokenType(savedAccessToken.TokenType).
 		WithAccessTokenCreatedAt(savedAccessToken.CreatedAt).
-		WithAccessTokenExpiresAt(time.Until(savedAccessToken.ExpiresAt)).
+		WithAccessTokenExpiresIn(int(AccessTokenDuration.Seconds())).
+		WithAccessTokenExpiresAt(savedAccessToken.ExpiresAt).
 		WithRefreshToken(savedRefreshToken.Token).
 		WithRefreshTokenCreatedAt(savedRefreshToken.CreatedAt).
-		WithRefreshTokenExpiresAt(time.Until(savedRefreshToken.ExpiresAt)).
+		WithRefreshTokenExpiresAt(savedRefreshToken.ExpiresAt).
 		WithExtension(nil).
 		Build()
 
-	t.logger.Info("Token response successfully built for Refresh Token Flow", zap.String("clientId", savedAccessToken.ClientId))
+	t.logger.Info("Token response successfully built for Refresh Token Flow", zap.String("clientId", utils.StringDeref(savedAccessToken.ClientId)))
 
 	return newToken, nil
 }
@@ -248,14 +262,14 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 // authenticateClient checks if the client is confidential and validates the provided client secret.
 func (t *tokenService) authenticateClient(clientId, clientSecret string, client *store.OauthClient) error {
 	if clientSecret == "" {
-		t.logger.Warn("Client is confidential but no client secret provided", zap.String("clientId", clientId))
+		t.logger.Warn("Client is confidential but no client secret provided", zap.String("clientId", utils.StringDeref(&clientId)))
 		return fmt.Errorf("client secret is required for confidential clients")
 	}
 	if err := client.ValidateSecret(clientSecret); err != nil {
-		t.logger.Error("Authentication failed for confidential client", zap.String("clientId", clientId), zap.Error(err))
+		t.logger.Error("Authentication failed for confidential client", zap.String("clientId", utils.StringDeref(&clientId)), zap.Error(err))
 		return fmt.Errorf("authentication failed: %w", err)
 	}
-	t.logger.Debug("Client authenticated successfully", zap.String("clientId", clientId))
+	t.logger.Debug("Client authenticated successfully", zap.String("clientId", utils.StringDeref(&clientId)))
 	return nil
 }
 
@@ -271,8 +285,8 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	}
 	t.logger.Debug("Authorization code retrieved", zap.Any("authCode", authCode))
 
-	if authCode.ClientId != clientId {
-		t.logger.Warn("Client ID mismatch", zap.String("expectedClientId", authCode.ClientId), zap.String("receivedClientId", clientId), zap.String("code", code))
+	if authCode.ClientId != nil && clientId != *authCode.ClientId {
+		t.logger.Warn("Client ID mismatch", zap.String("expectedClientId", utils.StringDeref(authCode.ClientId)), zap.String("receivedClientId", clientId), zap.String("code", code))
 		return nil, fmt.Errorf("client ID mismatch")
 	}
 
@@ -310,7 +324,7 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 		t.logger.Error("Error retrieving client for Authorization Code Flow", zap.String("clientId", clientId), zap.Error(err))
 		return nil, fmt.Errorf("failed to find client: %w", err)
 	}
-	t.logger.Debug("Client retrieved for Authorization Code Flow", zap.String("clientId", client.ClientId))
+	t.logger.Debug("Client retrieved for Authorization Code Flow", zap.String("clientId", clientId))
 
 	if err := t.authenticateClient(clientId, clientSecret, client); err != nil {
 		t.logger.Error("Client authentication failed for Authorization Code Flow", zap.String("clientId", clientId), zap.Error(err))
@@ -328,30 +342,31 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	t.logger.Info("Authorization code invalidated successfully", zap.String("code", authCode.Code))
 
 	// Step 3: Generate a new access token
-	accessTokenJwt, err := utils.GenerateJWT(clientId, "user", []byte("secret"), "access")
+	accessTokenJwt, err := utils.GenerateJWT(authCode.ClientId, authCode.UserId, []byte("secret"), "access")
 	if err != nil {
-		t.logger.Error("Error generating JWT for access token in Authorization Code Flow", zap.String("clientId", clientId), zap.Error(err))
+		t.logger.Error("Error generating JWT for access token in Authorization Code Flow", zap.String("clientId", utils.StringDeref(authCode.ClientId)), zap.Error(err))
 		return nil, fmt.Errorf("failed to generate access token JWT: %w", err)
 	}
 	t.logger.Debug("Access token JWT generated for Authorization Code Flow")
 
 	newAccessToken := store.NewAccessTokenBuilder().
-		WithClientId(clientId).
+		WithClientId(authCode.ClientId).
 		WithToken(accessTokenJwt).
 		WithCode(code).
-		WithTokenType("JWT").
+		WithTokenType("Bearer").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)).
+		WithUserId(authCode.UserId).
 		Build()
 
 	savedAccessToken, err := t.accessTokenRepository.Save(newAccessToken)
 	if err != nil {
-		t.logger.Error("Error saving new access token for Authorization Code Flow", zap.String("clientId", clientId), zap.Error(err))
+		t.logger.Error("Error saving new access token for Authorization Code Flow", zap.String("clientId", utils.StringDeref(authCode.ClientId)), zap.Error(err))
 		return nil, fmt.Errorf("failed to save new access token: %w", err)
 	}
 	t.logger.Info("New access token created and saved successfully for Authorization Code Flow", zap.String("accessTokenId", savedAccessToken.Id))
 
 	// Step 4: Generate a new refresh token
-	refreshTokenJwt, err := utils.GenerateJWT(savedAccessToken.Id, "user", []byte("secret"), "refresh")
+	refreshTokenJwt, err := utils.GenerateJWT(savedAccessToken.ClientId, savedAccessToken.UserId, []byte("secret"), "refresh")
 	if err != nil {
 		t.logger.Error("Error generating JWT for refresh token in Authorization Code Flow", zap.String("accessTokenId", savedAccessToken.Id), zap.Error(err))
 		return nil, fmt.Errorf("failed to generate refresh token JWT: %w", err)
@@ -362,10 +377,11 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 		WithAccessToken(savedAccessToken).
 		WithAccessTokenId(savedAccessToken.Id).
 		WithClient(savedAccessToken.Client).
-		WithClientId(clientId).
+		WithClientId(savedAccessToken.ClientId).
 		WithToken(refreshTokenJwt).
-		WithTokenType("JWT").
+		WithTokenType("Bearer").
 		WithExpiresAt(time.Now().Add(RefreshTokenDuration)).
+		WithUserId(savedAccessToken.UserId).
 		Build()
 
 	savedRefreshToken, err := t.refreshTokenRepository.Save(newRefreshToken)
@@ -378,17 +394,19 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	// Step 5: Build and return the token response
 	token := oauth.NewTokenBuilder().
 		WithClientId(savedAccessToken.ClientId).
-		WithUserId("user").
+		WithUserId(savedAccessToken.UserId).
 		WithAccessToken(savedAccessToken.Token).
+		WithTokenType(savedAccessToken.TokenType).
 		WithAccessTokenCreatedAt(savedAccessToken.CreatedAt).
-		WithAccessTokenExpiresAt(time.Until(savedAccessToken.ExpiresAt)).
+		WithAccessTokenExpiresIn(int(AccessTokenDuration.Seconds())).
+		WithAccessTokenExpiresAt(savedAccessToken.ExpiresAt).
 		WithRefreshToken(savedRefreshToken.Token).
 		WithRefreshTokenCreatedAt(savedRefreshToken.CreatedAt).
-		WithRefreshTokenExpiresAt(time.Until(savedRefreshToken.ExpiresAt)).
+		WithRefreshTokenExpiresAt(savedRefreshToken.ExpiresAt).
 		WithExtension(nil).
 		Build()
 
-	t.logger.Info("Token response successfully built for Authorization Code Flow", zap.String("clientId", savedAccessToken.ClientId))
+	t.logger.Info("Token response successfully built for Authorization Code Flow", zap.String("clientId", utils.StringDeref(savedAccessToken.ClientId)))
 
 	return token, nil
 }

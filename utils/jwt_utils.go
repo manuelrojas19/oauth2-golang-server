@@ -5,13 +5,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/manuelrojas19/go-oauth2-server/configuration"
-	"time"
 )
 
 // GenerateJWT creates a JWT token with the given parameters.
-func GenerateJWT(clientId string, userId string, secretKey interface{}, tokenType string) (string, error) {
+func GenerateJWT(clientId *string, userId *string, secretKey interface{}, tokenType string) (string, error) {
 	var expirationTime time.Duration
 	var signingMethod jwt.SigningMethod
 
@@ -24,13 +25,20 @@ func GenerateJWT(clientId string, userId string, secretKey interface{}, tokenTyp
 			return "", fmt.Errorf("private key is not initialized: %w", err)
 		}
 		token := jwt.NewWithClaims(signingMethod, jwt.MapClaims{
-			"clientId": clientId,
-			"userId":   userId,
-			"iat":      time.Now().Unix(),
-			"exp":      time.Now().Add(expirationTime).Unix(),
-			"type":     tokenType,
-			"jti":      generateRandomString(),
+			"iat":  time.Now().Unix(),
+			"exp":  time.Now().Add(expirationTime).Unix(),
+			"type": tokenType,
+			"jti":  generateRandomString(),
 		})
+
+		if clientId != nil {
+			token.Claims.(jwt.MapClaims)["clientId"] = *clientId
+		}
+
+		if userId != nil {
+			token.Claims.(jwt.MapClaims)["userId"] = *userId
+		}
+
 		tokenString, err := token.SignedString(privateKey)
 		if err != nil {
 			return "", fmt.Errorf("failed to sign token: %w", err)
@@ -50,6 +58,14 @@ func GenerateJWT(clientId string, userId string, secretKey interface{}, tokenTyp
 			"type": tokenType,
 			"jti":  generateRandomString(),
 		})
+
+		if clientId != nil {
+			token.Claims.(jwt.MapClaims)["clientId"] = *clientId
+		}
+		if userId != nil {
+			token.Claims.(jwt.MapClaims)["userId"] = *userId
+		}
+
 		tokenString, err := token.SignedString(key)
 		if err != nil {
 			return "", fmt.Errorf("failed to sign token: %w", err)

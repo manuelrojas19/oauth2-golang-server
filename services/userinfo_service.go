@@ -43,10 +43,10 @@ func (s *userinfoService) GetUserinfo(command *GetUserinfoCommand) (*UserinfoRes
 	}
 	s.logger.Debug("Access token entity found", zap.Any("accessTokenEntity", accessTokenEntity))
 
-	s.logger.Debug("Calling userRepository.FindById", zap.String("userId", accessTokenEntity.UserId))
-	userEntity, err := s.userRepository.FindById(accessTokenEntity.UserId)
+	s.logger.Debug("Calling userRepository.FindById", zap.String("userId", *accessTokenEntity.UserId))
+	userEntity, err := s.userRepository.FindById(*accessTokenEntity.UserId)
 	if err != nil {
-		s.logger.Error("User not found for accessToken", zap.String("userId", accessTokenEntity.UserId), zap.Error(err))
+		s.logger.Error("User not found for accessToken", zap.String("userId", *accessTokenEntity.UserId), zap.Error(err))
 		return nil, fmt.Errorf("user associated with token not found: %w", err)
 	}
 	s.logger.Debug("User entity found", zap.Any("userEntity", userEntity))

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/utils"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -24,13 +25,13 @@ func NewAuthCodeRepository(db *gorm.DB, logger *zap.Logger) AuthorizationReposit
 
 // Save saves an AuthCode to the database
 func (r *authCodeRepository) Save(authCode *store.AuthCode) (*store.AuthCode, error) {
-	r.logger.Info("Attempting to save authorization code", zap.String("code", authCode.Code), zap.String("clientId", authCode.ClientId))
+	r.logger.Info("Attempting to save authorization code", zap.String("code", authCode.Code), zap.String("clientId", *authCode.ClientId))
 	r.logger.Debug("AuthCode entity to save", zap.Any("authCode", authCode))
 
 	if err := r.Db.Create(authCode).Error; err != nil {
 		r.logger.Error("Error saving AuthCode to database",
 			zap.String("code", authCode.Code),
-			zap.String("clientId", authCode.ClientId),
+			zap.String("clientId", utils.StringDeref(authCode.ClientId)),
 			zap.Error(err),
 			zap.Stack("stacktrace"),
 		)

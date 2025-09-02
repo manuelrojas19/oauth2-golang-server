@@ -12,8 +12,8 @@ type AuthCode struct {
 	RedirectURI         string    `gorm:"type:varchar(255);not null"`
 	Scope               string    `gorm:"size:255;not null"`
 	Used                bool      `gorm:"not null;default:false"`
-	UserId              string    `gorm:"index;not null"`
-	ClientId            string    `gorm:"index;not null"`
+	UserId              *string   `gorm:"index"`
+	ClientId            *string   `gorm:"index"`
 	ExpiresAt           time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	CreatedAt           time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	CodeChallenge       string    `gorm:"type:varchar(255)"`
@@ -45,7 +45,7 @@ func (b *AuthCodeBuilder) WithClient(client *OauthClient) *AuthCodeBuilder {
 	return b
 }
 
-func (b *AuthCodeBuilder) WithClientId(clientId string) *AuthCodeBuilder {
+func (b *AuthCodeBuilder) WithClientId(clientId *string) *AuthCodeBuilder {
 	b.authorizationCode.ClientId = clientId
 	return b
 }
@@ -62,11 +62,11 @@ func (b *AuthCodeBuilder) WithScope(scope string) *AuthCodeBuilder {
 
 func (b *AuthCodeBuilder) WithUser(user *User) *AuthCodeBuilder {
 	b.authorizationCode.User = user
-	b.authorizationCode.UserId = user.Id // Automatically set UserId based on the provided user
+	b.authorizationCode.UserId = &user.Id // Automatically set UserId based on the provided user
 	return b
 }
 
-func (b *AuthCodeBuilder) WithUserId(userId string) *AuthCodeBuilder {
+func (b *AuthCodeBuilder) WithUserId(userId *string) *AuthCodeBuilder {
 	b.authorizationCode.UserId = userId
 	return b
 }

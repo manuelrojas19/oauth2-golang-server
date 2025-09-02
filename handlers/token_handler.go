@@ -63,9 +63,12 @@ func (handler *tokenHandler) Token(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handler.logger.Info("Access token granted successfully")
-	res := api.NewTokenResponse(token.AccessToken,
-		"Bearer",
-		token.RefreshToken)
+	res := api.NewTokenResponse(
+		token.AccessToken,
+		token.TokenType,
+		token.AccessTokenExpiresIn,
+		token.RefreshToken,
+		token.Scope)
 
 	// Send the response with the token
 	utils.RespondWithJSON(w, http.StatusOK, res)

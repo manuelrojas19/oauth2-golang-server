@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/manuelrojas19/go-oauth2-server/store"
+	"github.com/manuelrojas19/go-oauth2-server/utils"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -21,7 +22,7 @@ func NewAccessTokenRepository(db *gorm.DB, logger *zap.Logger) AccessTokenReposi
 }
 
 func (ot *accessTokenRepository) Save(token *store.AccessToken) (*store.AccessToken, error) {
-	ot.logger.Info("Starting transaction to save access token", zap.String("clientId", token.ClientId))
+	ot.logger.Info("Starting transaction to save access token", zap.String("clientId", utils.StringDeref(token.ClientId)))
 	ot.logger.Debug("Access token details to be saved", zap.Any("token", token))
 
 	tx := ot.Db.Begin()
@@ -30,13 +31,13 @@ func (ot *accessTokenRepository) Save(token *store.AccessToken) (*store.AccessTo
 		return nil, fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
 
-	ot.logger.Debug("Deleting expired access tokens for client", zap.String("clientId", token.ClientId))
+	ot.logger.Debug("Deleting expired access tokens for client", zap.String("clientId", utils.StringDeref(token.ClientId)))
 	expiredTokensQuery := tx.Unscoped().
 		Where("client_id = ?", token.ClientId).
 		Where("expires_at <= ?", time.Now())
 
 	if err := expiredTokensQuery.Delete(new(store.AccessToken)).Error; err != nil {
-		ot.logger.Error("Error deleting expired access tokens", zap.String("clientId", token.ClientId), zap.Error(err))
+		ot.logger.Error("Error deleting expired access tokens", zap.String("clientId", utils.StringDeref(token.ClientId)), zap.Error(err))
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to delete expired access tokens: %w", err)
 	}
@@ -44,19 +45,19 @@ func (ot *accessTokenRepository) Save(token *store.AccessToken) (*store.AccessTo
 
 	ot.logger.Debug("Creating new access token record in database")
 	if err := tx.Create(token).Error; err != nil {
-		ot.logger.Error("Error creating access token", zap.String("clientId", token.ClientId), zap.Error(err))
+		ot.logger.Error("Error creating access token", zap.String("clientId", utils.StringDeref(token.ClientId)), zap.Error(err))
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to create access token: %w", err)
 	}
 	ot.logger.Debug("Access token record created in database", zap.String("accessTokenId", token.Id))
 
 	if err := tx.Commit().Error; err != nil {
-		ot.logger.Error("Error committing transaction for saving access token", zap.String("clientId", token.ClientId), zap.Error(err))
+		ot.logger.Error("Error committing transaction for saving access token", zap.String("clientId", utils.StringDeref(token.ClientId)), zap.Error(err))
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
-	ot.logger.Info("Access token saved successfully", zap.String("clientId", token.ClientId), zap.String("accessTokenId", token.Id))
+	ot.logger.Info("Access token saved successfully", zap.String("clientId", utils.StringDeref(token.ClientId)), zap.String("accessTokenId", token.Id))
 	return token, nil
 }
 

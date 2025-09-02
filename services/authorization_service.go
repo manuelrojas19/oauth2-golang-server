@@ -179,9 +179,9 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 	// Build authorization code entity
 	authCodeEntity := store.NewAuthorizationCodeBuilder().
 		WithCode(code).
-		WithClientId(client.ClientId).
+		WithClientId(&client.ClientId).
 		WithClient(client).
-		WithUserId(user.Id).
+		WithUserId(&user.Id).
 		WithScope(command.Scope).
 		WithRedirectURI(command.RedirectUri).
 		WithCodeChallenge(command.CodeChallenge).
@@ -206,7 +206,7 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 	// Build the OAuth authorization code response
 	oauthCode := oauth.NewAuthCodeBuilder().
 		WithCode(authCodeEntity.Code).
-		WithClientId(authCodeEntity.ClientId).
+		WithClientId(*authCodeEntity.ClientId).
 		WithScope(authCodeEntity.Scope).
 		WithRedirectURI(authCodeEntity.RedirectURI).
 		WithCreatedAt(authCodeEntity.CreatedAt).

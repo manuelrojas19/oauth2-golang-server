@@ -14,8 +14,8 @@ type AccessToken struct {
 	ExpiresAt     time.Time `gorm:"not null"`
 	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	Code          string    `gorm:"type:text"` // Reference to authorization code
-	UserId        string    `gorm:"index;not null"`
-	ClientId      string    `gorm:"index;not null"`
+	UserId        *string   `gorm:"index"`
+	ClientId      *string   `gorm:"index"`
 	User          *User
 	Client        *OauthClient
 	RefreshTokens []RefreshToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:CASCADE"`
@@ -26,9 +26,9 @@ type AccessTokenBuilder struct {
 	tokenType string
 	scope     string
 	expiresAt time.Time
-	clientId  string
+	clientId  *string
 	client    *OauthClient
-	userId    string
+	userId    *string
 	user      *User
 	code      string
 }
@@ -63,7 +63,7 @@ func (b *AccessTokenBuilder) WithExpiresAt(expiresAt time.Time) *AccessTokenBuil
 }
 
 // WithClientId sets the client ScopeId value.
-func (b *AccessTokenBuilder) WithClientId(clientId string) *AccessTokenBuilder {
+func (b *AccessTokenBuilder) WithClientId(clientId *string) *AccessTokenBuilder {
 	b.clientId = clientId
 	return b
 }
@@ -75,7 +75,7 @@ func (b *AccessTokenBuilder) WithClient(client *OauthClient) *AccessTokenBuilder
 }
 
 // WithUserId sets the userId reference.
-func (b *AccessTokenBuilder) WithUserId(userId string) *AccessTokenBuilder {
+func (b *AccessTokenBuilder) WithUserId(userId *string) *AccessTokenBuilder {
 	b.userId = userId
 	return b
 }
@@ -83,6 +83,9 @@ func (b *AccessTokenBuilder) WithUserId(userId string) *AccessTokenBuilder {
 // WithUser sets the user reference.
 func (b *AccessTokenBuilder) WithUser(user *User) *AccessTokenBuilder {
 	b.user = user
+	if user != nil {
+		b.userId = &user.Id
+	}
 	return b
 }
 

@@ -6,30 +6,34 @@ import (
 )
 
 type Token struct {
-	ClientId              string
-	UserId                string
+	ClientId              *string
+	UserId                *string
 	RedirectURI           string
 	Scope                 string
+	TokenType             string
 	AccessToken           string
 	AccessTokenCreatedAt  time.Time
-	AccessTokenExpiresAt  time.Duration
+	AccessTokenExpiresIn  int
+	AccessTokenExpiresAt  time.Time
 	RefreshToken          string
 	RefreshTokenCreatedAt time.Time
-	RefreshTokenExpiresAt time.Duration
+	RefreshTokenExpiresAt time.Time
 	Extension             url.Values
 }
 
 type TokenBuilder struct {
-	clientId              string
-	userId                string
+	clientId              *string
+	userId                *string
 	redirectURI           string
 	scope                 string
+	tokenType             string
 	accessToken           string
 	accessTokenCreatedAt  time.Time
-	accessTokenExpiresAt  time.Duration
+	accessTokenExpiresIn  int
+	accessTokenExpiresAt  time.Time
 	refreshToken          string
 	refreshTokenCreatedAt time.Time
-	refreshTokenExpiresAt time.Duration
+	refreshTokenExpiresAt time.Time
 	extension             url.Values
 }
 
@@ -37,12 +41,12 @@ func NewTokenBuilder() *TokenBuilder {
 	return &TokenBuilder{}
 }
 
-func (b *TokenBuilder) WithClientId(clientId string) *TokenBuilder {
+func (b *TokenBuilder) WithClientId(clientId *string) *TokenBuilder {
 	b.clientId = clientId
 	return b
 }
 
-func (b *TokenBuilder) WithUserId(userId string) *TokenBuilder {
+func (b *TokenBuilder) WithUserId(userId *string) *TokenBuilder {
 	b.userId = userId
 	return b
 }
@@ -57,6 +61,11 @@ func (b *TokenBuilder) WithScope(scope string) *TokenBuilder {
 	return b
 }
 
+func (b *TokenBuilder) WithTokenType(tokenType string) *TokenBuilder {
+	b.tokenType = tokenType
+	return b
+}
+
 func (b *TokenBuilder) WithAccessToken(accessToken string) *TokenBuilder {
 	b.accessToken = accessToken
 	return b
@@ -67,7 +76,12 @@ func (b *TokenBuilder) WithAccessTokenCreatedAt(accessTokenCreatedAt time.Time) 
 	return b
 }
 
-func (b *TokenBuilder) WithAccessTokenExpiresAt(accessTokenExpiresAt time.Duration) *TokenBuilder {
+func (b *TokenBuilder) WithAccessTokenExpiresIn(accessTokenExpiresIn int) *TokenBuilder {
+	b.accessTokenExpiresIn = accessTokenExpiresIn
+	return b
+}
+
+func (b *TokenBuilder) WithAccessTokenExpiresAt(accessTokenExpiresAt time.Time) *TokenBuilder {
 	b.accessTokenExpiresAt = accessTokenExpiresAt
 	return b
 }
@@ -82,7 +96,7 @@ func (b *TokenBuilder) WithRefreshTokenCreatedAt(refreshTokenCreatedAt time.Time
 	return b
 }
 
-func (b *TokenBuilder) WithRefreshTokenExpiresAt(refreshTokenExpiresAt time.Duration) *TokenBuilder {
+func (b *TokenBuilder) WithRefreshTokenExpiresAt(refreshTokenExpiresAt time.Time) *TokenBuilder {
 	b.refreshTokenExpiresAt = refreshTokenExpiresAt
 	return b
 }
@@ -98,8 +112,10 @@ func (b *TokenBuilder) Build() *Token {
 		UserId:                b.userId,
 		RedirectURI:           b.redirectURI,
 		Scope:                 b.scope,
+		TokenType:             b.tokenType,
 		AccessToken:           b.accessToken,
 		AccessTokenCreatedAt:  b.accessTokenCreatedAt,
+		AccessTokenExpiresIn:  b.accessTokenExpiresIn,
 		AccessTokenExpiresAt:  b.accessTokenExpiresAt,
 		RefreshToken:          b.refreshToken,
 		RefreshTokenCreatedAt: b.refreshTokenCreatedAt,
