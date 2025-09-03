@@ -63,15 +63,7 @@ func (handler *registerHandler) Register(w http.ResponseWriter, r *http.Request)
 
 	client, err := handler.oauthClientService.CreateOauthClient(&command)
 	if err != nil {
-		handler.logger.Error("Error creating OAuth client", zap.Error(err))
-
-		if strings.Contains(err.Error(), "client with name") && strings.Contains(err.Error(), "already exists") {
-			utils.RespondWithJSON(w, http.StatusConflict, api.ErrorResponseBody(api.ErrClientAlreadyExists, fmt.Sprintf("Client with name '%s' already exists", command.ClientName)))
-		} else if strings.Contains(err.Error(), "invalid_scope") {
-			utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidScope, err.Error()))
-		} else {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, api.ErrorResponseBody(api.ErrServerError, "An unexpected error occurred during client registration."))
-		}
+		utils.HandleErrorResponse(w, handler.logger, err)
 		return
 	}
 

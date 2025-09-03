@@ -3,8 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"errors"
-
 	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/services"
 	"github.com/manuelrojas19/go-oauth2-server/utils"
@@ -59,19 +57,7 @@ func (handler *tokenHandler) Token(w http.ResponseWriter, r *http.Request) {
 	// Generate an access token
 	token, err := handler.tokenService.GrantAccessToken(grantAccessTokenCommand)
 	if err != nil {
-		handler.logger.Error("Error granting access token", zap.Error(err))
-
-		if errors.Is(err, api.ErrInvalidClient) {
-			utils.RespondWithJSON(w, http.StatusUnauthorized, api.ErrorResponseBody(api.ErrInvalidClient))
-		} else if errors.Is(err, api.ErrInvalidGrant) {
-			utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidGrant))
-		} else if errors.Is(err, api.ErrUnsupportedGrantType) {
-			utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrUnsupportedGrantType))
-		} else if errors.Is(err, api.ErrInvalidScope) {
-			utils.RespondWithJSON(w, http.StatusBadRequest, api.ErrorResponseBody(api.ErrInvalidScope))
-		} else {
-			utils.RespondWithJSON(w, http.StatusInternalServerError, api.ErrorResponseBody(api.ErrServerError))
-		}
+		utils.HandleErrorResponse(w, handler.logger, err)
 		return
 	}
 
