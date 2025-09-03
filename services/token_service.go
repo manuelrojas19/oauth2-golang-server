@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
 	"github.com/manuelrojas19/go-oauth2-server/store"
@@ -12,8 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
-const AccessTokenDuration = 1*time.Hour
-const RefreshTokenDuration = 30*24*time.Hour
+const AccessTokenDuration = 1 * time.Hour
+const RefreshTokenDuration = 30 * 24 * time.Hour
 
 type GrantAccessTokenCommand struct {
 	ClientId     string
@@ -85,18 +86,18 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 	client, err := t.client.FindOauthClient(clientId)
 	if err != nil {
 		t.logger.Error("Error retrieving client for Client Credentials Flow", zap.String("clientId", clientId), zap.Error(err))
-		return nil, fmt.Errorf("failed to find client: %w", err)
+		return nil, api.ErrInvalidClient
 	}
 
 	if err := client.ValidateSecret(clientSecret); err != nil {
 		t.logger.Error("Client authentication failed for Client Credentials Flow", zap.String("clientId", clientId), zap.Error(err))
-		return nil, fmt.Errorf("authentication failed: %w", err)
+		return nil, api.ErrInvalidClient
 	}
 
 	// Preload scopes for the client
 	err = t.client.PreloadOauthClientScopes(client)
 	if err != nil {
-		t.logger.Error("Error preloading client scopes", zap.String("clientId", clientId), zap.Error(err))
+		t.logger.Error("Error preloading client scopes for Client Credentials Flow", zap.String("clientId", clientId), zap.Error(err))
 		return nil, fmt.Errorf("failed to preload client scopes: %w", err)
 	}
 
@@ -172,7 +173,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	client, err := t.client.FindOauthClient(clientId)
 	if err != nil {
 		t.logger.Error("Error retrieving client for Refresh Token Flow", zap.String("clientId", clientId), zap.Error(err))
-		return nil, fmt.Errorf("failed to find client: %w", err)
+		return nil, api.ErrInvalidClient
 	}
 
 	// Preload scopes for the client
@@ -187,7 +188,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 	if client.Confidential {
 		if err := t.authenticateClient(clientId, clientSecret, client); err != nil {
 			t.logger.Error("Client authentication failed for Refresh Token Flow", zap.String("clientId", clientId), zap.Error(err))
-			return nil, fmt.Errorf("client authentication failed: %w", err)
+			return nil, api.ErrInvalidClient
 		}
 		t.logger.Debug("Confidential client authenticated for Refresh Token Flow", zap.String("clientId", clientId))
 	}
@@ -342,13 +343,21 @@ func (t *tokenService) handleAuthorizationCodeFlow(clientId, clientSecret, code,
 	client, err := t.client.FindOauthClient(clientId)
 	if err != nil {
 		t.logger.Error("Error retrieving client for Authorization Code Flow", zap.String("clientId", clientId), zap.Error(err))
-		return nil, fmt.Errorf("failed to find client: %w", err)
+		return nil, api.ErrInvalidClient
 	}
+
+	// Preload scopes for the client
+	err = t.client.PreloadOauthClientScopes(client)
+	if err != nil {
+		t.logger.Error("Error preloading client scopes for Authorization Code Flow", zap.String("clientId", clientId), zap.Error(err))
+		return nil, fmt.Errorf("failed to preload client scopes: %w", err)
+	}
+
 	t.logger.Debug("Client retrieved for Authorization Code Flow", zap.String("clientId", clientId))
 
 	if err := t.authenticateClient(clientId, clientSecret, client); err != nil {
 		t.logger.Error("Client authentication failed for Authorization Code Flow", zap.String("clientId", clientId), zap.Error(err))
-		return nil, fmt.Errorf("client authentication failed: %w", err)
+		return nil, api.ErrInvalidClient
 	}
 	t.logger.Debug("Confidential client authenticated for Authorization Code Flow", zap.String("clientId", clientId))
 
