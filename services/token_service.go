@@ -12,8 +12,8 @@ import (
 	"go.uber.org/zap"
 )
 
-const AccessTokenDuration = 1*time.Hour + 1*time.Second
-const RefreshTokenDuration = 30*24*time.Hour + 1*time.Second
+const AccessTokenDuration = 1*time.Hour
+const RefreshTokenDuration = 30*24*time.Hour
 
 type GrantAccessTokenCommand struct {
 	ClientId     string
@@ -92,6 +92,14 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 		t.logger.Error("Client authentication failed for Client Credentials Flow", zap.String("clientId", clientId), zap.Error(err))
 		return nil, fmt.Errorf("authentication failed: %w", err)
 	}
+
+	// Preload scopes for the client
+	err = t.client.PreloadOauthClientScopes(client)
+	if err != nil {
+		t.logger.Error("Error preloading client scopes", zap.String("clientId", clientId), zap.Error(err))
+		return nil, fmt.Errorf("failed to preload client scopes: %w", err)
+	}
+
 	t.logger.Debug("Client authenticated successfully for Client Credentials Flow", zap.String("clientId", clientId))
 
 	// Step 2: Generate a new access token
@@ -109,6 +117,7 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 		WithToken(accessTokenJwt).
 		WithTokenType("Bearer").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)).
+		WithScopes(client.Scopes).
 		Build()
 
 	savedAccessToken, err := t.accessTokenRepository.Save(accessToken)
@@ -127,6 +136,7 @@ func (t *tokenService) handleClientCredentialsFlow(clientId, clientSecret string
 		WithAccessTokenExpiresIn(int(AccessTokenDuration.Seconds())).
 		WithAccessTokenExpiresAt(savedAccessToken.ExpiresAt).
 		WithExtension(nil).
+		WithScope(utils.ScopesToStringSlice(savedAccessToken.Scopes)).
 		Build()
 	t.logger.Info("Token response built for Client Credentials Flow", zap.String("clientId", utils.StringDeref(savedAccessToken.ClientId)))
 
@@ -164,6 +174,14 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		t.logger.Error("Error retrieving client for Refresh Token Flow", zap.String("clientId", clientId), zap.Error(err))
 		return nil, fmt.Errorf("failed to find client: %w", err)
 	}
+
+	// Preload scopes for the client
+	err = t.client.PreloadOauthClientScopes(client)
+	if err != nil {
+		t.logger.Error("Error preloading client scopes for Refresh Token Flow", zap.String("clientId", clientId), zap.Error(err))
+		return nil, fmt.Errorf("failed to preload client scopes: %w", err)
+	}
+
 	t.logger.Debug("Client retrieved for Refresh Token Flow", zap.String("clientId", client.ClientId))
 
 	if client.Confidential {
@@ -196,6 +214,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		WithTokenType("Bearer").
 		WithExpiresAt(time.Now().Add(AccessTokenDuration)).
 		WithUserId(refreshToken.UserId).
+		WithScopes(client.Scopes).
 		Build()
 
 	savedAccessToken, err := t.accessTokenRepository.Save(newAccessToken)
@@ -252,6 +271,7 @@ func (t *tokenService) handleRefreshTokenFlow(clientId, clientSecret, token stri
 		WithRefreshTokenCreatedAt(savedRefreshToken.CreatedAt).
 		WithRefreshTokenExpiresAt(savedRefreshToken.ExpiresAt).
 		WithExtension(nil).
+		WithScope(utils.ScopesToStringSlice(savedAccessToken.Scopes)).
 		Build()
 
 	t.logger.Info("Token response successfully built for Refresh Token Flow", zap.String("clientId", utils.StringDeref(savedAccessToken.ClientId)))
