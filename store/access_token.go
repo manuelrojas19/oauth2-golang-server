@@ -18,7 +18,7 @@ type AccessToken struct {
 	User          *User
 	Client        *OauthClient
 	RefreshTokens []RefreshToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:CASCADE"`
-	Scopes        []Scope        `gorm:"many2many:access_token_scopes;"`
+	Scopes        []Scope        `gorm:"many2many:access_token_scopes;constraint:OnDelete:CASCADE"`
 }
 
 type AccessTokenBuilder struct {
