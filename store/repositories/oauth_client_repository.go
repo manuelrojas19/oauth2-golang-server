@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/manuelrojas19/go-oauth2-server/store"
 	"go.uber.org/zap"
@@ -94,4 +95,40 @@ func (ocd *oauthClientRepository) ExistsByName(clientName string) bool {
 	}
 	ocd.logger.Debug("Client existence check result by name", zap.String("clientName", clientName), zap.Bool("exists", exists))
 	return exists
+}
+
+// PreloadScopes preloads the associated scopes for a given OauthClient.
+func (ocd *oauthClientRepository) PreloadScopes(client *store.OauthClient) error {
+	start := time.Now()
+
+	if client == nil {
+		return errors.New("client cannot be nil for preloading scopes")
+	}
+
+	ocd.logger.Debug("Preloading scopes for OAuth client", zap.String("clientId", client.ClientId))
+
+	err := ocd.Db.Preload("Scopes").First(client, "client_id = ?", client.ClientId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			ocd.logger.Warn("Client not found when preloading scopes",
+				zap.String("clientId", client.ClientId),
+				zap.Duration("duration", time.Since(start)),
+			)
+			return fmt.Errorf("client with ID %s not found for preloading scopes: %w", client.ClientId, err)
+		}
+		ocd.logger.Error("Error preloading scopes for OAuth client from database",
+			zap.String("clientId", client.ClientId),
+			zap.Error(err),
+			zap.Duration("duration", time.Since(start)),
+			zap.Stack("stacktrace"),
+		)
+		return fmt.Errorf("failed to preload client scopes: %w", err)
+	}
+
+	ocd.logger.Debug("Scopes preloaded successfully for OAuth client",
+		zap.String("clientId", client.ClientId),
+		zap.Int("scopeCount", len(client.Scopes)),
+		zap.Duration("duration", time.Since(start)),
+	)
+	return nil
 }

@@ -6,6 +6,7 @@ type OauthClientRepository interface {
 	Save(client *store.OauthClient) (*store.OauthClient, error)
 	FindByClientId(clientKey string) (*store.OauthClient, error)
 	ExistsByName(clientName string) bool
+	PreloadScopes(client *store.OauthClient) error
 }
 
 type AccessTokenRepository interface {

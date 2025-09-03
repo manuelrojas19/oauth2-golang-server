@@ -10,7 +10,6 @@ type AuthCode struct {
 	Id                  string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
 	Code                string    `gorm:"type:text;unique;not null"`
 	RedirectURI         string    `gorm:"type:varchar(255);not null"`
-	Scope               string    `gorm:"size:255;not null"`
 	Used                bool      `gorm:"not null;default:false"`
 	UserId              *string   `gorm:"index"`
 	ClientId            *string   `gorm:"index"`
@@ -20,11 +19,13 @@ type AuthCode struct {
 	CodeChallengeMethod string    `gorm:"type:varchar(255)"`
 	User                *User
 	Client              *OauthClient
+	Scopes              []Scope `gorm:"many2many:auth_code_scopes;"`
 }
 
 // AuthCodeBuilder helps in constructing AuthCode instances
 type AuthCodeBuilder struct {
 	authorizationCode AuthCode
+	scopes            []Scope
 }
 
 func NewAuthorizationCodeBuilder() *AuthCodeBuilder {
@@ -55,8 +56,8 @@ func (b *AuthCodeBuilder) WithRedirectURI(redirectURI string) *AuthCodeBuilder {
 	return b
 }
 
-func (b *AuthCodeBuilder) WithScope(scope string) *AuthCodeBuilder {
-	b.authorizationCode.Scope = scope
+func (b *AuthCodeBuilder) WithScopes(scopes []Scope) *AuthCodeBuilder {
+	b.authorizationCode.Scopes = scopes
 	return b
 }
 
@@ -93,5 +94,6 @@ func (b *AuthCodeBuilder) WithCodeChallengeMethod(codeChallengeMethod string) *A
 
 func (b *AuthCodeBuilder) Build() *AuthCode {
 	b.authorizationCode.Id = uuid.New().String()
+	b.authorizationCode.Scopes = b.scopes
 	return &b.authorizationCode
 }

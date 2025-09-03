@@ -47,7 +47,7 @@ func (s *introspectionService) Introspect(command *IntrospectCommand) (*Introspe
 	accessTokenEntity, err := s.accessTokenRepository.FindByAccessToken(command.Token)
 	if err == nil && accessTokenEntity != nil {
 		s.logger.Debug("Access token found", zap.String("accessTokenId", accessTokenEntity.Id))
-		return s.buildIntrospectionResponse(*accessTokenEntity.UserId, *accessTokenEntity.ClientId, accessTokenEntity.Scope, accessTokenEntity.CreatedAt, time.Until(accessTokenEntity.ExpiresAt), "access_token"), nil
+		return s.buildIntrospectionResponse(*accessTokenEntity.UserId, *accessTokenEntity.ClientId, "", accessTokenEntity.CreatedAt, time.Until(accessTokenEntity.ExpiresAt), "access_token"), nil
 	}
 	// Log error if any, or if token not found as access token
 	if err != nil {
@@ -61,7 +61,7 @@ func (s *introspectionService) Introspect(command *IntrospectCommand) (*Introspe
 	refreshTokenEntity, err := s.refreshTokenRepository.FindByRefreshToken(command.Token)
 	if err == nil && refreshTokenEntity != nil {
 		s.logger.Debug("Refresh token found", zap.String("refreshTokenId", refreshTokenEntity.Id))
-		return s.buildIntrospectionResponse(*refreshTokenEntity.UserId, *refreshTokenEntity.ClientId, refreshTokenEntity.Scope, refreshTokenEntity.CreatedAt, time.Until(refreshTokenEntity.ExpiresAt), "refresh_token"), nil
+		return s.buildIntrospectionResponse(*refreshTokenEntity.UserId, *refreshTokenEntity.ClientId, "", refreshTokenEntity.CreatedAt, time.Until(refreshTokenEntity.ExpiresAt), "refresh_token"), nil
 	}
 
 	if err != nil {

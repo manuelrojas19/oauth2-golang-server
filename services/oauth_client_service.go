@@ -143,6 +143,29 @@ func (s *oauthClientService) FindOauthClient(clientId string) (*store.OauthClien
 	return client, nil
 }
 
+// PreloadOauthClientScopes preloads the associated scopes for a given OauthClient.
+func (s *oauthClientService) PreloadOauthClientScopes(client *store.OauthClient) error {
+	start := time.Now()
+
+	err := s.oauthClientRepository.PreloadScopes(client)
+	if err != nil {
+		s.logger.Error("Error preloading scopes for OAuth client",
+			zap.String("clientId", client.ClientId),
+			zap.Error(err),
+			zap.Duration("duration", time.Since(start)),
+			zap.Stack("stacktrace"),
+		)
+		return fmt.Errorf("failed to preload client scopes: %w", err)
+	}
+
+	s.logger.Debug("Scopes preloaded successfully for OAuth client",
+		zap.String("clientId", client.ClientId),
+		zap.Int("scopeCount", len(client.Scopes)),
+		zap.Duration("duration", time.Since(start)),
+	)
+	return nil
+}
+
 func oauthScopesFromStoreScopes(storeScopes []store.Scope) []oauth.Scope {
 	oauthScopes := make([]oauth.Scope, 0, len(storeScopes))
 	for _, storeScope := range storeScopes {

@@ -21,6 +21,7 @@ type AuthorizationService interface {
 type OauthClientService interface {
 	CreateOauthClient(command *RegisterOauthClientCommand) (*oauth2.Client, error)
 	FindOauthClient(clientId string) (*store.OauthClient, error)
+	PreloadOauthClientScopes(client *store.OauthClient) error
 }
 
 type WellKnownService interface {

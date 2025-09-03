@@ -9,7 +9,7 @@ type Token struct {
 	ClientId              *string
 	UserId                *string
 	RedirectURI           string
-	Scope                 string
+	Scope                 []string
 	TokenType             string
 	AccessToken           string
 	AccessTokenCreatedAt  time.Time
@@ -25,7 +25,7 @@ type TokenBuilder struct {
 	clientId              *string
 	userId                *string
 	redirectURI           string
-	scope                 string
+	scope                 []string
 	tokenType             string
 	accessToken           string
 	accessTokenCreatedAt  time.Time
@@ -56,7 +56,7 @@ func (b *TokenBuilder) WithRedirectURI(redirectURI string) *TokenBuilder {
 	return b
 }
 
-func (b *TokenBuilder) WithScope(scope string) *TokenBuilder {
+func (b *TokenBuilder) WithScope(scope []string) *TokenBuilder {
 	b.scope = scope
 	return b
 }

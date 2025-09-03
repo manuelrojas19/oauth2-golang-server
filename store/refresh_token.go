@@ -15,11 +15,10 @@ type RefreshToken struct {
 	AccessTokenId string    `gorm:"index;not null;constraint:OnDelete:CASCADE"`
 	ClientId      *string   `gorm:"index"`
 	UserId        *string   `gorm:"index"`
-	Scope         string    `gorm:"type:varchar(255);not null"`
-
-	AccessToken *AccessToken
-	Client      *OauthClient
-	User        *User
+	AccessToken   *AccessToken
+	Client        *OauthClient
+	User          *User
+	Scopes        []Scope `gorm:"many2many:refresh_token_scopes;"`
 }
 
 // IsExpired checks if the refresh token has expired
@@ -39,6 +38,7 @@ type RefreshTokenBuilder struct {
 	accessTokenId string
 	user          *User
 	userId        *string
+	scopes        []Scope
 }
 
 func NewRefreshTokenBuilder() *RefreshTokenBuilder {
@@ -106,6 +106,11 @@ func (b *RefreshTokenBuilder) WithUser(user *User) *RefreshTokenBuilder {
 	return b
 }
 
+func (b *RefreshTokenBuilder) WithScopes(scopes []Scope) *RefreshTokenBuilder {
+	b.scopes = scopes
+	return b
+}
+
 func (b *RefreshTokenBuilder) Build() *RefreshToken {
 	return &RefreshToken{
 		Id:            uuid.New().String(),
@@ -119,5 +124,6 @@ func (b *RefreshTokenBuilder) Build() *RefreshToken {
 		User:          b.user,
 		UserId:        b.userId,
 		CreatedAt:     time.Now(),
+		Scopes:        b.scopes,
 	}
 }

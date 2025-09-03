@@ -68,7 +68,7 @@ func (handler *tokenHandler) Token(w http.ResponseWriter, r *http.Request) {
 		token.TokenType,
 		token.AccessTokenExpiresIn,
 		token.RefreshToken,
-		token.Scope)
+		utils.JoinStringSlice(token.Scope, " "))
 
 	// Send the response with the token
 	utils.RespondWithJSON(w, http.StatusOK, res)

@@ -10,7 +10,6 @@ type AccessToken struct {
 	Id            string    `gorm:"primaryKey;type:varchar(255);unique;not null"`
 	Token         string    `gorm:"type:text;unique;not null"`
 	TokenType     string    `gorm:"type:varchar(255);not null"`
-	Scope         string    `gorm:"type:varchar(255);not null"`
 	ExpiresAt     time.Time `gorm:"not null"`
 	CreatedAt     time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	Code          string    `gorm:"type:text"` // Reference to authorization code
@@ -19,18 +18,19 @@ type AccessToken struct {
 	User          *User
 	Client        *OauthClient
 	RefreshTokens []RefreshToken `gorm:"foreignKey:AccessTokenId;constraint:OnDelete:CASCADE"`
+	Scopes        []Scope        `gorm:"many2many:access_token_scopes;"`
 }
 
 type AccessTokenBuilder struct {
 	token     string
 	tokenType string
-	scope     string
 	expiresAt time.Time
 	clientId  *string
 	client    *OauthClient
 	userId    *string
 	user      *User
 	code      string
+	scopes    []Scope
 }
 
 // NewAccessTokenBuilder initializes a new builder instance.
@@ -51,8 +51,8 @@ func (b *AccessTokenBuilder) WithTokenType(tokenType string) *AccessTokenBuilder
 }
 
 // WithScope sets the scope value.
-func (b *AccessTokenBuilder) WithScope(scope string) *AccessTokenBuilder {
-	b.scope = scope
+func (b *AccessTokenBuilder) WithScopes(scopes []Scope) *AccessTokenBuilder {
+	b.scopes = scopes
 	return b
 }
 
@@ -100,13 +100,13 @@ func (b *AccessTokenBuilder) Build() *AccessToken {
 		Id:        uuid.New().String(),
 		Token:     b.token,
 		TokenType: b.tokenType,
-		Scope:     b.scope,
 		ExpiresAt: b.expiresAt,
 		ClientId:  b.clientId,
 		Client:    b.client,
 		UserId:    b.userId,
-		Code:      b.code,
 		User:      b.user,
+		Code:      b.code,
 		CreatedAt: time.Now(),
+		Scopes:    b.scopes,
 	}
 }
