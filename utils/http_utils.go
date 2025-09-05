@@ -29,33 +29,35 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, payload interface{})
 // HandleErrorResponse centralizes error handling for HTTP responses.
 // It maps specific API errors to appropriate HTTP status codes and responds with an ErrorResponseBody.
 func HandleErrorResponse(w http.ResponseWriter, logger *zap.Logger, err error) {
+	
 	logger.Error("Error processing request", zap.Error(err))
 
 	var status int
 	var apiError api.ErrorResponse
 
-	if errors.Is(err, api.ErrInvalidClient) {
+	switch {
+	case errors.Is(err, api.ErrInvalidClient):
 		status = http.StatusUnauthorized
 		apiError = api.ErrorResponseBody(api.ErrInvalidClient)
-	} else if errors.Is(err, api.ErrInvalidGrant) {
+	case errors.Is(err, api.ErrInvalidGrant):
 		status = http.StatusBadRequest
 		apiError = api.ErrorResponseBody(api.ErrInvalidGrant)
-	} else if errors.Is(err, api.ErrUnsupportedGrantType) {
+	case errors.Is(err, api.ErrUnsupportedGrantType):
 		status = http.StatusBadRequest
 		apiError = api.ErrorResponseBody(api.ErrUnsupportedGrantType)
-	} else if errors.Is(err, api.ErrInvalidScope) {
+	case errors.Is(err, api.ErrInvalidScope):
 		status = http.StatusBadRequest
 		apiError = api.ErrorResponseBody(api.ErrInvalidScope)
-	} else if errors.Is(err, api.ErrInvalidRequest) {
+	case errors.Is(err, api.ErrInvalidRequest):
 		status = http.StatusBadRequest
 		apiError = api.ErrorResponseBody(api.ErrInvalidRequest)
-	} else if errors.Is(err, api.ErrInvalidRedirectUri) {
+	case errors.Is(err, api.ErrInvalidRedirectUri):
 		status = http.StatusBadRequest
-		apiError = api.ErrorResponseBody(api.ErrInvalidRedirectUri, "One or more redirect URIs are invalid or missing")
-	} else if errors.Is(err, api.ErrClientAlreadyExists) {
+		apiError = api.ErrorResponseBody(api.ErrInvalidRedirectUri)
+	case errors.Is(err, api.ErrClientAlreadyExists):
 		status = http.StatusConflict
 		apiError = api.ErrorResponseBody(api.ErrClientAlreadyExists, err.Error())
-	} else {
+	default:
 		status = http.StatusInternalServerError
 		apiError = api.ErrorResponseBody(api.ErrServerError)
 	}

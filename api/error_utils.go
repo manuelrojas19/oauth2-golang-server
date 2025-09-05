@@ -7,6 +7,8 @@ func ErrorResponseBody(err error, description ...string) ErrorResponse {
 	}
 	if len(description) > 0 && description[0] != "" {
 		response.ErrorDescription = description[0]
+	} else if defaultDesc, ok := errorDescriptions[err]; ok {
+		response.ErrorDescription = defaultDesc
 	}
 	return response
 }
