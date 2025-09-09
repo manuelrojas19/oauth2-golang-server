@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/manuelrojas19/go-oauth2-server/api"
 	"github.com/manuelrojas19/go-oauth2-server/oauth"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/authmethodtype"
 	"github.com/manuelrojas19/go-oauth2-server/oauth/granttype"
@@ -50,7 +51,7 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
 		)
-		return nil, err
+		return nil, api.ErrServerError
 	}
 
 	// Validate and fetch scopes
@@ -64,7 +65,7 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 				zap.String("scope", scopeName),
 				zap.Error(err),
 			)
-			return nil, fmt.Errorf("invalid_scope: %q not found", scopeName)
+			return nil, api.ErrInvalidScope
 		}
 		clientScopes = append(clientScopes, *scope)
 	}
@@ -73,6 +74,12 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 		zap.Int("count", len(clientScopes)),
 		zap.Any("scopes", clientScopes),
 	)
+
+	if s.oauthClientRepository.ExistsByName(command.ClientName) {
+		s.logger.Warn("Client name already in use", zap.String("clientName", command.ClientName))
+		return nil, api.ErrClientAlreadyExists
+	}
+
 	// Build the client entity
 	clientEntity := store.NewOauthClientBuilder().
 		WithClientName(command.ClientName).
@@ -95,7 +102,7 @@ func (s *oauthClientService) CreateOauthClient(command *RegisterOauthClientComma
 			zap.Duration("duration", time.Since(start)),
 			zap.Stack("stacktrace"),
 		)
-		return nil, err
+		return nil, api.ErrServerError
 	}
 
 	// Map to Client model

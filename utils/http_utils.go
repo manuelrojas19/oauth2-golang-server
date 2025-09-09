@@ -29,7 +29,7 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, payload interface{})
 // HandleErrorResponse centralizes error handling for HTTP responses.
 // It maps specific API errors to appropriate HTTP status codes and responds with an ErrorResponseBody.
 func HandleErrorResponse(w http.ResponseWriter, logger *zap.Logger, err error) {
-	
+
 	logger.Error("Error processing request", zap.Error(err))
 
 	var status int
@@ -56,7 +56,7 @@ func HandleErrorResponse(w http.ResponseWriter, logger *zap.Logger, err error) {
 		apiError = api.ErrorResponseBody(api.ErrInvalidRedirectUri)
 	case errors.Is(err, api.ErrClientAlreadyExists):
 		status = http.StatusConflict
-		apiError = api.ErrorResponseBody(api.ErrClientAlreadyExists, err.Error())
+		apiError = api.ErrorResponseBody(api.ErrClientAlreadyExists)
 	default:
 		status = http.StatusInternalServerError
 		apiError = api.ErrorResponseBody(api.ErrServerError)
