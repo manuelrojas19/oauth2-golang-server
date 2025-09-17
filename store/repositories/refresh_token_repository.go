@@ -122,7 +122,7 @@ func (ot *refreshTokenRepository) FindByRefreshToken(refreshToken string) (*stor
 	ot.logger.Info("Searching for refresh token by refresh token string", zap.String("refreshToken", refreshToken))
 	var token store.RefreshToken
 
-	if err := ot.Db.Where("refresh_token = ?", refreshToken).First(&token).Error; err != nil {
+	if err := ot.Db.Where("token = ?", refreshToken).First(&token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			ot.logger.Debug("Refresh token not found", zap.String("refreshToken", refreshToken))
 			return nil, fmt.Errorf("refresh token not found")

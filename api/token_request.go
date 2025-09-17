@@ -99,9 +99,6 @@ func (r *TokenRequest) Validate() error {
 		if strings.TrimSpace(r.ClientId) == "" {
 			return errors.New("client_id is required for authorization_code grant type")
 		}
-		if strings.TrimSpace(r.ClientSecret) == "" {
-			return errors.New("client_secret is required for authorization_code grant type")
-		}
 		if strings.TrimSpace(r.AuthCode) == "" {
 			return errors.New("code is required for authorization_code grant type")
 		}
