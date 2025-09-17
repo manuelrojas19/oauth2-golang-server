@@ -1,0 +1,23 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.venv/
+
+# pytest cache
+.pytest_cache/
+
+# Test reports
+*.html
+*.xml
+
+# Editor/IDE specific files (optional, but common)
+.idea/
+.vscode/
+
+# Any temporary files created during tests
+*.tmp
