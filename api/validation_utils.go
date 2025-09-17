@@ -72,7 +72,7 @@ func IsValidScope(scope string) bool {
 // IsValidState checks if the state is valid (example validation, adapt as needed)
 func IsValidState(state string) bool {
 	// Example: ensure state is non-empty and contains only alphanumeric characters
-	matched, err := regexp.MatchString(`^[a-zA-Z0-9]*$`, state)
+	matched, err := regexp.MatchString(`^[A-Za-z0-9_-]{8,128}$`, state)
 	if err != nil {
 		return false
 	}

@@ -50,7 +50,7 @@ func GenerateJWT(clientId *string, userId *string, secretKey interface{}, tokenT
 		signingMethod = jwt.SigningMethodHS256
 		key, ok := secretKey.([]byte)
 		if !ok {
-			return "", errors.New("invalid key type for HS256")
+			return "", fmt.Errorf("invalid key type for HS256; expected []byte, got %T", secretKey)
 		}
 		token := jwt.NewWithClaims(signingMethod, jwt.MapClaims{
 			"iat":  time.Now().Unix(),
@@ -73,7 +73,7 @@ func GenerateJWT(clientId *string, userId *string, secretKey interface{}, tokenT
 		return tokenString, nil
 
 	default:
-		return "", errors.New("invalid token type")
+		return "", fmt.Errorf("unsupported token type: %s", tokenType)
 	}
 }
 
@@ -83,29 +83,29 @@ func ValidateRefreshToken(tokenString string, secretKey []byte) (jwt.MapClaims, 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Check token signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
+			return nil, fmt.Errorf("unsupported JWT signing method for refresh token: %s", token.Method.Alg())
 		}
 		return secretKey, nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse or validate refresh token: %w", err)
 	}
 
 	// Check if the token is valid
 	if !token.Valid {
-		return nil, errors.New("invalid token")
+		return nil, errors.New("refresh token is invalid")
 	}
 
 	// Extract claims
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, errors.New("invalid claims")
+		return nil, errors.New("refresh token contains invalid claims")
 	}
 
 	// Validate expiration time
 	exp, ok := claims["exp"].(float64)
 	if !ok || time.Unix(int64(exp), 0).Before(time.Now()) {
-		return nil, errors.New("token has expired")
+		return nil, errors.New("refresh token has expired")
 	}
 
 	return claims, nil

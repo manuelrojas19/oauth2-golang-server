@@ -149,18 +149,19 @@ func (a *authorizationService) Authorize(command *AuthorizeCommand) (*oauth.Auth
 	}
 	a.logger.Debug("User found in database", zap.String("userId", user.Id))
 
-	// Validate access consent
-	if !a.consentService.HasUserConsented(user.Id, client.ClientId, command.Scope) {
-		a.logger.Warn("User consent required",
-			zap.String("userId", user.Id),
-			zap.String("clientId", client.ClientId),
-			zap.String("scope", command.Scope),
-			zap.Duration("duration", time.Since(start)),
-			zap.Stack("stacktrace"),
-		)
-		return nil, fmt.Errorf(errors.ErrConsentRequired)
-	}
-	a.logger.Debug("User consent confirmed")
+	// // Validate access consent, not required for Idp
+	// if !a.consentService.HasUserConsented(user.Id, client.ClientId, command.Scope) {
+	// 	a.logger.Warn("User consent required",
+	// 		zap.String("userId", user.Id),
+	// 		zap.String("clientId", client.ClientId),
+	// 		zap.String("scope", command.Scope),
+	// 		zap.Duration("duration", time.Since(start)),
+	// 		zap.Stack("stacktrace"),
+	// 	)
+	// 	return nil, fmt.Errorf(errors.ErrConsentRequired)
+	// }
+
+	// a.logger.Debug("User consent confirmed")
 
 	// Generate authorization code
 	code, err := utils.GenerateAuthCode(client.ClientId, userId)
